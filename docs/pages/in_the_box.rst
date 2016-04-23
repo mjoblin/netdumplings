@@ -7,15 +7,15 @@ When you :ref:`install NetDumplings <installation>` you get the main
 ``netdumplings`` Python module as well as some command-line scripts.
 
 There's enough in the installation package to get started without writing any
-code, but the real fun comes from writing your own :class:`~DumplingChef`
-objects, and using the :class:`~DumplingEater` class to write your own
+code, but the real fun comes from writing your own :class:`DumplingChef`
+objects, and using the :class:`DumplingEater` class to write your own
 dumpling eaters.
 
 The netdumplings Python module
 ------------------------------
 
-This is a Python module which provides the :class:`~DumplingChef` and
-:class:`~DumplingEater` classes -- as well as additional classes -- as
+This is a Python module which provides the :class:`DumplingChef` and
+:class:`DumplingEater` classes -- as well as additional classes -- as
 described in :ref:`the API <api>`.
 
 ... and some DumplingChefs
@@ -43,7 +43,7 @@ nd-snifty
 ^^^^^^^^^
 
 A packet sniffer which sends every packet which matches a given filter to
-every registered :class:`~DumplingChef`.
+every registered :class:`DumplingChef`.
 
 .. Important::
    `nd_snifty` is a packet sniffer so it needs to be run as root, or the

@@ -1,14 +1,16 @@
+.. automodule:: netdumplings
+
 Writing a dumpling chef
 =======================
 
 The mission of a dumpling chef is to receive packets from `nd-snifty` and
 process them to create dumplings.  To write your own dumpling chef you need to:
 
-1. Create your chef by subclassing :class:`~DumplingChef`.
+1. Create your chef by subclassing :class:`DumplingChef`.
 #. Tell `nd-shifty` where to find your chef.
 
-Subclassing :class:`~DumplingChef`
-----------------------------------
+Subclassing :class:`DumplingChef`
+---------------------------------
 
 Here's an example chef which processes DNS packets: ::
 

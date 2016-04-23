@@ -16,7 +16,7 @@ NetDumplings is a small collection of command-line scripts and Python classes
 allowing you to:
 
 1. Watch for specific packets on your network.
-#. Process those packets in any way you please using the :class:`~DumplingChef` class, which uses the contents of your network packets to make dumplings.
+#. Process those packets in any way you please using the :class:`DumplingChef` class, which uses the contents of your network packets to make dumplings.
 #. Send those dumplings off to your own dumping eaters to display the contents however you like.
 
 How about an example?
@@ -24,7 +24,7 @@ How about an example?
 
 Sure!  You could configure NetDumplings to listen for all ``port 53`` (DNS)
 packets on your network.  Those packets would then be passed to your
-:class:`~DumplingChef` which looks at each packet to see if it's able to
+:class:`DumplingChef` which looks at each packet to see if it's able to
 extract the name of the remote host being looked up.  Every time it found a
 remote host lookup the chef could then create a new dumpling (containing just
 the host name being looked up) which gets shipped off to your dumpling eater.
@@ -38,16 +38,16 @@ What are the various pieces?
 There's four main parts to NetDumplings:
 
 1. `nd-snifty` (the packet sniffer).  This comes with NetDumplings.
-2. The :class:`~DumplingChef` class (which makes the delicious dumplings).  You'll be writing these.
+2. The :class:`DumplingChef` class (which makes the delicious dumplings).  You'll be writing these.
 3. `nd-shifty` (the dumpling hub; a connection between `nd-snifty` and the dumpling eaters).  This comes with NetDumplings.
-4. The dumpling eaters (with their convenience :class:`~DumplingEater` class).  You'll be writing these.
+4. The dumpling eaters (with their convenience :class:`DumplingEater` class).  You'll be writing these.
 
 Parts 1 & 2: nd-snifty and the dumpling chefs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Everything starts with `nd-snifty` which sniffs network packets and passes them
-off to the :class:`~DumplingChef` objects for processing.  The
-:class:`~DumplingChef` objects treat the network packets as ingredients which
+off to the :class:`DumplingChef` objects for processing.  The
+:class:`DumplingChef` objects treat the network packets as ingredients which
 they can use to make their tasty dumplings.  When a dumpling is ready it gets
 sent to `nd-shifty` (the dumpling hub).
 
@@ -79,9 +79,9 @@ contained in one or more network packets.
 Where you come in
 ^^^^^^^^^^^^^^^^^
 
-You can write your own :class:`~DumplingChef` objects to create dumplings, and
+You can write your own :class:`DumplingChef` objects to create dumplings, and
 you can also write your own dumpling eater scripts using the
-:class:`~DumplingEater` class.  And since dumplings are just JSON data sent to
+:class:`DumplingEater` class.  And since dumplings are just JSON data sent to
 eaters over websockets you could even write your eaters in JavaScript and
 display network activity in a Web browser.
 
@@ -99,7 +99,7 @@ Yes you can!  Here you go:
 
 `nd-shifty` takes care of sniffing the network -- in this case using the
 ``port 53`` filter (port 53 is used by DNS requests).  Every packet matching
-that filter is passed to the :class:`~DumplingChef`.  The :class:`~DumplingChef`
+that filter is passed to the :class:`DumplingChef`.  The :class:`DumplingChef`
 then decides whether or not to make a dumpling (it might make one for every
 packet it receives; or it might decide to accumulate a few packets before
 making its dumpling).  When it's finished making a dumpling it then sends it
@@ -116,7 +116,7 @@ console, or if it's a Web-based eater it may render the contents in a browser.
 What does a dumpling look like?
 -------------------------------
 
-Dumplings are just JSON documents.  The :class:`~DumplingChef` defines the
+Dumplings are just JSON documents.  The :class:`DumplingChef` defines the
 ``payload`` section (which can be anything that can be serialized into JSON --
 usually a Python dict) and `nd-snifty` will automatically generate the
 ``metadata`` section.
@@ -149,7 +149,7 @@ Some quick notes about ...
 
 `nd-snifty` is a command-line script.  You tell it what network packets to
 listen for via the ``--filter`` argument.  You can also tell it what
-:class:`~DumplingChef` instances it should talk to via ``--chefs`` (it will
+:class:`DumplingChef` instances it should talk to via ``--chefs`` (it will
 default to all of them).
 
 The filter you pass to `nd-snifty` should adhere to this `filter syntax`_
@@ -159,8 +159,8 @@ The filter you pass to `nd-snifty` should adhere to this `filter syntax`_
 ^^^^^^^^^^^^^^^^^^^
 
 `nd-snifty` will send *every* packet which matches its sniffer filter to every
-:class:`~DumpingChef` instance it's talking to.  It's up to each
-:class:`~DumplingChef` to decide whether it cares about the packet or not.
+:class:`DumpingChef` instance it's talking to.  It's up to each
+:class:`DumplingChef` to decide whether it cares about the packet or not.
 The packets themselves are the exact same packet objects that the
 `scapy sniff function`_ creates.
 
@@ -173,22 +173,22 @@ eaters.
 
 An additional feature of `nd-shifty` is that it makes and sends its own
 status dumplings thanks to its own chef called ``SystemStatusChef``.  These
-dumplings are not created by a :class:`~DumplingChef` instance.  They're
+dumplings are not created by a :class:`DumplingChef` instance.  They're
 created by `nd-shifty` itself for the purpose of announcing its current status
 to any interested eaters.
 
 ... dumpling eaters
 ^^^^^^^^^^^^^^^^^^^
 
-When a dumpling eater is written using the :class:`~DumplingEater` class,
-it can optionally specify which :class:`~DumplingChef` dumplings it wants to
+When a dumpling eater is written using the :class:`DumplingEater` class,
+it can optionally specify which :class:`DumplingChef` dumplings it wants to
 receive.  If it doesn't specify then it will receive every dumpling from every
-:class:`~DumplingChef`.
+:class:`DumplingChef`.
 
 Can I have multiple Chefs and Eaters?
 -------------------------------------
 
-Absolutely!  You can have as many :class:`~DumplingChef` instances and
+Absolutely!  You can have as many :class:`DumplingChef` instances and
 dumpling eaters as you want, and you can also have as many running instances
 of `nd-snifty` and `nd-shifty` as you want (although usually a single
 `nd-shifty` will be enough).

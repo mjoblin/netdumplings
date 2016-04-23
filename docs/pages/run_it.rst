@@ -1,5 +1,7 @@
 .. _run-it:
 
+.. automodule:: netdumplings
+
 Let's run this thing!
 =====================
 
@@ -14,7 +16,7 @@ Hopefully we'll then have our `nd-shifty` running like a boss and itching to
 start shifting some superior legit network dumplings.  Then we'll:
 
 3. Start `nd-snifty` in a third terminal window to begin sniffing for DNS-related network packets (remember DNS traffic uses port 53).  We'll have `nd-snifty` send those packets to our :ref:`api-dnslookupchef`.
-#. Start `nd-printer` (a :class:`~netdumplings.DumplingEater`) in a fourth terminal window to print our tasty dumplings to the terminal.
+#. Start `nd-printer` (a :class:`DumplingEater`) in a fourth terminal window to print our tasty dumplings to the terminal.
 #. Start some more chefs and view some dumplings in a web browser.
 #. Bask in all the dumplings.
 

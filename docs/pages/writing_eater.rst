@@ -8,7 +8,7 @@ A dumpling eater has a very simple mission: receive dumplings from
 
 Here's an example of a dumpling eater script.  All it does is pretty-print the
 payload of every dumpling it receives.  Note that it uses the
-:class:`~DumplingEater` class to do most of the hard work::
+:class:`DumplingEater` class to do most of the hard work::
 
     #!/usr/bin/env python
 
@@ -29,7 +29,7 @@ payload of every dumpling it receives.  Note that it uses the
     if __name__ == '__main__':
         main()
 
-Check out the :class:`~DumplingEater` documentation for more information on
+Check out the :class:`DumplingEater` documentation for more information on
 what the class can do.  And take a look at the dumpling eater scripts that come
 with NetDumplings for more examples:
 
@@ -76,7 +76,7 @@ Writing eaters in languages other than Python
 
 Since dumplings are just JSON documents sent over a websocket connection to
 `nd-shifty`, you can write your dumpling eaters in any language you like.  If
-you do this (or otherwise aren't using the provided :class:`~DumplingEater`
+you do this (or otherwise aren't using the provided :class:`DumplingEater`
 class) then there's a few things to remember:
 
 * Your eater needs to announce itself when it connects to `nd-shifty` by passing a simple payload of ``{"eater_name": "your_eater_name"}``.

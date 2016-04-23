@@ -46,15 +46,15 @@ NetDumplings API
 Commonly-used classes
 ---------------------
 
+.. automodule:: netdumplings
+
 These are the classes commonly used when developing with NetDumplings.
 
-The most important two are :class:`~DumplingChef` and :class:`~DumplingEater`,
+The most important two are :class:`DumplingChef` and :class:`DumplingEater`,
 which are the classes you're likely to use to write your own chefs and eaters.
 
-You'll probably also find yourself using :class:`~DumplingDriver` and
+You'll probably also find yourself using :class:`DumplingDriver` and
 the exception classes.
-
-.. automodule:: netdumplings
 
 DumplingChef
 ^^^^^^^^^^^^

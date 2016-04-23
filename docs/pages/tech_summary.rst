@@ -7,8 +7,8 @@ This is a quick technical overview.  You can
 :ref:`read more details here <more-details>`.
 
 * NetDumplings provides a network sniffing script called **nd-snifty**.
-* `nd-snifty` instantiates all your :class:`~DumplingChef` sub-classes and invokes a ``packet_handler()`` method on each one whenever a new packet is sniffed.
-* Your :class:`~DumplingChef` sub-classes receive each sniffed packet, processes them, and call ``send()`` (whenever they're ready; not necessarily every time they receive a packet) to send a dumpling.  The dumplings they send will be made from the contents of the network packets they've received.
+* `nd-snifty` instantiates all your :class:`DumplingChef` sub-classes and invokes a ``packet_handler()`` method on each one whenever a new packet is sniffed.
+* Your :class:`DumplingChef` sub-classes receive each sniffed packet, processes them, and call ``send()`` (whenever they're ready; not necessarily every time they receive a packet) to send a dumpling.  The dumplings they send will be made from the contents of the network packets they've received.
 * (Dumplings are just bundles of information stored in a Python dictionary).
 * `nd-snifty` manages the forwarding of those dumplings (which are converted to JSON payloads) to **nd-shifty** over a websocket connection.
 * `nd-shifty`, which is also a command-line script, then forwards those dumplings to all connected dumpling eaters (also using websockets).
@@ -22,7 +22,7 @@ from anywhere.
 Usually you'll have a single `nd-shifty` (the dumpling hub) running; one or
 more `nd-snifty` (network sniffer) scripts running; and one or more
 dumpling eaters (the visualizers) running.  The eaters can be Python scripts
-written using the :class:`~DumplingEater` class, or might instead be running in
+written using the :class:`DumplingEater` class, or might instead be running in
 a web browser (JavaScript) or elsewhere.
 
 In pictures
