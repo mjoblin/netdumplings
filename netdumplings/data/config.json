@@ -1,0 +1,26 @@
+{
+    "shifty": {
+        "address": "localhost",
+        "in_port": 11347,
+        "out_port": 11348,
+        "status_freq": 5
+    },
+    "snifty": {
+        "interface": "all",
+        "filter": "tcp",
+        "poke_interval": 5,
+        "chefs": true,
+        "chef_modules": [
+            "netdumplings.dumplingchefs"
+        ],
+        "kitchens": {
+            "packets_per_second": {
+                "filter": null,
+                "poke_interval": 1,
+                "chefs": [
+                    "PacketCountChef"
+                ]
+            }
+        }
+    }
+}

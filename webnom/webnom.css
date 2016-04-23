@@ -1,0 +1,78 @@
+body {
+    background-color: #002433;
+    overflow: hidden;
+    font-family: Arial, Courier, sans-serif;
+}
+
+/* ------------------------------------------------------------------------- */
+/* DNS lookups                                                               */
+/* ------------------------------------------------------------------------- */
+
+.host-name {
+    position: absolute;
+    opacity: 0;
+    top: 80%;
+    font-size: 5rem;
+    color: #FFFFFF;
+    text-shadow: 0 0 0.1em white;
+    margin: 150px 0;
+    padding: 0;
+    left: 20px;
+    right: 20px;
+    text-align: center;
+
+    transition: top 2s ease-out, opacity 2s ease-out;
+    -webkit-transition: top 2s ease-out, opacity 2s ease-out;
+    -moz-transition: top 2s ease-out, opacity 2s ease-out;
+    -o-transition: top 2s ease-out, opacity 2s ease-out;
+}
+
+.host-name.display {
+    top: -20%;
+    opacity: 1;
+}
+
+
+/* ------------------------------------------------------------------------- */
+/* Network layer packet counts                                               */
+/* ------------------------------------------------------------------------- */
+
+.packet-count-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 2rem;
+    color: #AAEFAA;
+}
+
+.packet-count-container .packet-counts {
+}
+
+.packet-count-container .packet-counts .layer-count {
+    color: #EFEFEF;
+    text-align: right;
+}
+
+.packet-count-container .packet-counts .layer-name {
+    color: #999999;
+    text-align: left;
+    padding-left: 10px;
+}
+
+
+/* ------------------------------------------------------------------------- */
+/* shifty status information                                                 */
+/* ------------------------------------------------------------------------- */
+
+.shifty-status-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 1.1rem;
+    color: #AAAAAA;
+}
+
+.shifty-status-container pre {
+    margin-top: 0;
+}
+
