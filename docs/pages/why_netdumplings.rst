@@ -37,4 +37,4 @@ get it running on your system by following the instructions in :doc:`run_it`
 
 .. _see source: https://github.com/mjoblin/netdumplings/blob/master/netdumplings/dumplingchefs/packetcountchef.py
 .. _more source: https://github.com/mjoblin/netdumplings/blob/master/netdumplings/dumplingchefs/dnslookupchef.py
-.. _see the source code: https://github.com/mjoblin/netdumplings/blob/master/netdumplings/webnom/
+.. _see the source code: https://github.com/mjoblin/netdumplings/tree/master/webnom/
