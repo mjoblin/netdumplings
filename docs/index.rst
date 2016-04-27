@@ -9,7 +9,7 @@ way you please.  What NetDumplings listens for -- and how that information is
 displayed -- is up to you.
 
 NetDumplings requires `Python 3.5`_ and relies on the fantastic `scapy3k`_
-and `websockets`_ modules.
+and `websockets`_ modules.  The source is on `GitHub`_.
 
 What's a dumpling?
 ------------------
@@ -76,4 +76,5 @@ Tell me more!
 .. _Python 3.5: https://www.python.org/downloads/
 .. _scapy3k: https://github.com/phaethon/scapy
 .. _websockets: https://websockets.readthedocs.org/en/stable/
+.. _GitHub: https://github.com/mjoblin/netdumplings
 

@@ -48,12 +48,11 @@ Run the following (after :ref:`installation <installation>`) to see it in action
     # in terminal 3: start the dumpling eater
     $ nd-printer --chef PacketCountChef
 
-For more on how to run everything, see :ref:`run-it`.
+For more on how to run everything, see the :ref:`run it section<run-it>`.
 
 More details
 ------------
 
-You can read more on how it works in the :ref:`More details <more-details>`
-section.
+You can read more on how it works in the :ref:`more details section<more-details>`.
 
 Boom!

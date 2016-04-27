@@ -114,16 +114,20 @@ todo_include_todos = False
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#html_theme = 'alabaster'
+html_theme = 'alabaster'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
     'logo': 'dumpling.png',
+    'logo_name': True,
+    'touch_icon': 'dumpling.png',
     'description':
         """NetDumplings lets you see what's happening on your network,
-        any way you want to see it."""
+        any way you want to see it.""",
+    'show_related': True,
+    'analytics_id': 'UA-76821591-1',
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
