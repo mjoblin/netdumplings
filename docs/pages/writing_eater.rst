@@ -82,7 +82,7 @@ class) then there's a few things to remember:
 * Your eater needs to announce itself when it connects to `nd-shifty` by passing a simple payload of ``{"eater_name": "your_eater_name"}``.
 * Your eater will then receive `every` dumpling coming out of `nd-shifty`.  It may want to interrogate the ``metadata`` key of each dumpling to check the ``chef_name`` (or any other information it cares about) to decide whether it's interested in the dumpling or not.  Ignoring unwanted packets early will help performance and stability.
 
-.. _nd-status: https://github.com/mjoblin/netdumplings/blob/master/netdumplings/console/statuseater.py
-.. _nd-info: https://github.com/mjoblin/netdumplings/blob/master/netdumplings/console/infoeater.py
-.. _nd-printer: https://github.com/mjoblin/netdumplings/blob/master/netdumplings/console/printereater.py
+.. _nd-status: https://github.com/mjoblin/netdumplings/blob/master/netdumplings/console/status.py
+.. _nd-info: https://github.com/mjoblin/netdumplings/blob/master/netdumplings/console/info.py
+.. _nd-printer: https://github.com/mjoblin/netdumplings/blob/master/netdumplings/console/printer.py
 
