@@ -2,8 +2,8 @@
 
 .. automodule:: netdumplings
 
-More details
-============
+More technical details
+======================
 
 .. contents::
    :depth: 1

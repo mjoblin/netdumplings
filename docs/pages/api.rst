@@ -1,9 +1,9 @@
 .. _api:
 
-NetDumplings API
-================
+API and supporting code
+=======================
 
-`Commonly-used classes`_
+`Main API`_
 
  You'll probably find yourself using these classes if you develop with NetDumplings.
 
@@ -43,8 +43,8 @@ NetDumplings API
  * `DumplingKitchen`_
 
 
-Commonly-used classes
----------------------
+Main API
+--------
 
 .. automodule:: netdumplings
 
@@ -81,6 +81,9 @@ Exception classes
 
 .. autoexception:: netdumplings.exceptions.InvalidDumplingError
 
+.. Important::
+   The following are included for reference and can be safely ignored unless
+   you're looking for more detailed information.
 
 Some dumpling chefs
 -------------------

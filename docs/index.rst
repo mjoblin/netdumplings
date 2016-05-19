@@ -8,8 +8,11 @@ you sniff your network for interesting packets and display the results in any
 way you please.  What NetDumplings listens for -- and how that information is
 displayed -- is up to you.
 
-NetDumplings requires `Python 3.5`_ and relies on the fantastic `scapy3k`_
-and `websockets`_ modules.  The source is on `GitHub`_.
+Technically speaking, NetDumplings wraps ``tcpdump`` filters and network packet
+processors, sending the results over websockets for display.
+
+NetDumplings requires `Python 3.5`_ or higher, and relies on the fantastic
+`scapy3k`_ and `websockets`_ modules.  The source is on `GitHub`_.
 
 What's a dumpling?
 ------------------
@@ -17,16 +20,17 @@ What's a dumpling?
 A dumpling is a description of network activity, defined by you and encoded in
 JSON.  It can contain anything you want based on one or more network packets
 sniffed on your network.  You control the dumpling contents through the
-:class:`DumplingChef` objects you write, as well as how those contents are
-displayed by the **dumpling eaters** you write.  You can make as many dumplings
-as you want; and since dumplings are just JSON data sent to eaters over
-websockets, you could even write your eaters in JavaScript and display them in
-a web browser.
+:class:`DumplingChef` objects you `write <pages/writing_chef.html>`_, as well
+as how those contents are displayed by the **dumpling eaters** you
+`write <pages/writing_eater.html>`_.  You can make as many dumplings as you
+want; and since dumplings are just JSON data sent to eaters over websockets,
+you could even write your eaters in JavaScript and display them in a web
+browser.
 
 OK so how do I visualize my network?
 ------------------------------------
 
-1. Write :class:`DumplingChef` Python objects to interpret your network packets and make dumplings.
+1. Write :class:`DumplingChef` Python classes to interpret your network packets and make dumplings.
 #. Write **dumpling eaters** (in any language) to visualize the information in the dumplings you've made.  If you're using Python then you can use the :class:`DumplingEater` helper class.
 #. Run `nd-snifty` (a command-line script included with NetDumplings) to sniff your network for the packets your chefs want to see.
 #. Run `nd-shifty` (also a command-line script included with NetDumplings) to forward the dumplings from `nd-snifty` to the eaters.
@@ -38,7 +42,7 @@ Tell me more!
    :maxdepth: 1
 
    pages/why_netdumplings
-   pages/tech_summary
+   pages/quickstart
 
 **Running it:**
 
@@ -71,7 +75,6 @@ Tell me more!
    :maxdepth: 1
 
    pages/config
-   pages/resources
 
 .. _Python 3.5: https://www.python.org/downloads/
 .. _scapy3k: https://github.com/phaethon/scapy

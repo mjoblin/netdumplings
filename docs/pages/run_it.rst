@@ -264,7 +264,7 @@ Remember you can have as many `nd-snifty` instances running as you like -- all
 with different filter strings and chef lists (if desired); and possibly even
 running on different machines on your network.
 
-5. Bask
+6. Bask
 -------
 
 Go on, you earned it.

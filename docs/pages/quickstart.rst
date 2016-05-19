@@ -1,9 +1,29 @@
 .. automodule:: netdumplings
 
-A quick technical summary
-=========================
+Quickstart
+==========
 
-This is a quick technical overview.  You can
+Run the following (after :ref:`installation <installation>`) to see it in action: ::
+
+    # in terminal 1: start the dumpling hub
+    $ nd-shifty
+
+    # in terminal 2: start a network sniffer
+    $ nd-snifty --kitchen packets_per_second
+
+    # in terminal 3: start a dumpling eater
+    $ nd-printer --chef PacketCountChef
+
+For more on how to run everything, see the :ref:`run it section<run-it>`.
+
+The above quickstart doesn't require writing any code, but it also doesn't do
+much.  You'll be able to do a lot more when you start writing your own dumpling
+chefs and dumpling eaters.
+
+What's going on
+---------------
+
+Following is a quick technical overview of NetDumplings.  You can
 :ref:`read more details here <more-details>`.
 
 * NetDumplings provides a network sniffing script called **nd-snifty**.
@@ -34,25 +54,3 @@ Here's what it looks like with boxes and arrows:
    :width: 600
    :align: center
 
-Example
--------
-
-Run the following (after :ref:`installation <installation>`) to see it in action: ::
-
-    # in terminal 1: start the dumpling hub
-    $ nd-shifty
-
-    # in terminal 2: start the network sniffer
-    $ nd-snifty --kitchen packets_per_second
-
-    # in terminal 3: start the dumpling eater
-    $ nd-printer --chef PacketCountChef
-
-For more on how to run everything, see the :ref:`run it section<run-it>`.
-
-More details
-------------
-
-You can read more on how it works in the :ref:`more details section<more-details>`.
-
-Boom!

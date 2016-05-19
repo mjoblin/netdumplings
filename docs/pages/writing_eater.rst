@@ -8,7 +8,7 @@ A dumpling eater has a very simple mission: receive dumplings from
 
 Here's an example of a dumpling eater script.  All it does is pretty-print the
 payload of every dumpling it receives.  Note that it uses the
-:class:`DumplingEater` class to do most of the hard work::
+:class:`DumplingEater` helper class. ::
 
     #!/usr/bin/env python
 
@@ -80,7 +80,7 @@ you do this (or otherwise aren't using the provided :class:`DumplingEater`
 class) then there's a few things to remember:
 
 * Your eater needs to announce itself when it connects to `nd-shifty` by passing a simple payload of ``{"eater_name": "your_eater_name"}``.
-* Your eater will then receive `every` dumpling coming out of `nd-shifty`.  It may want to interrogate the ``metadata`` key of each dumpling to check the ``chef_name`` (or any other information it cares about) to decide whether it's interested in the dumpling or not.  Ignoring unwanted packets early will help performance and stability.
+* Your eater will then receive `every` dumpling coming out of `nd-shifty`.  It may want to interrogate the ``metadata`` key of each dumpling to check the ``chef_name`` (or any other information it cares about) to decide whether it's interested in the dumpling or not.  Ignoring unwanted dumplings early will help performance and stability.
 
 .. _nd-status: https://github.com/mjoblin/netdumplings/blob/master/netdumplings/console/status.py
 .. _nd-info: https://github.com/mjoblin/netdumplings/blob/master/netdumplings/console/info.py

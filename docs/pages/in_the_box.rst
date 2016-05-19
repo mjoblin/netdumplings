@@ -32,7 +32,8 @@ Command-line scripts
 
 NetDumplings comes with a handful of command-line scripts.  Two of them
 (``nd-snifty`` and ``nd-shifty``) are essential for our tasty dumpling
-universe to exist.
+universe to exist.  The others (``nd-info``, ``nd-status``, ``nd-printer``)
+are dumpling eaters.
 
 To see the command-line arguments supported by any of the NetDumplings
 command-line scripts, use the ``--help`` flag: ::

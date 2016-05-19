@@ -4,7 +4,10 @@
 Installation
 ============
 
-NetDumplings requires `Python 3.5`_.
+NetDumplings requires `Python 3.5`_ or higher.
+
+Using pip
+---------
 
 You can install NetDumplings (including all the command-line scripts and the
 associated Python modules) with pip: ::
@@ -17,13 +20,17 @@ You may want to to that in a `virtual environment`_: ::
     $ source nd-env/bin/activate
     $ pip install netdumplings
 
-The full source code is `GitHub`_ which you can clone into your local
+Manually from GitHub
+--------------------
+
+The full source code is on `GitHub`_ which you can clone into your local
 environment: ::
 
     $ git clone git://github.com/mjoblin/netdumplings.git
 
-You can also install NetDumplings from your local copy: ::
+You can then install NetDumplings from your local copy: ::
 
+    $ cd netdumplings
     $ python setup.py install
 
 
