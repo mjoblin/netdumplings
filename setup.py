@@ -26,10 +26,11 @@ setup(
     long_description=readme,
     author='Mike Joblin',
     author_email='mike@tastymoss.com',
-    url='',
+    url='https://github.com/mjoblin/netdumplings',
     packages=packages,
     include_package_data=True,
     install_requires=install_requires,
+    download_url='https://pypi.python.org/pypi/netdumplings',
     entry_points={
         'console_scripts': [
             'nd-snifty=netdumplings.console:snifty',
@@ -41,7 +42,7 @@ setup(
     },
     license='MIT',
     zip_safe=False,
-    classifiers=(
+    classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
@@ -50,5 +51,5 @@ setup(
         'Topic :: System :: Monitoring',
         'Topic :: System :: Networking',
         'Topic :: System :: Networking :: Monitoring',
-    )
+    ]
 )
