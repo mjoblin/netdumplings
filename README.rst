@@ -13,7 +13,11 @@ to do that in a `virtual environment`_).
 
 Complete documentation is available on `Read the Docs`_.
 
+For an example of a 3D browser-based network visualization using NetDumplings,
+see `packscape`_.
+
 .. _Read the Docs: https://netdumplings.readthedocs.org/
 .. _scapy-python3: https://github.com/phaethon/scapy
 .. _virtual environment: http://docs.python-guide.org/en/latest/dev/virtualenvs/
 .. _websockets: https://github.com/aaugustin/websockets
+.. _packscape: https://github.com/mjoblin/packscape

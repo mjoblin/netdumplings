@@ -14,6 +14,9 @@ processors, sending the results over websockets for display.
 NetDumplings requires `Python 3.5`_ or higher, and relies on the fantastic
 `scapy3k`_ and `websockets`_ modules.  The source is on `GitHub`_.
 
+For an example of a 3D browser-based network visualization using NetDumplings,
+see `packscape`_.
+
 What's a dumpling?
 ------------------
 
@@ -80,4 +83,5 @@ Tell me more!
 .. _scapy3k: https://github.com/phaethon/scapy
 .. _websockets: https://websockets.readthedocs.org/en/stable/
 .. _GitHub: https://github.com/mjoblin/netdumplings
+.. _packscape: https://github.com/mjoblin/packscape
 

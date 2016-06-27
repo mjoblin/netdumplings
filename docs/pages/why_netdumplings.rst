@@ -35,6 +35,13 @@ SystemStatus dumplings made by `nd-shifty`:
 You can `see the source code`_ for this web-based dumpling eater, and you can
 get it running on your system by following the instructions in :doc:`run_it`
 
+You can find another web-based example `here`_, which looks like this:
+
+.. image:: https://github.com/mjoblin/packscape/blob/screenshots/screenshots/packscape.gif?raw=true
+   :width: 600
+   :align: center
+
 .. _see source: https://github.com/mjoblin/netdumplings/blob/master/netdumplings/dumplingchefs/packetcountchef.py
 .. _more source: https://github.com/mjoblin/netdumplings/blob/master/netdumplings/dumplingchefs/dnslookupchef.py
 .. _see the source code: https://github.com/mjoblin/netdumplings/tree/master/webnom/
+.. _here: https://github.com/mjoblin/packscape
