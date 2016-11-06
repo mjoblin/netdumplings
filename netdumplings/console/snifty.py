@@ -304,7 +304,7 @@ def get_commandline_args():
         "--chef-list", action='store_true',
         help="list all available chefs")
     parser.add_argument(
-        "--poke-interval", default=None, type=int,
+        "--poke-interval", default=None, type=float,
         help="interval (in secs) to poke chefs (default: {0})".format(
             default_poke_interval))
 
