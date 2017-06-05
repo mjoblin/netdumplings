@@ -1,4 +1,4 @@
-from collections import defaultdict
+import time
 
 from netdumplings import DumplingChef, DumplingDriver
 
@@ -8,7 +8,7 @@ class DNSLookupChef(DumplingChef):
     Makes dumplings which describe DNS activity.  Sends per-packet dumplings
     for individual DNS (Domain Name System) lookups; and poke-interval
     dumplings which describe the hosts lookups seen so far with per-host lookup
-    counts.
+    counts and timestamp of last lookup.
 
     Dumpling payload examples:
 
@@ -16,7 +16,8 @@ class DNSLookupChef(DumplingChef):
 
         {
             "lookup": {
-                "hostname": "srirachamadness.com"
+                "hostname": "srirachamadness.com",
+                "when": 1496620761
             }
         }
 
@@ -24,9 +25,18 @@ class DNSLookupChef(DumplingChef):
 
         {
             "lookups_seen": {
-                "srirachamadness.com": 28,
-                "www.fleegle.com": 1,
-                "floople.com": 7
+                "srirachamadness.com": {
+                    "count": 28,
+                    "latest": 1496620761
+                },
+                "www.fleegle.com": {
+                    "count": 1,
+                    "latest": 1496614232
+                },
+                "floople.com": {
+                    "count": 7,
+                    "latest": 1497983761
+                }
             }
         }
     """
@@ -35,7 +45,7 @@ class DNSLookupChef(DumplingChef):
         """
         super().__init__(kitchen=kitchen, dumpling_queue=dumpling_queue,
                          receive_pokes=receive_pokes)
-        self.lookups_seen = defaultdict(int)
+        self.lookups_seen = {}
 
     def packet_handler(self, packet):
         """
@@ -44,19 +54,31 @@ class DNSLookupChef(DumplingChef):
 
         :param packet: Packet from nd-snifty.
         """
-        if not packet.haslayer("DNS"):
+        if not packet.haslayer('DNS'):
             return
 
-        dns_query = packet.getlayer("DNS")
+        dns_query = packet.getlayer('DNS')
         query = dns_query.fields['qd']
-        hostname = query.qname.decode("utf-8")
-        if hostname.endswith("."):
+        hostname = query.qname.decode('utf-8')
+
+        if hostname.endswith('.'):
             hostname = hostname[:-1]
-        self.lookups_seen[hostname] += 1
+
+        now_millis = int(round(time.time() * 1000))
+
+        try:
+            self.lookups_seen[hostname]['count'] += 1
+            self.lookups_seen[hostname]['latest'] = now_millis
+        except KeyError:
+            self.lookups_seen[hostname] = {
+                'count': 1,
+                'latest': now_millis,
+            }
 
         payload = {
-            "lookup": {
-                "hostname": hostname
+            'lookup': {
+                'hostname': hostname,
+                'when': int(round(time.time() * 1000))
             }
         }
 
@@ -65,10 +87,11 @@ class DNSLookupChef(DumplingChef):
     def interval_handler(self, interval=None):
         """
         Makes a dumpling at regular intervals which summarizes all the host
-        lookups seen so far along with the count for each host.
+        lookups seen so far along with the count and latest lookup time for
+        each host.
         """
         payload = {
-            "lookups_seen": self.lookups_seen
+            'lookups_seen': self.lookups_seen
         }
 
         self.send_dumpling(payload=payload, driver=DumplingDriver.interval)
