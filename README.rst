@@ -6,7 +6,7 @@ you sniff your network for interesting packets and display the results in any
 way you please.  What NetDumplings listens for -- and how that information is
 displayed -- is up to you.
 
-NetDumplings requires Python 3.5.
+NetDumplings requires Python 3.5 or higher.
 
 NetDumplings can be installed with ``pip install netdumplings`` (you may want
 to do that in a `virtual environment`_).
