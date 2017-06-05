@@ -17,7 +17,7 @@ from netdumplings.shared import (configure_logging, get_config, get_config_file,
                                  get_logging_config_file, ND_CLOSE_MSGS)
 
 
-def network_sniffer(kitchen_name, interface, chefs, chef_modules,
+def network_sniffer(kitchen_name, interface, chefs, chef_modules, valid_chefs,
                     sniffer_filter, chef_poke_interval, dumpling_queue):
     """
     Top-level function for managing the flow of sniffed network packets to
@@ -42,6 +42,7 @@ def network_sniffer(kitchen_name, interface, chefs, chef_modules,
     :param interface: Network interface to sniff (``all`` sniffs all interfaces).
     :param chefs: List of chefs to send packets to.
     :param chef_modules: List of Python module names in which to find our chefs.
+    :param valid_chefs: Dict of module+chef combinations we plan on importing.
     :param sniffer_filter: PCAP-compliant sniffer filter.
     :param chef_poke_interval: Interval (in secs) to poke chefs.
     :param dumpling_queue: Queue to send fresh dumplings to so they can be
@@ -63,40 +64,17 @@ def network_sniffer(kitchen_name, interface, chefs, chef_modules,
         name=kitchen_name, interface=interface, sniffer_filter=sniffer_filter,
         chef_poke_interval=chef_poke_interval)
 
-    chef_info = DumplingKitchen.get_chefs_in_modules(chef_modules)
-    chefs_seen = []
-    chef_instantiated = False
-
-    # Import and instantiate all the chefs.
-    for chef_module in chef_info:
-        chef_class_names = chef_info[chef_module]['chef_classes']
+    # Instantiate all the valid DumplingChef classes and register them with
+    # the kitchen.
+    for chef_module in valid_chefs:
+        chef_class_names = valid_chefs[chef_module]
         mod = __import__(chef_module, fromlist=chef_class_names)
 
         for chef_class_name in chef_class_names:
-            chefs_seen.append(chef_class_name)
+            log.info("{0}: Registering {1}.{2} with kitchen".format(
+                kitchen_name, chef_module, chef_class_name))
             klass = getattr(mod, chef_class_name)
-            if not klass.assignable_to_kitchen:
-                log.warning("{0}: Chef {1} is marked as unassignable".format(
-                    kitchen_name, chef_class_name))
-                continue
-
-            # A 'chefs' value of True means all chefs.
-            if chefs is True or chef_class_name in chefs:
-                log.info("{0}: Registering {1}.{2} with kitchen".format(
-                    kitchen_name, chef_module, chef_class_name))
-                klass(kitchen=sniffer_kitchen, dumpling_queue=dumpling_queue)
-                chef_instantiated = True
-
-    # Warn about any requested chefs which were not found and instantiated.
-    if chefs is not True:
-        for chef_not_found in [chef for chef in chefs if chef not in chefs_seen]:
-            log.warning("{0}: Chef {1} not found".format(
-                kitchen_name, chef_not_found))
-
-    if not chef_instantiated:
-        log.error("{0}: No chefs instantiated.  Not starting sniffer.".format(
-            kitchen_name))
-        return
+            klass(kitchen=sniffer_kitchen, dumpling_queue=dumpling_queue)
 
     sniffer_kitchen.run()
 
@@ -186,6 +164,56 @@ def list_chefs(chef_modules=None):
             print("  error importing module: {0}".format(import_error))
 
         print()
+
+
+def get_valid_chefs(kitchen_name, chef_modules, chefs_requested, log):
+    """
+    Retrieves the names of all valid DumplingChef subclasses for later
+    instantiation.  Valid chefs are all the classes in ``chef_modules`` which
+    subclass DumplingChef and are included in our list of ``chefs_requested``.
+    They also need to have their ``assignable_to_kitchen`` attribute set to
+    True.
+    
+    :param kitchen_name: Kitchen name (for logging purposes).
+    :param chef_modules: List of modules to look for chefs in.
+    :param chefs_requested: List of requested chef names (True means all chefs
+        are requested).
+    :param log: Logger to log to.
+    :return: Dict of valid DumpingChef subclasses.  Keys are the Python module
+        names and the values are a list of valid chef classes in each module.
+    """
+    valid_chefs = {}
+    chef_info = DumplingKitchen.get_chefs_in_modules(chef_modules)
+    chefs_seen = []
+
+    # Find all the valid chefs.
+    for chef_module in chef_info:
+        chef_class_names = chef_info[chef_module]['chef_classes']
+        mod = __import__(chef_module, fromlist=chef_class_names)
+
+        for chef_class_name in chef_class_names:
+            chefs_seen.append(chef_class_name)
+            klass = getattr(mod, chef_class_name)
+            if not klass.assignable_to_kitchen:
+                log.warning("{0}: Chef {1} is marked as unassignable".format(
+                    kitchen_name, chef_class_name))
+                continue
+
+            # A chefs_requested value of True means all chefs.
+            if chefs_requested is True or chef_class_name in chefs_requested:
+                try:
+                    valid_chefs[chef_module].append(chef_class_name)
+                except KeyError:
+                    valid_chefs[chef_module] = [chef_class_name]
+
+    # Warn about any requested chefs which were not found.
+    if chefs_requested is not True:
+        for chef_not_found in [chef for chef in chefs_requested
+                               if chef not in chefs_seen]:
+            log.warning("{0}: Chef {1} not found".format(
+                kitchen_name, chef_not_found))
+
+    return valid_chefs
 
 
 def get_override(arg_name, kitchen_config, default):
@@ -382,6 +410,22 @@ def main():
     # by the dumplingchef packet handlers) to the dumpling-emitter process.
     q = Queue()
 
+    # Determine what chefs we'll be sending packets to.
+    valid_chefs = get_valid_chefs(kitchen_name, snifty_config['chef_modules'],
+                                  snifty_config['chefs'], log)
+
+    if not valid_chefs:
+        log.error("{0}: No valid chefs found.  Not starting sniffer.".format(
+            kitchen_name))
+        return
+
+    # Generate list of module.class names for all the seemingly-valid chefs
+    # we'll be instantiating.  This is for use in the status dumplings.
+    valid_chef_list = []
+    for chef_module in sorted(valid_chefs.keys()):
+        for chef_class_name in sorted(valid_chefs[chef_module]):
+            valid_chef_list.append('{}.{}'.format(chef_module, chef_class_name))
+
     # Start the sniffer and dumpling-emitter processes.  The sniffer passes
     # each sniffed packet to each of the registered dumpling chefs, and the
     # dumpling chefs populate the queue with new dumplings whenever they're
@@ -390,15 +434,15 @@ def main():
     sniffer_process = Process(
         target=network_sniffer,
         args=(kitchen_name, snifty_config['interface'], snifty_config['chefs'],
-              snifty_config['chef_modules'], snifty_config['filter'],
-              snifty_config['poke_interval'], q)
+              snifty_config['chef_modules'], valid_chefs,
+              snifty_config['filter'], snifty_config['poke_interval'], q)
     )
 
     kitchen_info = {
         'kitchen_name': kitchen_name,
         'interface': snifty_config['interface'],
         'filter': snifty_config['filter'],
-        'chefs': snifty_config['chefs'],
+        'chefs': valid_chef_list,
         'poke_interval': snifty_config['poke_interval']
     }
 
