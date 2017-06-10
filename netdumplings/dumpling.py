@@ -1,6 +1,6 @@
-import datetime
 from enum import Enum
 import json
+import time
 
 
 DumplingDriver = Enum('DumplingDriver', 'packet interval')
@@ -50,8 +50,6 @@ class Dumpling:
             'payload': <mixed: the meat/veg of the dumpling>
         }
     """
-    _epoch = datetime.datetime.utcfromtimestamp(0)
-
     def __init__(
             self, *, chef=None, driver=DumplingDriver.packet, payload=None):
         """
@@ -99,14 +97,11 @@ class Dumpling:
 
         :return: A JSON string representation of the dumpling.
         """
-        now_utc_epoch = (datetime.datetime.now() - Dumpling._epoch)
-        now_utc_epoch_ms = now_utc_epoch.total_seconds() * 1000.0
-
         dumpling = {
             'metadata': {
                 'chef': self.chef_name,
                 'kitchen': self.kitchen.name if self.kitchen else None,
-                'creation_time': now_utc_epoch_ms,
+                'creation_time': time.time() * 1000,
                 'driver': self.driver.name,
             },
             'payload': self.payload
