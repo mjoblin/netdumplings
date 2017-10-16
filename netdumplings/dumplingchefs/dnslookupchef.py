@@ -17,7 +17,7 @@ class DNSLookupChef(DumplingChef):
         {
             "lookup": {
                 "hostname": "srirachamadness.com",
-                "when": 1496620761
+                "when": 1499040017.811247
             }
         }
 
@@ -27,15 +27,15 @@ class DNSLookupChef(DumplingChef):
             "lookups_seen": {
                 "srirachamadness.com": {
                     "count": 28,
-                    "latest": 1496620761
+                    "latest": 1499040017.811247
                 },
                 "www.fleegle.com": {
                     "count": 1,
-                    "latest": 1496614232
+                    "latest": 1499045642.57563
                 },
                 "floople.com": {
                     "count": 7,
-                    "latest": 1497983761
+                    "latest": 1499043343.104648
                 }
             }
         }
