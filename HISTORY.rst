@@ -3,6 +3,15 @@
 Release History
 ---------------
 
+0.2.0 (2017-10-15)
+++++++++++++++++++
+
+* snifty now maintains more information on the chefs it's sending packets to
+* Added time to ARPChef dumpling payload
+* Added time of last lookup to DNSLookupChef
+* Changed time format to float milliseconds
+* Minor code style and documentation tweaks
+
 0.1.0 (2016-11-05)
 ++++++++++++++++++
 
