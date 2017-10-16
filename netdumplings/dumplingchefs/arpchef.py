@@ -1,3 +1,5 @@
+import time
+
 from scapy.all import ARP
 
 from netdumplings import DumplingChef, DumplingDriver
@@ -15,7 +17,8 @@ class ARPChef(DumplingChef):
             "notes": "source device is new",
             "operation": "reply",
             "src_hw": "aa:bb:cc:dd:ee:ff",
-            "src_ip": "10.0.1.100"
+            "src_ip": "10.0.1.100",
+            "time": 1499041214.205803
         }
     """
     request = 1
@@ -52,14 +55,15 @@ class ARPChef(DumplingChef):
             'src_ip': arp.psrc,
             'dst_hw': arp.hwdst,
             'dst_ip': arp.pdst,
+            'time': arp.time,
             'notes': None,
         }
 
         if arp.op == ARPChef.reply:
             if self.ip_mac.get(arp.psrc) is None:
-                result['notes'] = "source device is new"
+                result['notes'] = 'source device is new'
             elif self.ip_mac.get(arp.psrc) and self.ip_mac[arp.psrc] != arp.hwsrc:
-                result['notes'] = "source device has new IP address"
+                result['notes'] = 'source device has new IP address'
 
             # Remember this IP -> MAC mapping.
             self.ip_mac[arp.psrc] = arp.hwsrc
