@@ -98,7 +98,7 @@ def validate_dumpling(dumpling_json):
         raise InvalidDumplingError("Could not interpret dumpling JSON")
 
     try:
-        chef_name = dumpling['metadata']['chef']
+        dumpling['metadata']['chef']
     except (KeyError, TypeError) as e:
         raise InvalidDumplingError("Could not determine chef name")
 

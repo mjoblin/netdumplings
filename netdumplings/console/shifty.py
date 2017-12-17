@@ -5,8 +5,9 @@ import sys
 
 from netdumplings import DumplingHub
 from netdumplings.exceptions import NetDumplingsError
-from netdumplings.shared import (configure_logging, get_config, get_config_file,
-                                 get_logging_config_file)
+from netdumplings.shared import (
+    configure_logging, get_config, get_config_file, get_logging_config_file
+)
 
 
 def set_config(field, args, config_file_overrides, config):

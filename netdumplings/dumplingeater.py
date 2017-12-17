@@ -8,9 +8,10 @@ import sys
 import websockets
 
 from netdumplings.exceptions import InvalidDumplingError, NetDumplingsError
-from netdumplings.shared import (configure_logging, get_config, get_config_file,
-                                 get_logging_config_file, validate_dumpling,
-                                 ND_CLOSE_MSGS)
+from netdumplings.shared import (
+    configure_logging, get_config, get_config_file, get_logging_config_file,
+    validate_dumpling, ND_CLOSE_MSGS
+)
 
 
 class DumplingEater:
@@ -150,7 +151,8 @@ class DumplingEater:
             task.cancel()
 
     @staticmethod
-    def commandline_helper(name="dumpling_eater", description=None, chefs=None):
+    def commandline_helper(
+            name="dumpling_eater", description=None, chefs=None):
         """
         Helper function for generating and processing eater commandline args.
 
@@ -228,7 +230,8 @@ class DumplingEater:
                     # This setting may not be overridden so we quietly ignore.
                     pass
 
-        configure_logging(args.log_level, args.log_config, 'netdumplings.eater')
+        configure_logging(
+            args.log_level, args.log_config, 'netdumplings.eater')
 
         return (args.name, config,
                 None if not args.log_level else args.log_level.upper(),

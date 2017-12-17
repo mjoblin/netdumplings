@@ -26,7 +26,8 @@ class DumplingHub:
         :param address: Address the hub is running on.
         :param in_port: Port used to receive dumplings from `nd-snifty`.
         :param out_port: Port used to send dumplings to `dumpling eaters`.
-        :param status_freq: Frequency (in secs) to send system status dumplings.
+        :param status_freq: Frequency (in secs) to send system status
+            dumplings.
         """
         self.address = address
         self.in_port = in_port
@@ -113,18 +114,22 @@ class DumplingHub:
                     self._logger.error(
                         "Received invalid dumpling: {0}; kitchen: {1}".format(
                             e,
-                            json.dumps(kitchen['metadata']['info_from_kitchen'])
+                            json.dumps(
+                                kitchen['metadata']['info_from_kitchen']
+                            )
                         ))
                     continue
 
                 chef = dumpling['metadata']['chef']
                 self._logger.debug(
-                    "Received {0} dumpling from {1} at {2}:{3}; {4} bytes".format(
+                    "Received {} dumpling from {} at {}:{}; {} bytes".format(
                         chef, kitchen_name, host, port, len(dumpling_json)))
 
                 # Send this dumpling to all the eager dumpling eaters.
                 for eater in self._dumpling_eaters:
-                    await self._dumpling_eaters[eater]['queue'].put(dumpling_json)
+                    await self._dumpling_eaters[eater]['queue'].put(
+                        dumpling_json
+                    )
         except ConnectionClosed as e:
             self._logger.info(
                 "Dumpling kitchen {0} connection closed: {1}".format(
@@ -235,7 +240,9 @@ class DumplingHub:
 
         in_uri = "ws://{0}:{1}".format(self.address, self.in_port)
         out_uri = "ws://{0}:{1}".format(self.address, self.out_port)
-        self._logger.info("Dumplings in: {0}  out: {1}".format(in_uri, out_uri ))
+        self._logger.info(
+            "Dumplings in: {0}  out: {1}".format(in_uri, out_uri)
+        )
 
         try:
             loop.run_forever()
@@ -250,4 +257,3 @@ class DumplingHub:
             if not status_task.cancelled():
                 status_task.set_result(None)
             self._logger.info("Dumpling hub signing off.  Thanks!")
-

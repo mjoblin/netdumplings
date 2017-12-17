@@ -31,6 +31,7 @@ async def on_dumpling(dumpling):
                      separators=(',', ': ')))
     print()
 
+
 async def on_connection_lost(e):
     """
     Called when nd-shifty connection is lost.

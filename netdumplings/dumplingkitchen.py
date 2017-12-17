@@ -17,9 +17,9 @@ class DumplingKitchen:
     the :class:`DumplingChef` objects via the handler they each register with
     the kitchen via :meth:`register_handler`.
 
-    The ``DumplingKitchen`` will attempt to find available :class:`DumplingChef`
-    subclasses and automatically instantiate them so that they can register
-    their handlers with the kitchen.
+    The ``DumplingKitchen`` will attempt to find available
+    :class:`DumplingChef` subclasses and automatically instantiate them so that
+    they can register their handlers with the kitchen.
 
     The ``DumplingKitchen`` runs the sniffer and maintains a separate thread
     for poking the chefs at regular time intervals.
@@ -96,9 +96,9 @@ class DumplingKitchen:
             :class:`DumplingChef`).
         """
         # Allow for a chef module to be relative to the current working
-        # directory (wherever the script calling this method is being run from).
-        # There's potential for this to result in unexpected behaviour as
-        # we're effectively modifying the PYTHONPATH.
+        # directory (wherever the script calling this method is being run
+        # from). There's potential for this to result in unexpected behaviour
+        # as we're effectively modifying the PYTHONPATH.
         sys.path.append(os.getcwd())
 
         chef_info = {}
@@ -123,7 +123,9 @@ class DumplingKitchen:
                     continue
 
                 if issubclass(chef_class[1], DumplingChef):
-                    chef_info[chef_module]['chef_classes'].append(chef_class[0])
+                    chef_info[chef_module]['chef_classes'].append(
+                        chef_class[0]
+                    )
 
         return chef_info
 
@@ -176,4 +178,3 @@ class DumplingKitchen:
         else:
             sniff(iface=self.interface, filter=self.filter,
                   prn=self._process_packet, store=0)
-

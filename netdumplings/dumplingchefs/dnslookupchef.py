@@ -95,4 +95,3 @@ class DNSLookupChef(DumplingChef):
         }
 
         self.send_dumpling(payload=payload, driver=DumplingDriver.interval)
-

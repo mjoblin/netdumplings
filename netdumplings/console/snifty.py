@@ -13,8 +13,10 @@ import websockets
 
 from netdumplings import DumplingKitchen
 from netdumplings.exceptions import NetDumplingsError
-from netdumplings.shared import (configure_logging, get_config, get_config_file,
-                                 get_logging_config_file, ND_CLOSE_MSGS)
+from netdumplings.shared import (
+    configure_logging, get_config, get_config_file, get_logging_config_file,
+    ND_CLOSE_MSGS
+)
 
 
 def network_sniffer(kitchen_name, interface, chefs, chef_modules, valid_chefs,
@@ -39,9 +41,11 @@ def network_sniffer(kitchen_name, interface, chefs, chef_modules, valid_chefs,
     they will then submit to the dumpling queue).
 
     :param kitchen_name: Name of the sniffer kitchen.
-    :param interface: Network interface to sniff (``all`` sniffs all interfaces).
+    :param interface: Network interface to sniff (``all`` sniffs all
+        interfaces).
     :param chefs: List of chefs to send packets to.
-    :param chef_modules: List of Python module names in which to find our chefs.
+    :param chef_modules: List of Python module names in which to find our
+        chefs.
     :param valid_chefs: Dict of module+chef combinations we plan on importing.
     :param sniffer_filter: PCAP-compliant sniffer filter.
     :param chef_poke_interval: Interval (in secs) to poke chefs.
@@ -95,8 +99,9 @@ def dumpling_emitter(kitchen_name, shifty, dumpling_queue, kitchen_info):
     async def notify_shifty():
         shifty_uri = 'ws://{0}'.format(shifty)
 
-        log.info(
-            "{0}: Connecting to shifty at {1}".format(kitchen_name, shifty_uri))
+        log.info("{0}: Connecting to shifty at {1}".format(
+            kitchen_name, shifty_uri)
+        )
 
         try:
             websocket = await websockets.connect(shifty_uri)
@@ -173,7 +178,7 @@ def get_valid_chefs(kitchen_name, chef_modules, chefs_requested, log):
     subclass DumplingChef and are included in our list of ``chefs_requested``.
     They also need to have their ``assignable_to_kitchen`` attribute set to
     True.
-    
+
     :param kitchen_name: Kitchen name (for logging purposes).
     :param chef_modules: List of modules to look for chefs in.
     :param chefs_requested: List of requested chef names (True means all chefs
@@ -282,9 +287,6 @@ def get_commandline_args():
     default_log_level = 'INFO'
     default_log_config_file = get_logging_config_file()
     default_filter = config['snifty']['filter']
-    default_chefs = (
-        ",".join(config['snifty']['chefs'])
-        if config['snifty']['chefs'] is not True else True)
     default_chef_modules = config['snifty']['chef_modules']
     default_poke_interval = config['snifty']['poke_interval']
 
@@ -316,7 +318,9 @@ def get_commandline_args():
     # These arguments may have a kitchen-level override in the config file.
     parser.add_argument(
         "--interface", default=None,
-        help="network interface to sniff (default: {0})".format(default_interface))
+        help="network interface to sniff (default: {0})".format(
+            default_interface)
+        )
     parser.add_argument(
         "--filter", default=None,
         help="PCAP-style sniffer packet filter (default: {0})".format(
@@ -354,9 +358,9 @@ def get_commandline_args():
     except (KeyError, TypeError):
         kitchen_config = {}
 
-    # Priority order: commandline, then kitchen config overrides, then defaults.
-    # We replace the main snifty config setting with kitchen-specific settings
-    # if possible.
+    # Priority order: commandline, then kitchen config overrides, then
+    # defaults. We replace the main snifty config setting with kitchen-specific
+    # settings if possible.
     for snifty_field in ['interface', 'filter', 'poke_interval', 'chefs',
                          'chef_modules']:
         config['snifty'][snifty_field] = \
@@ -397,7 +401,9 @@ def main():
      * Creates a queue for the kitchen process to send freshly-made dumplings
        to the emitter process.
     """
-    kitchen_name, config, log_level, logging_config_file = get_commandline_args()
+    kitchen_name, config, log_level, logging_config_file = (
+        get_commandline_args()
+    )
 
     snifty_config = config['snifty']
     shifty_config = config['shifty']
@@ -424,7 +430,9 @@ def main():
     valid_chef_list = []
     for chef_module in sorted(valid_chefs.keys()):
         for chef_class_name in sorted(valid_chefs[chef_module]):
-            valid_chef_list.append('{}.{}'.format(chef_module, chef_class_name))
+            valid_chef_list.append('{}.{}'.format(
+                chef_module, chef_class_name)
+            )
 
     # Start the sniffer and dumpling-emitter processes.  The sniffer passes
     # each sniffed packet to each of the registered dumpling chefs, and the
@@ -446,7 +454,9 @@ def main():
         'poke_interval': snifty_config['poke_interval']
     }
 
-    shifty = "{0}:{1}".format(shifty_config['address'], shifty_config['in_port'])
+    shifty = "{0}:{1}".format(
+        shifty_config['address'], shifty_config['in_port']
+    )
 
     dumpling_emitter_process = Process(
         target=dumpling_emitter, args=(kitchen_name, shifty, q, kitchen_info))
@@ -456,7 +466,8 @@ def main():
 
     try:
         while True:
-            if sniffer_process.is_alive() and dumpling_emitter_process.is_alive():
+            if (sniffer_process.is_alive() and
+                    dumpling_emitter_process.is_alive()):
                 sleep(1)
             else:
                 if sniffer_process.is_alive():
