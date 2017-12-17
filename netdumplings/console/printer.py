@@ -27,7 +27,7 @@ async def on_dumpling(dumpling):
     """
     print("{0} {1} dumpling:\n".format(
         dumpling['metadata']['chef'], dumpling['metadata']['driver']))
-    print(json.dumps(dumpling['payload'], sort_keys=True, indent=4,
+    print(json.dumps(dumpling, sort_keys=True, indent=4,
                      separators=(',', ': ')))
     print()
 
