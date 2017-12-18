@@ -1,9 +1,12 @@
-#!/usr/bin/env python
-
+import os
 from setuptools import setup
 
 
-version = '0.2.0'
+here = os.path.abspath(os.path.dirname(__file__))
+
+version = {}
+with open(os.path.join(here, 'netdumplings', '_version.py')) as ver_file:
+    exec(ver_file.read(), version)
 
 with open('README.rst', 'r') as f:
     readme = f.read()
@@ -15,6 +18,7 @@ packages = [
 ]
 
 install_requires = [
+    'click~=6.7',
     'scapy-python3==0.23',
     'websockets~=4.0.0',
 ]
@@ -35,7 +39,7 @@ extras_require = {
 
 setup(
     name='netdumplings',
-    version=version,
+    version=version['__version__'],
     description='Tools for building your own computer network visualizations.',
     long_description=readme,
     author='Mike Joblin',
@@ -49,11 +53,11 @@ setup(
     download_url='https://pypi.python.org/pypi/netdumplings',
     entry_points={
         'console_scripts': [
-            'nd-snifty=netdumplings.console:snifty',
-            'nd-shifty=netdumplings.console:shifty',
-            'nd-info=netdumplings.console:info',
-            'nd-status=netdumplings.console:status',
             'nd-printer=netdumplings.console:printer',
+            'nd-shifty=netdumplings.console:shifty',
+            'nd-shiftydetails=netdumplings.console:shiftydetails',
+            'nd-shiftysummary=netdumplings.console:shiftysummary',
+            'nd-snifty=netdumplings.console:snifty',
         ]
     },
     license='MIT',
