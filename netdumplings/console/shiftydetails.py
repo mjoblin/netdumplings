@@ -17,29 +17,27 @@ async def on_connect(shifty_uri, websocket):
     :return: None
     """
     print('Connected to nd-shifty at {0}'.format(shifty_uri))
-    print('Waiting for dumplings...\n')
+    print('Waiting for a SystemStatus dumpling...')
 
 
 async def on_dumpling(dumpling):
     """
-    Called when a new dumpling is received from nd-shifty. Prints the dumpling
-    contents.
+    Called when a new dumpling is received from nd-shifty.  Prints dumpling
+    payload.
 
     :param dumpling: The freshly-made new dumpling.
     :return: None
     """
-    print('{} {} dumpling:\n'.format(
-        dumpling['metadata']['chef'], dumpling['metadata']['driver'])
-    )
-    print(
-        json.dumps(dumpling, sort_keys=True, indent=4, separators=(',', ': '))
-    )
+    print('{0} dumpling:\n'.format(dumpling['metadata']['chef']))
+    print(json.dumps(
+        dumpling['payload'], sort_keys=True, indent=4, separators=(',', ': ')
+    ))
     print()
 
 
 async def on_connection_lost(e):
     """
-    Called when the nd-shifty connection is lost.
+    Called when nd-shifty connection is lost.
 
     :param e: The exception thrown during the connection close.
     :return: None
@@ -59,33 +57,30 @@ async def on_connection_lost(e):
     show_default=True,
 )
 @click.option(
-    '--chef', '-c',
-    help='Restrict dumplings to those made by this chef.',
-    multiple=True,
-)
-@click.option(
     '--eater-name', '-n',
     help='Dumpling eater name for this tool when connecting to nd-shifty.',
-    default='printereater',
+    default='statuseater',
     show_default=True,
 )
 @click.version_option(version=netdumplings.__version__)
-def printer(shifty, chef, eater_name):
+def shiftydetails(shifty, eater_name):
     """
-    A dumpling eater which connects to nd-shifty (the dumpling hub) and prints
-    the contents of the dumplings made by the given chefs.
+    A dumpling eater which connects to nd-shifty (the dumpling hub) and waits
+    for a single SystemStatus dumpling which it displays and then exits.
     """
     eater = netdumplings.DumplingEater(
         name=eater_name,
         shifty=shifty,
-        chefs=chef if chef else None,
+        chefs=['SystemStatusChef'],
         on_connect=on_connect,
         on_dumpling=on_dumpling,
         on_connection_lost=on_connection_lost,
     )
 
-    eater.run()
+    eater.run(dumpling_count=1)
 
+
+# -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    printer()
+    shiftydetails()

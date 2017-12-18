@@ -1,4 +1,4 @@
-import json
+import datetime
 
 import click
 
@@ -16,30 +16,40 @@ async def on_connect(shifty_uri, websocket):
         (websockets.WebSocketClientProtocol).
     :return: None
     """
-    print('Connected to nd-shifty at {0}'.format(shifty_uri))
-    print('Waiting for dumplings...\n')
+    print('Shifty status from {0}'.format(shifty_uri))
+    print('Waiting for data... ', end='', flush=True)
 
 
 async def on_dumpling(dumpling):
     """
-    Called when a new dumpling is received from nd-shifty. Prints the dumpling
-    contents.
+    Called when a new dumpling is received from nd-shifty.  Prints information
+    about the current state of nd-shifty.
 
     :param dumpling: The freshly-made new dumpling.
     :return: None
     """
-    print('{} {} dumpling:\n'.format(
-        dumpling['metadata']['chef'], dumpling['metadata']['driver'])
-    )
-    print(
-        json.dumps(dumpling, sort_keys=True, indent=4, separators=(',', ': '))
-    )
-    print()
+    payload = dumpling['payload']
+
+    up_mins, up_secs = divmod(int(payload['server_uptime']), 60)
+    up_hrs, up_mins = divmod(up_mins, 60)
+    up_str = '{0:02d}:{1:02d}:{2:02d}'.format(up_hrs, up_mins, up_secs)
+
+    status_msg = '\r{now}  uptime: {uptime}  dumplings: {dumplings:,}  ' \
+        'kitchens: {kitchens:,}  eaters: {eaters:,} '.format(
+            now=datetime.datetime.now().strftime(
+                '%Y-%m-%d %H:%M:%S'),
+            dumplings=payload['total_dumplings_sent'],
+            uptime=up_str,
+            kitchens=payload['dumpling_kitchen_count'],
+            eaters=payload['dumpling_eater_count']
+        )
+
+    print(status_msg, end='', flush=True)
 
 
 async def on_connection_lost(e):
     """
-    Called when the nd-shifty connection is lost.
+    Called when nd-shifty connection is lost.
 
     :param e: The exception thrown during the connection close.
     :return: None
@@ -59,26 +69,23 @@ async def on_connection_lost(e):
     show_default=True,
 )
 @click.option(
-    '--chef', '-c',
-    help='Restrict dumplings to those made by this chef.',
-    multiple=True,
-)
-@click.option(
     '--eater-name', '-n',
     help='Dumpling eater name for this tool when connecting to nd-shifty.',
-    default='printereater',
+    default='statuseater',
     show_default=True,
 )
 @click.version_option(version=netdumplings.__version__)
-def printer(shifty, chef, eater_name):
+def shiftysummary(shifty, eater_name):
     """
     A dumpling eater which connects to nd-shifty (the dumpling hub) and prints
-    the contents of the dumplings made by the given chefs.
+    information from any SystemStatusChef dumplings. This is a
+    system-monitoring dumpling eater which can be used to keep an eye on
+    nd-shifty.
     """
     eater = netdumplings.DumplingEater(
         name=eater_name,
         shifty=shifty,
-        chefs=chef if chef else None,
+        chefs=['SystemStatusChef'],
         on_connect=on_connect,
         on_dumpling=on_dumpling,
         on_connection_lost=on_connection_lost,
@@ -88,4 +95,4 @@ def printer(shifty, chef, eater_name):
 
 
 if __name__ == '__main__':
-    printer()
+    shiftysummary()
