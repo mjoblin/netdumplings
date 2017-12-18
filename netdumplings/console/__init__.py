@@ -1,14 +1,14 @@
-from .info import main as info
-from .printer import main as printer
-from .shifty import main as shifty
-from .snifty import main as snifty
-from .status import main as status
+from .printer import printer
+from .shifty import shifty
+from .shiftydetails import shiftydetails
+from .shiftysummary import shiftysummary
+from .snifty import snifty
 
 
 (
-    info,
     printer,
     shifty,
+    shiftydetails,
+    shiftysummary,
     snifty,
-    status,
 )
