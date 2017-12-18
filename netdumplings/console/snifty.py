@@ -1,8 +1,6 @@
-import argparse
 import asyncio
 import json
 import logging
-import re
 import sys
 from multiprocessing import Process, Queue
 from time import sleep
@@ -12,7 +10,6 @@ import websockets
 
 import netdumplings
 from netdumplings.console.shared import CLICK_CONTEXT_SETTINGS
-from netdumplings.exceptions import NetDumplingsError
 from netdumplings.shared import (
     configure_logging, ND_CLOSE_MSGS, DEFAULT_SHIFTY_HOST,
     DEFAULT_SHIFTY_IN_PORT,

@@ -2,7 +2,7 @@ import json
 import logging.config
 import os
 
-from netdumplings.exceptions import NetDumplingsError, InvalidDumplingError
+from netdumplings.exceptions import InvalidDumplingError
 
 
 # Tuples of (code, msg) for sending when closing websocket connections.
