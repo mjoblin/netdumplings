@@ -40,7 +40,7 @@ class DumplingKitchen:
 
         self._packet_handlers = []
         self._interval_handlers = []
-        self._logger = logging.getLogger("netdumplings.snifty")
+        self._logger = logging.getLogger(__name__)
 
     def _process_packet(self, packet):
         """

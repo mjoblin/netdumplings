@@ -46,7 +46,7 @@ class DumplingHub:
             'dumplings_sent': 0
         }
 
-        self._logger = logging.getLogger("netdumplings.shifty")
+        self._logger = logging.getLogger(__name__)
 
     def _get_system_status(self):
         """

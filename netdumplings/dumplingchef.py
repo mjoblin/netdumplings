@@ -50,7 +50,7 @@ class DumplingChef:
 
         self.name = type(self).__name__
         self.dumplings_sent_count = 0
-        self._logger = logging.getLogger("netdumplings.snifty")
+        self._logger = logging.getLogger(__name__)
 
         if self.kitchen:
             interval_handler = \
