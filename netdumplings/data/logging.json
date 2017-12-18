@@ -19,17 +19,17 @@
             "level": "INFO",
             "propagate": false
         },
-        "netdumplings.shifty": {
+        "netdumplings.dumplinghub": {
             "handlers": ["default"],
             "level": "INFO",
             "propagate": false
         },
-        "netdumplings.snifty": {
+        "netdumplings.dumplingkitchen": {
             "handlers": ["default"],
             "level": "INFO",
             "propagate": false
         },
-        "netdumplings.eater": {
+        "netdumplings.dumplingeater": {
             "handlers": ["default"],
             "level": "INFO",
             "propagate": false
