@@ -33,9 +33,9 @@ Check out the :class:`DumplingEater` documentation for more information on
 what the class can do.  And take a look at the dumpling eater scripts that come
 with NetDumplings for more examples:
 
-* `nd-status`_
-* `nd-info`_
 * `nd-printer`_
+* `nd-shiftydetails`_
+* `nd-shiftysummary`_
 
 The above dumpling eaters make use of the ``commandline_helper()`` method which
 provides your eater with some useful commandline arguments.  Here's an example
@@ -79,10 +79,15 @@ Since dumplings are just JSON documents sent over a websocket connection to
 you do this (or otherwise aren't using the provided :class:`DumplingEater`
 class) then there's a few things to remember:
 
-* Your eater needs to announce itself when it connects to `nd-shifty` by passing a simple payload of ``{"eater_name": "your_eater_name"}``.
-* Your eater will then receive `every` dumpling coming out of `nd-shifty`.  It may want to interrogate the ``metadata`` key of each dumpling to check the ``chef_name`` (or any other information it cares about) to decide whether it's interested in the dumpling or not.  Ignoring unwanted dumplings early will help performance and stability.
+* Your eater needs to announce itself when it connects to `nd-shifty` by
+  passing a simple payload of ``{"eater_name": "your_eater_name"}``.
+* Your eater will then receive `every` dumpling coming out of `nd-shifty`.  It
+  may want to interrogate the ``metadata`` key of each dumpling to check the
+  ``chef_name`` (or any other information it cares about) to decide whether
+  it's interested in the dumpling or not.  Ignoring unwanted dumplings early
+  will help performance and stability.
 
-.. _nd-status: https://github.com/mjoblin/netdumplings/blob/master/netdumplings/console/status.py
-.. _nd-info: https://github.com/mjoblin/netdumplings/blob/master/netdumplings/console/info.py
+.. _nd-shiftydetails: https://github.com/mjoblin/netdumplings/blob/master/netdumplings/console/shiftydetails.py
 .. _nd-printer: https://github.com/mjoblin/netdumplings/blob/master/netdumplings/console/printer.py
+.. _nd-shiftysummary:: https://github.com/mjoblin/netdumplings/blob/master/netdumplings/console/shiftysummary.py
 

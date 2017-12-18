@@ -5,7 +5,8 @@ API and supporting code
 
 `Main API`_
 
- You'll probably find yourself using these classes if you develop with NetDumplings.
+ You'll probably find yourself using these classes if you develop with
+ NetDumplings.
 
  * `DumplingChef`_
  * `DumplingEater`_
@@ -26,13 +27,14 @@ API and supporting code
 
 `Command-line scripts`_
 
- Not really part of the API, but this is the code behind the command-line scripts.
+ Not really part of the API, but this is the code behind the command-line
+ scripts.
 
  * `nd-snifty`_
  * `nd-shifty`_
- * `nd-info`_
  * `nd-printer`_
- * `nd-status`_
+ * `nd-shiftydetails`_
+ * `nd-shiftysummary`_
 
 `Additional classes`_
 
@@ -147,21 +149,21 @@ Dumpling eaters
 nd-printer
 **********
 
-.. automodule:: netdumplings.console.info
-   :members:
-   :exclude-members: on_connect, on_dumpling, on_connection_lost
-
-nd-info
-*******
-
 .. automodule:: netdumplings.console.printer
    :members:
    :exclude-members: on_connect, on_dumpling, on_connection_lost
 
-nd-status
-*********
+nd-shiftydetails
+****************
 
-.. automodule:: netdumplings.console.status
+.. automodule:: netdumplings.console.shiftydetails
+   :members:
+   :exclude-members: on_connect, on_dumpling, on_connection_lost
+
+nd-shiftysummary
+****************
+
+.. automodule:: netdumplings.console.shiftysummary
    :members:
    :exclude-members: on_connect, on_dumpling, on_connection_lost
 
