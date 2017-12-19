@@ -101,7 +101,7 @@ class Dumpling:
             'metadata': {
                 'chef': self.chef_name,
                 'kitchen': self.kitchen.name if self.kitchen else None,
-                'creation_time': time.time() * 1000,
+                'creation_time': time.time(),
                 'driver': self.driver.name,
             },
             'payload': self.payload
