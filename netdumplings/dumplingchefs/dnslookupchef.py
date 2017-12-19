@@ -64,7 +64,7 @@ class DNSLookupChef(DumplingChef):
         if hostname.endswith('.'):
             hostname = hostname[:-1]
 
-        now_millis = time.time() * 1000
+        now_millis = time.time()
 
         try:
             self.lookups_seen[hostname]['count'] += 1
