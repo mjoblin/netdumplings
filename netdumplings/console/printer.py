@@ -1,50 +1,98 @@
-import json
+import datetime
 
 import click
+import termcolor
 
 import netdumplings
 from netdumplings.console.shared import CLICK_CONTEXT_SETTINGS
 from netdumplings.shared import DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT
 
+from netdumplings.console.shared import printable_dumpling
 
-async def on_connect(shifty_uri, websocket):
+
+class PrinterEater(netdumplings.DumplingEater):
     """
-    Called when the connection to nd-shifty has been created.
-
-    :param shifty_uri: The nd-shifty websocket URI.
-    :param websocket: The websocket object used for talking to nd-shifty
-        (websockets.WebSocketClientProtocol).
-    :return: None
+    A dumpling eater which displays dumpling information to the terminal as it
+    arrives from nd-shifty.
     """
-    print('Connected to nd-shifty at {0}'.format(shifty_uri))
-    print('Waiting for dumplings...\n')
+    def __init__(
+            self,
+            interval_dumplings=True,
+            packet_dumplings=True,
+            contents=True,
+            color=True,
+            **kwargs
+    ):
+        super().__init__(**kwargs)
 
+        self._interval_dumplings = interval_dumplings
+        self._packet_dumplings = packet_dumplings
+        self._contents = contents
+        self._color = color
 
-async def on_dumpling(dumpling):
-    """
-    Called when a new dumpling is received from nd-shifty. Prints the dumpling
-    contents.
+    async def on_connect(self, shifty_uri, websocket):
+        """
+        Called when the connection to nd-shifty has been created.
 
-    :param dumpling: The freshly-made new dumpling.
-    :return: None
-    """
-    print('{} {} dumpling:\n'.format(
-        dumpling['metadata']['chef'], dumpling['metadata']['driver'])
-    )
-    print(
-        json.dumps(dumpling, sort_keys=True, indent=4, separators=(',', ': '))
-    )
-    print()
+        :param shifty_uri: The nd-shifty websocket URI.
+        :param websocket: The websocket object used for talking to nd-shifty
+            (websockets.WebSocketClientProtocol).
+        """
+        print('Connected to nd-shifty at {0}'.format(shifty_uri))
+        print('Waiting for dumplings...\n')
 
+    async def on_dumpling(self, dumpling):
+        """
+        Called when a new dumpling is received from nd-shifty. Prints the
+        dumpling summary and contents.
 
-async def on_connection_lost(e):
-    """
-    Called when the nd-shifty connection is lost.
+        :param dumpling: The freshly-made new dumpling.
+        """
+        dumpling_driver = dumpling['metadata']['driver']
 
-    :param e: The exception thrown during the connection close.
-    :return: None
-    """
-    print('\nLost connection to nd-shifty: {}'.format(e))
+        should_print_dumpling = (
+            (dumpling_driver == 'interval' and self._interval_dumplings) or
+            (dumpling_driver == 'packet' and self._packet_dumplings)
+        )
+
+        if not should_print_dumpling:
+            return
+
+        dumpling_creation_time = (
+            datetime.datetime.fromtimestamp(
+                int(dumpling['metadata']['creation_time'])
+            ).isoformat()
+        )
+
+        dumpling_chef = (
+            termcolor.colored(dumpling['metadata']['chef'], attrs=['bold'])
+            if self._color else dumpling['metadata']['chef']
+        )
+
+        dumpling_kitchen = (
+            termcolor.colored(dumpling['metadata']['kitchen'], attrs=['bold'])
+            if self._color else dumpling['metadata']['kitchen']
+        )
+
+        summary = '{} [{:8s}] {} from {}'.format(
+            dumpling_creation_time,
+            dumpling_driver,
+            dumpling_chef,
+            dumpling_kitchen,
+        )
+
+        print(summary)
+
+        if self._contents:
+            print('\n{}\n'.format(printable_dumpling(dumpling)))
+
+    async def on_connection_lost(self, e):
+        """
+        Called when the nd-shifty connection is lost.
+
+        :param e: The exception thrown during the connection close.
+        """
+        print('\nLost connection to nd-shifty: {}'.format(e))
 
 
 # -----------------------------------------------------------------------------
@@ -60,7 +108,8 @@ async def on_connection_lost(e):
 )
 @click.option(
     '--chef', '-c',
-    help='Restrict dumplings to those made by this chef.',
+    help=('Restrict dumplings to those made by this chef. Multiple can be '
+          'specified. Displays all chefs by default.'),
     multiple=True,
 )
 @click.option(
@@ -69,19 +118,45 @@ async def on_connection_lost(e):
     default='printereater',
     show_default=True,
 )
+@click.option(
+    '--interval-dumplings / --no-interval-dumplings',
+    help='Print interval dumplings.',
+    default=True,
+    show_default=True,
+)
+@click.option(
+    '--packet-dumplings / --no-packet-dumplings',
+    help='Print packet dumplings.',
+    default=True,
+    show_default=True,
+)
+@click.option(
+    '--contents / --no-contents',
+    help='Print dumpling contents.',
+    default=True,
+    show_default=True,
+)
+@click.option(
+    '--color / --no-color',
+    help='Print color output.',
+    default=True,
+    show_default=True,
+)
 @click.version_option(version=netdumplings.__version__)
-def printer(shifty, chef, eater_name):
+def printer(shifty, chef, eater_name, interval_dumplings, packet_dumplings,
+            contents, color):
     """
     A dumpling eater which connects to nd-shifty (the dumpling hub) and prints
     the contents of the dumplings made by the given chefs.
     """
-    eater = netdumplings.DumplingEater(
+    eater = PrinterEater(
+        interval_dumplings=interval_dumplings,
+        packet_dumplings=packet_dumplings,
+        contents=contents,
+        color=color,
         name=eater_name,
         shifty=shifty,
         chefs=chef if chef else None,
-        on_connect=on_connect,
-        on_dumpling=on_dumpling,
-        on_connection_lost=on_connection_lost,
     )
 
     eater.run()
