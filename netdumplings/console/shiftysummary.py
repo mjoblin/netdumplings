@@ -1,10 +1,14 @@
 import datetime
 
 import click
+import termcolor
 
 import netdumplings
 from netdumplings.console.shared import CLICK_CONTEXT_SETTINGS
 from netdumplings.shared import DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT
+
+
+PRINT_COLOR = False
 
 
 async def on_connect(shifty_uri, websocket):
@@ -34,15 +38,35 @@ async def on_dumpling(dumpling):
     up_hrs, up_mins = divmod(up_mins, 60)
     up_str = '{0:02d}:{1:02d}:{2:02d}'.format(up_hrs, up_mins, up_secs)
 
-    status_msg = '\r{now}  uptime: {uptime}  dumplings: {dumplings:,}  ' \
-        'kitchens: {kitchens:,}  eaters: {eaters:,} '.format(
-            now=datetime.datetime.now().strftime(
-                '%Y-%m-%d %H:%M:%S'),
-            dumplings=payload['total_dumplings_sent'],
+    up_str = (
+        termcolor.colored(up_str, attrs=['bold']) if PRINT_COLOR else up_str
+    )
+
+    dumplings = (
+        termcolor.colored(payload['total_dumplings_sent'], attrs=['bold'])
+        if PRINT_COLOR else payload['total_dumplings_sent']
+    )
+
+    kitchens = (
+        termcolor.colored(payload['dumpling_kitchen_count'], attrs=['bold'])
+        if PRINT_COLOR else payload['dumpling_kitchen_count']
+    )
+
+    eaters = (
+        termcolor.colored(payload['dumpling_eater_count'], attrs=['bold'])
+        if PRINT_COLOR else payload['dumpling_eater_count']
+    )
+
+    status_msg = (
+        '\r{now}  uptime: {uptime}  dumplings: {dumplings}  '
+        'kitchens: {kitchens}  eaters: {eaters} '.format(
+            now=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            dumplings=dumplings,
             uptime=up_str,
-            kitchens=payload['dumpling_kitchen_count'],
-            eaters=payload['dumpling_eater_count']
+            kitchens=kitchens,
+            eaters=eaters,
         )
+    )
 
     print(status_msg, end='', flush=True)
 
@@ -74,14 +98,23 @@ async def on_connection_lost(e):
     default='statuseater',
     show_default=True,
 )
+@click.option(
+    '--color / --no-color',
+    help='Print color output.',
+    default=True,
+    show_default=True,
+)
 @click.version_option(version=netdumplings.__version__)
-def shiftysummary(shifty, eater_name):
+def shiftysummary(shifty, eater_name, color):
     """
     A dumpling eater which connects to nd-shifty (the dumpling hub) and prints
     information from any SystemStatusChef dumplings. This is a
     system-monitoring dumpling eater which can be used to keep an eye on
     nd-shifty.
     """
+    global PRINT_COLOR
+    PRINT_COLOR = color
+
     eater = netdumplings.DumplingEater(
         name=eater_name,
         shifty=shifty,
