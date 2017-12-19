@@ -271,7 +271,7 @@ def get_valid_chefs(kitchen_name, chef_modules, chefs_requested, log):
     '--poke-interval', '-p',
     help='Interval (in seconds) to poke chefs to send interval dumplings.',
     type=click.FLOAT,
-    default=1.0,
+    default=5.0,
     show_default=True,
 )
 @click.version_option(version=netdumplings.__version__)
