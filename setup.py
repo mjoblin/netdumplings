@@ -19,7 +19,9 @@ packages = [
 
 install_requires = [
     'click~=6.7',
+    'pygments',
     'scapy-python3==0.23',
+    'termcolor',
     'websockets~=4.0.0',
 ]
 
