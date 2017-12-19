@@ -27,6 +27,18 @@ class DumplingEater:
 
     ``on_connection_lost(e)``
         invoked when the connection to `nd-shifty` is closed.
+
+    :param name: Name of the dumpling eater. Is ideally unique per eater.
+    :param shifty: Address where `nd-shifty` is sending dumplings from.
+    :param chefs: List of chef names whose dumplings this eater wants to
+        receive. ``None`` means get all chefs' dumplings.
+    :param on_connect: Called when connection to shifty is made. Is passed two
+        parameters: the shifty websocket URI (string) and websocket
+        object (:class:`websockets.client.WebSocketClientProtocol`).
+    :param on_dumpling: Called whenever a dumpling is received. Is passed the
+        dumpling as a Python dict.
+    :param on_connection_lost: Called when connection to `nd-shifty` is lost.
+        Is passed the associated exception object.
     """
     def __init__(
             self,
@@ -40,28 +52,26 @@ class DumplingEater:
             on_dumpling=None,
             on_connection_lost=None
     ):
-        """
-        :param name: Name of the dumpling eater.  Is ideally unique per eater.
-        :param shifty: Address where `nd-shifty` is sending dumplings from.
-        :param chefs: List of chef names whose dumplings this eater wants to
-            receive.  ``None`` means get all chefs' dumplings.
-        :param on_connect: Called when connection to shifty is made.  Is passed
-            two paramers: the shifty websocket URI (string) and websocket
-            object (:class:`websockets.client.WebSocketClientProtocol`).
-        :param on_dumpling: Called whenever a dumpling is received.  Is passed
-            the dumpling as a Python dict.
-        :param on_connection_lost: Called when connection to `nd-shifty` is
-            lost.  Is passed the associated exception object.
-        """
-        self._was_connected = False
-        self._logger_name = "{}.{}".format(__name__, self.name)
-
         self.name = name
         self.chefs = chefs
-        self.on_connect = on_connect
-        self.on_dumpling = on_dumpling
-        self.on_connection_lost = on_connection_lost
         self.shifty_uri = "ws://{0}".format(shifty)
+
+        # Configure handlers. If we're not provided with handlers then we
+        # fall back on the default handlers or the handlers provided by a
+        # subclass.
+        self.on_connect = (
+            on_connect if on_connect is not None else self.on_connect
+        )
+        self.on_dumpling = (
+            on_dumpling if on_dumpling is not None else self.on_dumpling
+        )
+        self.on_connection_lost = (
+            on_connection_lost if on_connection_lost is not None
+            else self.on_connection_lost
+        )
+
+        self._was_connected = False
+        self._logger_name = "{}.{}".format(__name__, self.name)
         self.logger = logging.getLogger(self._logger_name)
 
     async def _grab_dumplings(self, dumpling_count=None):
@@ -193,3 +203,42 @@ class DumplingEater:
                 self.logger.info(
                     "{0}: Done eating dumplings.".format(self.name))
             loop.close()
+
+    async def on_connect(self, websocket_uri, websocket_obj):
+        """
+        Default on_connect handler.
+
+        This will be used if an ``on_connect`` handler is not provided during
+        instantiation, and if a handler is not provided by a DumplingEater
+        subclass.
+        """
+        self.logger.warning(
+            '{}: No on_connect handler specified; ignoring '
+            'connection.'.format(self.name)
+        )
+
+    async def on_dumpling(self, dumpling):
+        """
+        Default on_dumpling handler.
+
+        This will be used if an ``on_dumpling`` handler is not provided during
+        instantiation, and if a handler is not provided by a DumplingEater
+        subclass.
+        """
+        self.logger.warning(
+            '{}: No on_dumpling handler specified; ignoring '
+            'dumpling.'.format(self.name)
+        )
+
+    async def on_connection_lost(self, e):
+        """
+        Default on_connection_lost handler.
+
+        This will be used if an ``on_connection_lost`` handler is not provided
+        during instantiation, and if a handler is not provided by a
+        DumplingEater subclass.
+        """
+        self.logger.warning(
+            '{}: No on_connection_lost handler specified; ignoring '
+            'connection loss.'.format(self.name)
+        )
