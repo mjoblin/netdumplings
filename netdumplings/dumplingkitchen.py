@@ -6,11 +6,9 @@ import sys
 from threading import Thread
 from time import sleep
 
-sys.stderr = None            # Suppress STDERR to hide harmless IPv6 warning.
-from scapy.all import sniff  # noqa: E402
-sys.stderr = sys.__stderr__  # Restore STDERR.
+from scapy.all import sniff
 
-from netdumplings import DumplingChef  # noqa: E402
+from netdumplings import DumplingChef
 
 
 class DumplingKitchen:
