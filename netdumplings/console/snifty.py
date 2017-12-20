@@ -278,6 +278,8 @@ def get_valid_chefs(kitchen_name, chef_modules, chefs_requested, log):
 def snifty(kitchen_name, shifty, interface, filter, chef_module, chef,
            chef_list, poke_interval):
     """
+    A dumpling kitchen.
+
     Sniffs network packets matching the given filter and sends them to chefs
     for processing into dumplings. Dumplings are then sent to nd-shifty for
     distribution to the dumpling eaters.

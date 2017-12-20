@@ -69,8 +69,10 @@ async def on_connection_lost(e):
 @click.version_option(version=netdumplings.__version__)
 def shiftydetails(shifty, eater_name, color):
     """
-    A dumpling eater which connects to nd-shifty (the dumpling hub) and waits
-    for a single SystemStatus dumpling which it displays and then exits.
+    A dumpling eater.
+
+    Connects to nd-shifty (the dumpling hub) and waits for a single
+    SystemStatus dumpling which it displays and then exits.
     """
     global PRINT_COLOR
     PRINT_COLOR = color

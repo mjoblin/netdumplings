@@ -146,8 +146,10 @@ class PrinterEater(netdumplings.DumplingEater):
 def printer(shifty, chef, eater_name, interval_dumplings, packet_dumplings,
             contents, color):
     """
-    A dumpling eater which connects to nd-shifty (the dumpling hub) and prints
-    the contents of the dumplings made by the given chefs.
+    A dumpling eater.
+
+    Connects to nd-shifty (the dumpling hub) and prints the contents of the
+    dumplings made by the given chefs.
     """
     eater = PrinterEater(
         interval_dumplings=interval_dumplings,

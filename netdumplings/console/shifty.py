@@ -42,6 +42,8 @@ from netdumplings.shared import (
 @click.version_option(version=netdumplings.__version__)
 def shifty(address, in_port, out_port, status_freq):
     """
+    The dumpling hub.
+
     Sends dumplings received from all kitchens (usually any running instances
     of nd-snifty) to all dumpling eaters. All kitchens and eaters need to
     connect to the nd-shifty --in-port or --out-port respectively.
