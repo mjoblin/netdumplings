@@ -1,6 +1,8 @@
 import json
+import logging
 import logging.config
 import os
+import time
 
 from netdumplings.exceptions import InvalidDumplingError
 
@@ -31,6 +33,11 @@ def configure_logging(log_level=logging.INFO, config_file=LOGGING_CONFIG_FILE):
     :param config_file: Path to the logging config file to use. Defaults to
         ``data/logging.json`` in the netdumplings package.
     """
+    # Format timestamps in GMT, YYYY-MM-DDThh:mm:ss.sss
+    logging.Formatter.converter = time.gmtime
+    logging.Formatter.default_time_format = '%Y-%m-%dT%H:%M:%S'
+    logging.Formatter.default_msec_format = '%s.%03d'
+
     use_basic_config = False
 
     try:
