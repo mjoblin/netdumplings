@@ -1,6 +1,6 @@
 from scapy.all import ARP
 
-from netdumplings import DumplingChef, DumplingDriver
+from netdumplings import DumplingChef
 
 
 class ARPChef(DumplingChef):
@@ -47,7 +47,7 @@ class ARPChef(DumplingChef):
         else:
             operation = arp.op
 
-        result = {
+        payload = {
             'operation': operation,
             'src_hw': arp.hwsrc,
             'src_ip': arp.psrc,
@@ -59,12 +59,12 @@ class ARPChef(DumplingChef):
 
         if arp.op == ARPChef.reply:
             if self.ip_mac.get(arp.psrc) is None:
-                result['notes'] = 'source device is new'
+                payload['notes'] = 'source device is new'
             elif (self.ip_mac.get(arp.psrc) and
                   self.ip_mac[arp.psrc] != arp.hwsrc):
-                result['notes'] = 'source device has new IP address'
+                payload['notes'] = 'source device has new IP address'
 
             # Remember this IP -> MAC mapping.
             self.ip_mac[arp.psrc] = arp.hwsrc
 
-        self.send_dumpling(payload=result, driver=DumplingDriver.packet)
+        self.send_packet_dumpling(payload)

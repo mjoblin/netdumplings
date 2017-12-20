@@ -27,7 +27,6 @@ class DumplingChef:
 
     * :meth:`packet_handler`
     * :meth:`interval_handler`
-    * :meth:`send_dumpling`
     """
     # Setting assignable_to_kitchen to False (in a subclass) will ensure the
     # chef cannot be assigned to any kitchens via snifty.
@@ -69,15 +68,15 @@ class DumplingChef:
 
         This method is expected to be overridden by child classes.
 
-        Base implementation immediately sends a dumpling, the payload of which
-        will be a string representation of the packet.
+        This base implementation immediately sends a dumpling, the payload of
+        which will be a string representation of the packet.
 
         :param packet: Network packet (from scapy).
         """
         payload = "{0}: {1}".format(type(self).__name__, packet.summary())
         self._logger.debug("{0}: Received packet: {1}",
                            self.name, packet.summary())
-        self.send_dumpling(payload, DumplingDriver.packet)
+        self.send_packet_dumpling(payload)
 
     def interval_handler(self, interval=None):
         """
@@ -87,15 +86,14 @@ class DumplingChef:
 
         This method is expected to be overridden by child classes.
 
-        Base implementation does nothing.
+        This base implementation does nothing.
 
         :param interval: Frequency (in seconds) of the time interval pokes.
         """
         self._logger.debug(
             "{0}: Received interval_handler poke", self.name)
-        pass
 
-    def send_dumpling(self, payload, driver):
+    def _send_dumpling(self, payload, driver):
         """
         Initiates a send of a dumpling to all the dumpling eaters.
 
@@ -109,3 +107,21 @@ class DumplingChef:
         self.dumpling_queue.put(dumpling_json)
         self._logger.debug("{0}: Sent dumpling, {1} bytes".format(
             self.name, len(dumpling_json)))
+
+    def send_interval_dumpling(self, payload):
+        """
+        Initiates a send of an interval dumpling to all dumpling eaters.
+
+        :param payload: The dumpling payload.  Can be anything which is JSON
+            serializable.  It's up to the dumpling eaters to make sense of it.
+        """
+        self._send_dumpling(payload, driver=DumplingDriver.interval)
+
+    def send_packet_dumpling(self, payload):
+        """
+        Initiates a send of a packet dumpling to all dumpling eaters.
+
+        :param payload: The dumpling payload.  Can be anything which is JSON
+            serializable.  It's up to the dumpling eaters to make sense of it.
+        """
+        self._send_dumpling(payload, driver=DumplingDriver.packet)

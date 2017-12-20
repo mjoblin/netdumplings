@@ -1,6 +1,6 @@
 import time
 
-from netdumplings import DumplingChef, DumplingDriver
+from netdumplings import DumplingChef
 
 
 class DNSLookupChef(DumplingChef):
@@ -82,7 +82,7 @@ class DNSLookupChef(DumplingChef):
             }
         }
 
-        self.send_dumpling(payload=payload, driver=DumplingDriver.packet)
+        self.send_packet_dumpling(payload)
 
     def interval_handler(self, interval=None):
         """
@@ -94,4 +94,4 @@ class DNSLookupChef(DumplingChef):
             'lookups_seen': self.lookups_seen
         }
 
-        self.send_dumpling(payload=payload, driver=DumplingDriver.interval)
+        self.send_interval_dumpling(payload)

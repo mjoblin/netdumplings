@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from netdumplings import DumplingChef, DumplingDriver
+from netdumplings import DumplingChef
 
 
 class PacketCountChef(DumplingChef):
@@ -47,4 +47,4 @@ class PacketCountChef(DumplingChef):
         in all the packets so far, and the count for each layer.
         """
         payload = {'packet_counts': self.packet_counts}
-        self.send_dumpling(payload=payload, driver=DumplingDriver.interval)
+        self.send_interval_dumpling(payload)
