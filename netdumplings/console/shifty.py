@@ -15,12 +15,14 @@ from netdumplings.shared import (
 @click.option(
     '--address', '-a',
     help='Address where nd-shifty will send dumplings from.',
+    metavar='HOSTNAME',
     default=DEFAULT_SHIFTY_HOST,
     show_default=True,
 )
 @click.option(
     '--in-port', '-i',
     help='Port to receive incoming dumplings from.',
+    metavar='PORT',
     type=click.INT,
     default=DEFAULT_SHIFTY_IN_PORT,
     show_default=True,
@@ -28,6 +30,7 @@ from netdumplings.shared import (
 @click.option(
     '--out-port', '-o',
     help='Port to send outgoing dumplings on.',
+    metavar='PORT',
     type=click.INT,
     default=DEFAULT_SHIFTY_OUT_PORT,
     show_default=True,
@@ -35,6 +38,7 @@ from netdumplings.shared import (
 @click.option(
     '--status-freq', '-f',
     help='Frequency (in seconds) to send status dumplings.',
+    metavar='SECONDS',
     type=click.INT,
     default=SHIFTY_STATUS_FREQ,
     show_default=True,

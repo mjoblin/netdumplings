@@ -89,12 +89,14 @@ async def on_connection_lost(e):
 @click.option(
     '--shifty', '-h',
     help='Address where nd-shifty is sending dumplings from.',
+    metavar='HOST:PORT',
     default='{}:{}'.format(DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT),
     show_default=True,
 )
 @click.option(
     '--eater-name', '-n',
     help='Dumpling eater name for this tool when connecting to nd-shifty.',
+    metavar='EATER_NAME',
     default='statuseater',
     show_default=True,
 )

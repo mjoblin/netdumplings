@@ -226,63 +226,73 @@ def get_valid_chefs(kitchen_name, chef_modules, chefs_requested, log):
 @click.option(
     '--kitchen-name', '-n',
     help='Dumpling kitchen name to assign to the sniffer',
+    metavar='KITCHEN_NAME',
     default='default_kitchen',
     show_default=True,
 )
 @click.option(
     '--shifty', '-h',
     help='Address where nd-shifty is receiving dumplings.',
+    metavar='HOST:PORT',
     default='{}:{}'.format(DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_IN_PORT),
     show_default=True,
 )
 @click.option(
     '--interface', '-i',
     help='Network interface to sniff.',
+    metavar='INTERFACE',
     default='all',
     show_default=True,
 )
 @click.option(
     '--filter', '-f',
     help='PCAP-style sniffer packet filter.',
+    metavar='PCAP_FILTER',
     default='tcp or udp or arp',
     show_default=True,
 )
 @click.option(
     '--chef-module', '-m',
-    help=('Python module containing chef implementations. Multiple can be '
-          'specified.'),
+    help='Python module containing chef implementations. Multiple can be '
+         'specified.',
+    metavar='PYTHON_MODULE',
     default=['netdumplings.dumplingchefs'],
     show_default=True,
     multiple=True,
 )
 @click.option(
     '--chef', '-c',
-    help=('Chef (as found in a --chef-module) to deliver packets to. Multiple '
-          'can be specified.'),
+    help='Chef (as found in a --chef-module) to deliver packets to. Multiple '
+         'can be specified. Default is to send packets to all chefs.',
+    metavar='CHEF_NAME',
     multiple=True,
 )
 @click.option(
-    '--chef-list', '-l',
-    help='List all available chefs and exit.',
-    is_flag=True,
-    default=False,
-)
-@click.option(
     '--poke-interval', '-p',
-    help='Interval (in seconds) to poke chefs to send interval dumplings.',
+    help='Interval (in seconds) to poke chefs instructing them to send their '
+         'interval dumplings.',
+    metavar='SECONDS',
     type=click.FLOAT,
     default=5.0,
     show_default=True,
 )
+@click.option(
+    '--chef-list', '-l',
+    help='List all available chefs (as found in the given --chef-module '
+         'Python modules, or the default netdumplings.dumplingchefs module) '
+         'and exit.',
+    is_flag=True,
+    default=False,
+)
 @click.version_option(version=netdumplings.__version__)
 def snifty(kitchen_name, shifty, interface, filter, chef_module, chef,
-           chef_list, poke_interval):
+           poke_interval, chef_list):
     """
     A dumpling kitchen.
 
-    Sniffs network packets matching the given filter and sends them to chefs
-    for processing into dumplings. Dumplings are then sent to nd-shifty for
-    distribution to the dumpling eaters.
+    Sniffs network packets matching the given PCAP-style filter and sends them
+    to chefs for processing into dumplings. Dumplings are then sent to
+    nd-shifty for distribution to the dumpling eaters.
     """
     # NOTE: Since the --chef-module and --chef flags can be specified multiple
     #   times, the associated 'chef_module' and 'chef' parameters are tuples of
