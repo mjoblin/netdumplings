@@ -17,6 +17,7 @@ class PrinterEater(netdumplings.DumplingEater):
     """
     def __init__(
             self,
+            kitchens=None,
             interval_dumplings=True,
             packet_dumplings=True,
             contents=True,
@@ -25,6 +26,7 @@ class PrinterEater(netdumplings.DumplingEater):
     ):
         super().__init__(**kwargs)
 
+        self._kitchens = kitchens
         self._interval_dumplings = interval_dumplings
         self._packet_dumplings = packet_dumplings
         self._contents = contents
@@ -48,11 +50,14 @@ class PrinterEater(netdumplings.DumplingEater):
 
         :param dumpling: The freshly-made new dumpling.
         """
+        kitchen = dumpling['metadata']['kitchen']
         dumpling_driver = dumpling['metadata']['driver']
 
         should_print_dumpling = (
             (dumpling_driver == 'interval' and self._interval_dumplings) or
             (dumpling_driver == 'packet' and self._packet_dumplings)
+        ) and (
+            self._kitchens is None or kitchen in self._kitchens
         )
 
         if not should_print_dumpling:
@@ -103,19 +108,29 @@ class PrinterEater(netdumplings.DumplingEater):
 @click.option(
     '--shifty', '-h',
     help='Address where nd-shifty is sending dumplings from.',
+    metavar='HOST:PORT',
     default='{}:{}'.format(DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT),
     show_default=True,
 )
 @click.option(
     '--chef', '-c',
-    help=('Restrict dumplings to those made by this chef. Multiple can be '
-          'specified. Displays all chefs by default.'),
+    help='Restrict dumplings to those made by this chef. Multiple can be '
+         'specified. Displays all chefs by default.',
+    metavar='CHEF_NAME',
+    multiple=True,
+)
+@click.option(
+    '--kitchen', '-k',
+    help='Restrict dumplings to those emitted by this kitchen. Multiple can be '
+         'specified. Displays all kitchens by default.',
+    metavar='KITCHEN_NAME',
     multiple=True,
 )
 @click.option(
     '--eater-name', '-n',
     help='Dumpling eater name for this tool when connecting to nd-shifty.',
     default='printereater',
+    metavar='EATER_NAME',
     show_default=True,
 )
 @click.option(
@@ -143,8 +158,8 @@ class PrinterEater(netdumplings.DumplingEater):
     show_default=True,
 )
 @click.version_option(version=netdumplings.__version__)
-def printer(shifty, chef, eater_name, interval_dumplings, packet_dumplings,
-            contents, color):
+def printer(shifty, chef, kitchen, eater_name, interval_dumplings,
+            packet_dumplings, contents, color):
     """
     A dumpling eater.
 
@@ -152,6 +167,7 @@ def printer(shifty, chef, eater_name, interval_dumplings, packet_dumplings,
     dumplings made by the given chefs.
     """
     eater = PrinterEater(
+        kitchens=kitchen if kitchen else None,
         interval_dumplings=interval_dumplings,
         packet_dumplings=packet_dumplings,
         contents=contents,
