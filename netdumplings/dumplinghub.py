@@ -6,7 +6,7 @@ import websockets
 from websockets.exceptions import ConnectionClosed
 
 from netdumplings import Dumpling, DumplingDriver
-from netdumplings.exceptions import InvalidDumplingError, NetDumplingsError
+from netdumplings.exceptions import InvalidDumpling, NetDumplingsError
 from netdumplings.shared import validate_dumpling
 
 
@@ -110,7 +110,7 @@ class DumplingHub:
                 # Validate the dumpling.
                 try:
                     dumpling = validate_dumpling(dumpling_json)
-                except InvalidDumplingError as e:
+                except InvalidDumpling as e:
                     self._logger.error(
                         "Received invalid dumpling: {0}; kitchen: {1}".format(
                             e,

@@ -4,7 +4,7 @@ import logging
 import signal
 import websockets
 
-from netdumplings.exceptions import InvalidDumplingError
+from netdumplings.exceptions import InvalidDumpling
 from netdumplings.shared import (
     validate_dumpling, ND_CLOSE_MSGS, DEFAULT_SHIFTY_HOST,
     DEFAULT_SHIFTY_OUT_PORT
@@ -106,7 +106,7 @@ class DumplingEater:
                 # probably be stripped out by shifty (the DumplingHub).
                 try:
                     dumpling = validate_dumpling(dumpling_json)
-                except InvalidDumplingError as e:
+                except InvalidDumpling as e:
                     self.logger.error("{0}: Invalid dumpling: {1}".format(
                         self.name, e))
                     continue
