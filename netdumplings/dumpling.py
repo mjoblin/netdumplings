@@ -2,6 +2,8 @@ from enum import Enum
 import json
 import time
 
+from netdumplings.exceptions import InvalidDumplingPayload
+
 
 DumplingDriver = Enum('DumplingDriver', 'packet interval')
 """
@@ -96,6 +98,8 @@ class Dumpling:
         :class:`DumplingKitchen`.
 
         :return: A JSON string representation of the dumpling.
+        :raises :class:`InvalidDumplingPayload` if `payload` cannot be
+            JSON-serialized.
         """
         dumpling = {
             'metadata': {
@@ -104,7 +108,14 @@ class Dumpling:
                 'creation_time': time.time(),
                 'driver': self.driver.name,
             },
-            'payload': self.payload
+            'payload': self.payload,
         }
 
-        return json.dumps(dumpling)
+        try:
+            dumpling_serialized = json.dumps(dumpling)
+        except TypeError as e:
+            raise InvalidDumplingPayload(
+                'Could not create dumpling: {}'.format(e)
+            )
+
+        return dumpling_serialized
