@@ -4,7 +4,7 @@ import logging.config
 import os
 import time
 
-from netdumplings.exceptions import InvalidDumplingError
+from netdumplings.exceptions import InvalidDumpling
 
 
 # Tuples of (code, msg) for sending when closing websocket connections.
@@ -70,18 +70,18 @@ def validate_dumpling(dumpling_json):
     ``metadata.chef`` key.
 
     :param dumpling_json: The dumpling JSON.
-    :raise: :class:`netdumplings.exceptions.InvalidDumplingError` if the
+    :raise: :class:`netdumplings.exceptions.InvalidDumpling` if the
         dumpling is invalid.
     :return: A dict created from the dumpling JSON.
     """
     try:
         dumpling = json.loads(dumpling_json)
     except json.JSONDecodeError as e:
-        raise InvalidDumplingError("Could not interpret dumpling JSON")
+        raise InvalidDumpling("Could not interpret dumpling JSON")
 
     try:
         dumpling['metadata']['chef']
     except (KeyError, TypeError) as e:
-        raise InvalidDumplingError("Could not determine chef name")
+        raise InvalidDumpling("Could not determine chef name")
 
     return dumpling

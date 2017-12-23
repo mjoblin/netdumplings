@@ -4,9 +4,15 @@ class NetDumplingsError(Exception):
     """
 
 
-class InvalidDumplingError(NetDumplingsError):
+class InvalidDumpling(NetDumplingsError):
     """
-    Raised when a Dumpling does not appear to be valid.  This is either because
-    the Dumpling is not valid JSON or it doesn't contain a ``metadata.chef``
-    key.
+    A Dumpling does not appear to be valid.  This is either because the
+    Dumpling is not valid JSON or it doesn't contain a ``metadata.chef`` key.
+    """
+
+
+class InvalidDumplingPayload(NetDumplingsError):
+    """
+    A Dumpling payload is invalid (probably because it is not
+    JSON-serializable).
     """
