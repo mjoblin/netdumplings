@@ -29,7 +29,7 @@ def mock_chef(mocker, mock_kitchen):
 
 class TestDumpling:
     """
-    Test the Dumping class.
+    Test the Dumpling class.
     """
     def test_init_default(self):
         """
