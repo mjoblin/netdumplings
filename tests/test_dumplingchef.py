@@ -5,7 +5,7 @@ import pytest
 from netdumplings import Dumpling, DumplingChef, DumplingDriver
 
 
-class TestChef(DumplingChef):
+class ChefForTests(DumplingChef):
     pass
 
 
@@ -49,17 +49,17 @@ class TestDumplingChef:
         Test the setting of the name for a subclass of DumplingChef. The name
         should match the class name.
         """
-        chef = TestChef()
-        assert chef.name == 'TestChef'
+        chef = ChefForTests()
+        assert chef.name == 'ChefForTests'
 
     def test_kitchen_registration_with_pokes(self, mock_kitchen):
         """
         Test registering a chef with a kitchen with interval pokes enabled.
         """
-        chef = TestChef(kitchen=mock_kitchen, receive_pokes=True)
+        chef = ChefForTests(kitchen=mock_kitchen, receive_pokes=True)
 
         mock_kitchen.register_handler.assert_called_once_with(
-            chef_name='TestChef',
+            chef_name='ChefForTests',
             packet_handler=chef.packet_handler,
             interval_handler=chef.interval_handler,
         )
@@ -68,10 +68,10 @@ class TestDumplingChef:
         """
         Test registering a chef with a kitchen with interval pokes disabled.
         """
-        chef = TestChef(kitchen=mock_kitchen, receive_pokes=False)
+        chef = ChefForTests(kitchen=mock_kitchen, receive_pokes=False)
 
         mock_kitchen.register_handler.assert_called_once_with(
-            chef_name='TestChef',
+            chef_name='ChefForTests',
             packet_handler=chef.packet_handler,
             interval_handler=False,
         )
@@ -81,10 +81,10 @@ class TestDumplingChef:
         Test the default packet handler. It should send a dumpling with a
         string payload matching "<ChefName>: <packet summary string>".
         """
-        chef = TestChef(kitchen=mock_kitchen, receive_pokes=False)
+        chef = ChefForTests(kitchen=mock_kitchen, receive_pokes=False)
         mocker.patch.object(chef, 'send_packet_dumpling')
 
-        expected_payload = 'TestChef: packet summary string'
+        expected_payload = 'ChefForTests: packet summary string'
         chef.packet_handler(mock_packet)
         chef.send_packet_dumpling.assert_called_with(expected_payload)
 
@@ -93,7 +93,7 @@ class TestDumplingChef:
         Test sending an interval dumpling. It should invoke _send_dumpling
         with the interval dumpling driver.
         """
-        chef = TestChef(kitchen=mock_kitchen, receive_pokes=True)
+        chef = ChefForTests(kitchen=mock_kitchen, receive_pokes=True)
         mocker.patch.object(chef, '_send_dumpling')
 
         test_payload = {'one': 1, 'two': 2}
@@ -108,7 +108,7 @@ class TestDumplingChef:
         Test sending an interval dumpling. It should invoke _send_dumpling
         with the packet dumpling driver.
         """
-        chef = TestChef(kitchen=mock_kitchen, receive_pokes=True)
+        chef = ChefForTests(kitchen=mock_kitchen, receive_pokes=True)
         mocker.patch.object(chef, '_send_dumpling')
 
         test_payload = {'one': 1, 'two': 2}
@@ -130,7 +130,7 @@ class TestDumplingChef:
         test_payload_json = json.dumps(test_payload)
 
         mock_queue = mocker.Mock()
-        chef = TestChef(
+        chef = ChefForTests(
             kitchen=mock_kitchen,
             dumpling_queue=mock_queue,
             receive_pokes=True,
