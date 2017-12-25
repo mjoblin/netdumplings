@@ -107,8 +107,7 @@ class TestHandlerInvocations:
         # exception. The exception should only result in a log entry being
         # made.
         mock_handler_1 = mocker.Mock()
-        mock_handler_2 = mocker.Mock()
-        mock_handler_2.side_effect = KeyError
+        mock_handler_2 = mocker.Mock(side_effect=KeyError)
         kitchen._packet_handlers = [mock_handler_1, mock_handler_2]
 
         # Add a spy on the logger so we can check it got called.
@@ -130,13 +129,14 @@ class TestHandlerInvocations:
         """
         test_interval = 3
         kitchen = DumplingKitchen(chef_poke_interval=test_interval)
-        mock_sleep = mocker.patch('netdumplings.dumplingkitchen.sleep')
 
         # _poke_chefs() runs in an infinite loop which we need to break out of.
         # We do that by setting a side effect on the mocked call to sleep()
         # which will raise an Exception. This doesn't interfere with being able
         # to determine the value passed to sleep().
-        mock_sleep.side_effect = Exception
+        mock_sleep = mocker.patch(
+            'netdumplings.dumplingkitchen.sleep', side_effect=Exception
+        )
 
         # Set up two valid mock interval handlers (pretending to be chef
         # interval handlers).
@@ -159,21 +159,20 @@ class TestHandlerInvocations:
     def test_chef_poking_with_broken_handler(self, mocker):
         """
         Test interval-based chef poking where one of the handlers raises an
-        exceptio, which should result in an exception-level log entry being
+        exception, which should result in an exception-level log entry being
         created but the processing being otherwise unaffected.
         """
         test_interval = 3
         kitchen = DumplingKitchen(chef_poke_interval=test_interval)
-        mock_sleep = mocker.patch('netdumplings.dumplingkitchen.sleep')
-
-        mock_sleep.side_effect = Exception
+        mocker.patch(
+            'netdumplings.dumplingkitchen.sleep', side_effect=Exception
+        )
 
         # Set up a valid interval handler, and an interval handler which raises
         # an exception. The exception should only result in a log entry being
         # made.
         mock_handler_1 = mocker.Mock()
-        mock_handler_2 = mocker.Mock()
-        mock_handler_2.side_effect = KeyError
+        mock_handler_2 = mocker.Mock(side_effect=KeyError)
         kitchen._interval_handlers = [mock_handler_1, mock_handler_2]
 
         # Add a spy on the logger so we can check it got called.
@@ -198,7 +197,7 @@ class TestChefDiscovery:
 
         # This will actually allow the imports to take place, so we're
         # technically letting this test pollute our namespace.
-        mocker.spy(importlib, 'import_module')
+        spy_importlib = mocker.spy(importlib, 'import_module')
 
         chef_info = kitchen.get_chefs_in_modules([
             'tests.data.dumplingchefs',
@@ -206,9 +205,9 @@ class TestChefDiscovery:
         ])
 
         # Assert that the two chef modules were actually imported.
-        assert importlib.import_module.call_count == 2
+        assert spy_importlib.call_count == 2
 
-        assert importlib.import_module.call_args_list == [
+        assert spy_importlib.call_args_list == [
             (('tests.data.dumplingchefs',),),
             (('tests.data.moredumplingchefs',),),
         ]

@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from netdumplings import Dumpling, DumplingChef, DumplingDriver
+from netdumplings import DumplingChef, DumplingDriver
 
 
 class ChefForTests(DumplingChef):
@@ -136,8 +136,10 @@ class TestDumplingChef:
             receive_pokes=True,
         )
 
-        patch_dumpling_callable = mocker.patch.object(Dumpling, '__call__')
-        patch_dumpling_callable.return_value = test_payload_json
+        mocker.patch(
+            'netdumplings.dumplingchef.Dumpling.__call__',
+            return_value=test_payload_json,
+        )
 
         # Ensure that _send_dumpling() puts the return value of the
         # dumpling call (which is the same as Dumpling.make()) onto the queue.

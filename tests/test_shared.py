@@ -104,11 +104,11 @@ class TestShared:
         # Set NETDUMPLINGS_LOGGING_CONFIG to point to a test logging config.
         logging_config_file = 'tests/data/logging_bogus.json'
         monkeypatch.setenv('NETDUMPLINGS_LOGGING_CONFIG', logging_config_file)
-        mocker.spy(logging, 'basicConfig')
+        spy_basic_config = mocker.spy(logging, 'basicConfig')
 
         configure_logging(logging.DEBUG)
 
-        logging.basicConfig.assert_called_once_with(level=logging.DEBUG)
+        spy_basic_config.assert_called_once_with(level=logging.DEBUG)
 
     def test_missing_logging_config_file(self, monkeypatch, mocker):
         """
@@ -123,8 +123,8 @@ class TestShared:
         # Set NETDUMPLINGS_LOGGING_CONFIG to point to a test logging config.
         logging_config_file = 'does_not_exist.json'
         monkeypatch.setenv('NETDUMPLINGS_LOGGING_CONFIG', logging_config_file)
-        mocker.spy(logging, 'basicConfig')
+        spy_basic_config = mocker.spy(logging, 'basicConfig')
 
         configure_logging(logging.DEBUG)
 
-        logging.basicConfig.assert_called_once_with(level=logging.DEBUG)
+        spy_basic_config.assert_called_once_with(level=logging.DEBUG)

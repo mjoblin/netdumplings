@@ -1,5 +1,4 @@
 import json
-import time
 
 import pytest
 
@@ -71,8 +70,7 @@ class TestDumpling:
         """
         Test Dumpling instance is callable and returns the same as make().
         """
-        mocker.patch.object(time, 'time')
-        time.time.return_value = 'test_timestamp'
+        mocker.patch('time.time', return_value='test_timestamp')
 
         dumpling = Dumpling(chef=mock_chef)
         assert dumpling() == dumpling.make()
@@ -81,8 +79,7 @@ class TestDumpling:
         """
         Test metadata keys in the make() result.
         """
-        mocker.patch.object(time, 'time')
-        time.time.return_value = 'test_timestamp'
+        mocker.patch('time.time', return_value='test_timestamp')
 
         dumpling = Dumpling(chef=mock_chef)
         data = json.loads(dumpling.make())
