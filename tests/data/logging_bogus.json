@@ -1,0 +1,39 @@
+# JSON doesn't support comments so this is a bogus config file.
+
+{
+    "version": 1,
+    "disable_existing_loggers": false,
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s %(levelname)s %(message)s"
+        }
+    },
+    "handlers": {
+        "default": {
+            "formatter": "standard",
+            "class": "logging.StreamHandler"
+        }
+    },
+    "loggers": {
+        "netdumplings": {
+            "handlers": ["default"],
+            "level": "ERROR",
+            "propagate": false
+        },
+        "netdumplings.dumplinghub": {
+            "handlers": ["default"],
+            "level": "ERROR",
+            "propagate": false
+        },
+        "netdumplings.dumplingkitchen": {
+            "handlers": ["default"],
+            "level": "ERROR",
+            "propagate": false
+        },
+        "netdumplings.dumplingeater": {
+            "handlers": ["default"],
+            "level": "ERROR",
+            "propagate": false
+        }
+    }
+}
