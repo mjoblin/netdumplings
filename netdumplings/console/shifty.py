@@ -1,3 +1,5 @@
+import sys
+
 import click
 
 import netdumplings
@@ -65,6 +67,7 @@ def shifty(address, in_port, out_port, status_freq):
         dumpling_hub.run()
     except NetDumplingsError as e:
         print('shifty error: {0}'.format(e))
+        sys.exit(1)
 
 
 if __name__ == '__main__':
