@@ -6,6 +6,9 @@ from netdumplings import DumplingKitchen
 
 
 class TestDumplingKitchen:
+    """
+    Test the DumplingKitchen class.
+    """
     def test_init_default(self):
         """
         Test default DumplingKitchen initialization.
@@ -72,7 +75,7 @@ class TestDumplingKitchen:
 
 class TestHandlerInvocations:
     """
-    Test invocations of the packet and interval handlers.
+    Test DumplingKitchen invocations of the packet and interval handlers.
     """
     def test_packet_handling(self, mocker):
         """
@@ -189,6 +192,9 @@ class TestHandlerInvocations:
 
 
 class TestChefDiscovery:
+    """
+    Test DumplingKitchen chef discovery.
+    """
     def test_chef_discovery(self, mocker):
         """
         Test discovery of chefs from the two valid test chef modules.
@@ -260,6 +266,9 @@ class TestChefDiscovery:
 
 
 class TestKitchenRun:
+    """
+    Test DumplingKitchen run() calls.
+    """
     def test_poke_thread_started(self, mocker):
         """
         Test that an attempt is made to start the poke thread when poking is
