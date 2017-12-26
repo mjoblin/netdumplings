@@ -28,6 +28,7 @@ install_requires = [
 
 tests_require = [
     'pytest',
+    'pytest-asyncio',
     'pytest-cov',
     'pytest-mock',
     'pytest-sugar',
