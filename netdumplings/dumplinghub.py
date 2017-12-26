@@ -208,7 +208,7 @@ class DumplingHub:
 
             for eater in self._dumpling_eaters:
                 await self._dumpling_eaters[eater]['queue'].put(
-                    status_dumpling())
+                    status_dumpling.make())
 
             await asyncio.sleep(self.status_freq)
 
