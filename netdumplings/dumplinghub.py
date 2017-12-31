@@ -7,8 +7,10 @@ from websockets.exceptions import ConnectionClosed
 
 from netdumplings import Dumpling, DumplingDriver
 from netdumplings.exceptions import InvalidDumpling, NetDumplingsError
-from netdumplings.shared import validate_dumpling
-
+from netdumplings.shared import (
+    validate_dumpling, DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_IN_PORT,
+    DEFAULT_SHIFTY_OUT_PORT, SHIFTY_STATUS_FREQ,
+)
 
 class DumplingHub:
     """
@@ -20,8 +22,13 @@ class DumplingHub:
 
     `nd-shifty` is a simple wrapper around ``DumplingHub``.
     """
-    def __init__(self, address=None, in_port=None, out_port=None,
-                 status_freq=None):
+    def __init__(
+            self,
+            address=DEFAULT_SHIFTY_HOST,
+            in_port=DEFAULT_SHIFTY_IN_PORT,
+            out_port=DEFAULT_SHIFTY_OUT_PORT,
+            status_freq=SHIFTY_STATUS_FREQ,
+    ):
         """
         :param address: Address the hub is running on.
         :param in_port: Port used to receive dumplings from `nd-snifty`.
