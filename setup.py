@@ -27,6 +27,7 @@ install_requires = [
 ]
 
 tests_require = [
+    'asynctest',
     'pytest',
     'pytest-asyncio',
     'pytest-cov',
