@@ -121,8 +121,8 @@ class PrinterEater(netdumplings.DumplingEater):
 )
 @click.option(
     '--kitchen', '-k',
-    help='Restrict dumplings to those emitted by this kitchen. Multiple can be '
-         'specified. Displays all kitchens by default.',
+    help='Restrict dumplings to those emitted by this kitchen. Multiple can '
+         'be specified. Displays all kitchens by default.',
     metavar='KITCHEN_NAME',
     multiple=True,
 )

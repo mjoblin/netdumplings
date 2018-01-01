@@ -12,6 +12,7 @@ from netdumplings.shared import (
     DEFAULT_SHIFTY_OUT_PORT, SHIFTY_STATUS_FREQ,
 )
 
+
 class DumplingHub:
     """
     Implements a dumpling hub.  A dumpling hub is two websocket servers: one
