@@ -303,7 +303,7 @@ def snifty_cli(kitchen_name, shifty, interface, filter, chef_module, chef,
     # Display the chef list and exit if that's all the user wanted.
     if chef_list:
         list_chefs(chef_module)
-        sys.exit(1)
+        sys.exit(0)
 
     # snifty now does the following:
     #
