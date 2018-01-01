@@ -14,7 +14,7 @@ with open('README.rst', 'r') as f:
 packages = [
     'netdumplings',
     'netdumplings.console',
-    'netdumplings.dumplingchefs'
+    'netdumplings.dumplingchefs',
 ]
 
 install_requires = [
@@ -58,11 +58,11 @@ setup(
     download_url='https://pypi.python.org/pypi/netdumplings',
     entry_points={
         'console_scripts': [
-            'nd-printer=netdumplings.console:printer',
-            'nd-shifty=netdumplings.console:shifty',
-            'nd-shiftydetails=netdumplings.console:shiftydetails',
-            'nd-shiftysummary=netdumplings.console:shiftysummary',
-            'nd-snifty=netdumplings.console:snifty',
+            'nd-printer=netdumplings.console:printer_cli',
+            'nd-shifty=netdumplings.console:shifty_cli',
+            'nd-shiftydetails=netdumplings.console:shiftydetails_cli',
+            'nd-shiftysummary=netdumplings.console:shiftysummary_cli',
+            'nd-snifty=netdumplings.console:snifty_cli',
         ]
     },
     license='MIT',

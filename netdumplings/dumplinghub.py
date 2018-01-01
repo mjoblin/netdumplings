@@ -7,7 +7,8 @@ from websockets.exceptions import ConnectionClosed
 
 from netdumplings import Dumpling, DumplingDriver
 from netdumplings.exceptions import InvalidDumpling, NetDumplingsError
-from netdumplings.shared import (
+
+from ._shared import (
     validate_dumpling, DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_IN_PORT,
     DEFAULT_SHIFTY_OUT_PORT, SHIFTY_STATUS_FREQ,
 )

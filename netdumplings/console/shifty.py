@@ -3,12 +3,13 @@ import sys
 import click
 
 import netdumplings
-from netdumplings.console.shared import CLICK_CONTEXT_SETTINGS
 from netdumplings.exceptions import NetDumplingsError
-from netdumplings.shared import (
+from netdumplings._shared import (
     configure_logging, DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_IN_PORT,
     DEFAULT_SHIFTY_OUT_PORT, SHIFTY_STATUS_FREQ,
 )
+
+from ._shared import CLICK_CONTEXT_SETTINGS
 
 
 @click.command(
@@ -46,7 +47,7 @@ from netdumplings.shared import (
     show_default=True,
 )
 @click.version_option(version=netdumplings.__version__)
-def shifty(address, in_port, out_port, status_freq):
+def shifty_cli(address, in_port, out_port, status_freq):
     """
     The dumpling hub.
 
@@ -71,4 +72,4 @@ def shifty(address, in_port, out_port, status_freq):
 
 
 if __name__ == '__main__':
-    shifty()
+    shifty_cli()

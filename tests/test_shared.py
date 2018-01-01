@@ -6,7 +6,7 @@ import time
 import pytest
 
 from netdumplings.exceptions import InvalidDumpling
-from netdumplings.shared import configure_logging, validate_dumpling
+from netdumplings._shared import configure_logging, validate_dumpling
 
 
 @pytest.fixture(scope='function')

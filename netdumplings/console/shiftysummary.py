@@ -4,8 +4,9 @@ import click
 import termcolor
 
 import netdumplings
-from netdumplings.console.shared import CLICK_CONTEXT_SETTINGS
-from netdumplings.shared import DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT
+from netdumplings._shared import DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT
+
+from ._shared import CLICK_CONTEXT_SETTINGS
 
 
 PRINT_COLOR = False
@@ -107,7 +108,7 @@ async def on_connection_lost(e):
     show_default=True,
 )
 @click.version_option(version=netdumplings.__version__)
-def shiftysummary(shifty, eater_name, color):
+def shiftysummary_cli(shifty, eater_name, color):
     """
     A dumpling eater.
 
@@ -131,4 +132,4 @@ def shiftysummary(shifty, eater_name, color):
 
 
 if __name__ == '__main__':
-    shiftysummary()
+    shiftysummary_cli()

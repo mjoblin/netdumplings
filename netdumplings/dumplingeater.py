@@ -5,7 +5,8 @@ import signal
 import websockets
 
 from netdumplings.exceptions import InvalidDumpling
-from netdumplings.shared import (
+
+from ._shared import (
     validate_dumpling, ND_CLOSE_MSGS, DEFAULT_SHIFTY_HOST,
     DEFAULT_SHIFTY_OUT_PORT
 )

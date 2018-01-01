@@ -4,10 +4,9 @@ import click
 import termcolor
 
 import netdumplings
-from netdumplings.console.shared import CLICK_CONTEXT_SETTINGS
-from netdumplings.shared import DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT
+from netdumplings._shared import DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT
 
-from netdumplings.console.shared import printable_dumpling
+from ._shared import CLICK_CONTEXT_SETTINGS, printable_dumpling
 
 
 class PrinterEater(netdumplings.DumplingEater):
@@ -158,8 +157,8 @@ class PrinterEater(netdumplings.DumplingEater):
     show_default=True,
 )
 @click.version_option(version=netdumplings.__version__)
-def printer(shifty, chef, kitchen, eater_name, interval_dumplings,
-            packet_dumplings, contents, color):
+def printer_cli(shifty, chef, kitchen, eater_name, interval_dumplings,
+                packet_dumplings, contents, color):
     """
     A dumpling eater.
 
@@ -181,4 +180,4 @@ def printer(shifty, chef, kitchen, eater_name, interval_dumplings,
 
 
 if __name__ == '__main__':
-    printer()
+    printer_cli()

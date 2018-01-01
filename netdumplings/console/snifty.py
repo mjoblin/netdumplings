@@ -9,11 +9,12 @@ import click
 import websockets
 
 import netdumplings
-from netdumplings.console.shared import CLICK_CONTEXT_SETTINGS
-from netdumplings.shared import (
+from netdumplings._shared import (
     configure_logging, ND_CLOSE_MSGS, DEFAULT_SHIFTY_HOST,
     DEFAULT_SHIFTY_IN_PORT,
 )
+
+from ._shared import CLICK_CONTEXT_SETTINGS
 
 
 def network_sniffer(kitchen_name, interface, chefs, chef_modules, valid_chefs,
@@ -285,8 +286,8 @@ def get_valid_chefs(kitchen_name, chef_modules, chefs_requested, log):
     default=False,
 )
 @click.version_option(version=netdumplings.__version__)
-def snifty(kitchen_name, shifty, interface, filter, chef_module, chef,
-           poke_interval, chef_list):
+def snifty_cli(kitchen_name, shifty, interface, filter, chef_module, chef,
+               poke_interval, chef_list):
     """
     A dumpling kitchen.
 
@@ -393,4 +394,4 @@ def snifty(kitchen_name, shifty, interface, filter, chef_module, chef,
 
 
 if __name__ == '__main__':
-    snifty()
+    snifty_cli()

@@ -7,7 +7,7 @@ import pytest
 import websockets.exceptions
 
 from netdumplings import DumplingEater
-from netdumplings.shared import DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT
+from netdumplings._shared import DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT
 
 
 # -----------------------------------------------------------------------------

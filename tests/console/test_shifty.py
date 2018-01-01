@@ -1,6 +1,6 @@
 import click.testing
 
-from netdumplings.console.shifty import shifty
+from netdumplings.console.shifty import shifty_cli
 from netdumplings.exceptions import NetDumplingsError
 
 
@@ -17,7 +17,7 @@ class TestShifty:
 
         runner = click.testing.CliRunner()
         result = runner.invoke(
-            shifty,
+            shifty_cli,
             [
                 '--address', 'testhost',
                 '--in-port', 1001,
@@ -45,6 +45,6 @@ class TestShifty:
         mock_hub.return_value.run.side_effect = NetDumplingsError
 
         runner = click.testing.CliRunner()
-        result = runner.invoke(shifty)
+        result = runner.invoke(shifty_cli)
 
         assert result.exit_code == 1

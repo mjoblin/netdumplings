@@ -1,14 +1,14 @@
-from .printer import printer
-from .shifty import shifty
-from .shiftydetails import shiftydetails
-from .shiftysummary import shiftysummary
-from .snifty import snifty
+from .printer import printer_cli
+from .shifty import shifty_cli
+from .shiftydetails import shiftydetails_cli
+from .shiftysummary import shiftysummary_cli
+from .snifty import snifty_cli
 
 
 (
-    printer,
-    shifty,
-    shiftydetails,
-    shiftysummary,
-    snifty,
+    printer_cli,
+    shifty_cli,
+    shiftydetails_cli,
+    shiftysummary_cli,
+    snifty_cli,
 )
