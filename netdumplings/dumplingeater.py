@@ -165,8 +165,7 @@ class DumplingEater:
         """
         self.logger.info("{0}: Running dumpling eater".format(self.name))
 
-        # Check that we have a valid callable on_dumpling handler.
-        if not hasattr(self.on_dumpling, '__call__'):
+        if not callable(self.on_dumpling):
             self.logger.error(
                 "{0}: on_dumpling handler is not callable".format(self.name))
             return
