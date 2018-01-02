@@ -187,11 +187,13 @@ def get_valid_chefs(kitchen_name, chef_modules, chefs_requested, log):
     """
     valid_chefs = {}
     chef_info = netdumplings.DumplingKitchen.get_chefs_in_modules(chef_modules)
+    # TODO: chefs_seen could be a set.
     chefs_seen = []
 
     # Find all the valid chefs.
     for chef_module in chef_info:
         chef_class_names = chef_info[chef_module]['chef_classes']
+        # TODO: Investigate replacing __import__ with importlib.import_module
         mod = __import__(chef_module, fromlist=chef_class_names)
 
         for chef_class_name in chef_class_names:
@@ -328,7 +330,7 @@ def snifty_cli(kitchen_name, shifty, interface, filter, chef_module, chef,
         logger.error('{}: No valid chefs found. Not starting sniffer.'.format(
             kitchen_name
         ))
-        return
+        sys.exit(1)
 
     # Generate list of module.class names for all the seemingly-valid chefs
     # we'll be instantiating.  This is for use in the status dumplings.
