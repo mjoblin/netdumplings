@@ -81,11 +81,62 @@ def network_sniffer(kitchen_name, interface, chefs, chef_modules, valid_chefs,
     sniffer_kitchen.run()
 
 
+async def notify_shifty(
+        kitchen_name, shifty, dumpling_queue, kitchen_info, log):
+    """
+    Grabs fresh dumplings from the sniffers dumpling queue and sends them on to
+    `nd-shifty` (the dumpling hub).
+
+    :param kitchen_name: The name of the kitchen.
+    :param shifty: The address where shifty is receiving dumplings.
+    :param dumpling_queue: Queue to grab fresh dumplings from.
+    :param kitchen_info: Dict describing the kitchen.
+    :param log: Logger.
+    """
+    shifty_uri = 'ws://{0}'.format(shifty)
+
+    log.info("{0}: Connecting to shifty at {1}".format(
+        kitchen_name, shifty_uri)
+    )
+
+    try:
+        websocket = await websockets.connect(shifty_uri)
+    except OSError as e:
+        log.error(
+            "{0}: There was a problem with the shifty connection. "
+            "Is shifty available?".format(kitchen_name))
+        log.error("{0}: {1}".format(kitchen_name, e))
+        return
+
+    try:
+        # Register our kitchen information with shifty.
+        await websocket.send(json.dumps(kitchen_info))
+
+        # Send dumplings to shifty when they come in from the chefs.
+        while True:
+            dumpling = dumpling_queue.get()
+            await websocket.send(dumpling)
+    except asyncio.CancelledError:
+        log.warning(
+            "{0}: Connection to shifty cancelled; closing...".format(
+                kitchen_name))
+        try:
+            await websocket.close(*ND_CLOSE_MSGS['conn_cancelled'])
+        except websockets.exceptions.InvalidState:
+            pass
+    except websockets.exceptions.ConnectionClosed as e:
+        log.warning("{0}: Lost connection to shifty: {1}".format(
+            kitchen_name, e))
+    except OSError as e:
+        log.exception(
+            "{0}: Error talking to shifty websocket hub: {1}".format(
+                kitchen_name, e))
+
+
 def dumpling_emitter(kitchen_name, shifty, dumpling_queue, kitchen_info):
     """
-    Grabs fresh dumplings (made by the dumpling chefs from network packet
-    ingredients) from the queue and sends them on to `nd-shifty` (the dumpling
-    hub).
+    Kick off an async event loop to manage funneling dumplings from the queue
+    to shifty.
 
     This function is intended to be invoked as a Python process.
 
@@ -94,46 +145,6 @@ def dumpling_emitter(kitchen_name, shifty, dumpling_queue, kitchen_info):
     :param dumpling_queue: Queue to grab fresh dumplings from.
     :param kitchen_info: Dict describing the kitchen.
     """
-    async def notify_shifty():
-        shifty_uri = 'ws://{0}'.format(shifty)
-
-        log.info("{0}: Connecting to shifty at {1}".format(
-            kitchen_name, shifty_uri)
-        )
-
-        try:
-            websocket = await websockets.connect(shifty_uri)
-        except OSError as e:
-            log.error(
-                "{0}: There was a problem with the shifty connection. "
-                "Is shifty available?".format(kitchen_name))
-            log.error("{0}: {1}".format(kitchen_name, e))
-            return
-
-        try:
-            # Register our kitchen information with shifty.
-            await websocket.send(json.dumps(kitchen_info))
-
-            # Send dumplings to shifty when they come in from the chefs.
-            while True:
-                dumpling = dumpling_queue.get()
-                await websocket.send(dumpling)
-        except asyncio.CancelledError:
-            log.warning(
-                "{0}: Connection to shifty cancelled; closing...".format(
-                    kitchen_name))
-            try:
-                await websocket.close(*ND_CLOSE_MSGS['conn_cancelled'])
-            except websockets.exceptions.InvalidState:
-                pass
-        except websockets.exceptions.ConnectionClosed as e:
-            log.warning("{0}: Lost connection to shifty: {1}".format(
-                kitchen_name, e))
-        except OSError as e:
-            log.exception(
-                "{0}: Error talking to shifty websocket hub: {1}".format(
-                    kitchen_name, e))
-
     log = logging.getLogger('netdumplings.snifty')
     log.info("{0}: Starting dumpling emitter process".format(kitchen_name))
     loop = asyncio.new_event_loop()
@@ -141,7 +152,11 @@ def dumpling_emitter(kitchen_name, shifty, dumpling_queue, kitchen_info):
     loop = asyncio.get_event_loop()
 
     try:
-        loop.run_until_complete(notify_shifty())
+        loop.run_until_complete(
+            notify_shifty(
+                kitchen_name, shifty, dumpling_queue, kitchen_info, log
+            )
+        )
     except KeyboardInterrupt:
         pass
 
