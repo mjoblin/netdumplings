@@ -147,6 +147,7 @@ def dumpling_emitter(kitchen_name, shifty, dumpling_queue, kitchen_info):
     """
     log = logging.getLogger('netdumplings.snifty')
     log.info("{0}: Starting dumpling emitter process".format(kitchen_name))
+    # TODO: Confirm that this new event loop creation is unnecessary.
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop = asyncio.get_event_loop()
