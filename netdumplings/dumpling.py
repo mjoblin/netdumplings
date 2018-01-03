@@ -86,6 +86,29 @@ class Dumpling:
         """
         return self.make()
 
+    def __repr__(self):
+        if self.driver == DumplingDriver.packet:
+            driver = 'DumplingDriver.packet'
+        elif self.driver == DumplingDriver.interval:
+            driver = 'DumplingDriver.interval'
+        else:
+            driver = repr(self.driver)
+
+        payload = (None if self.payload is None
+                   else '<{}>'.format(type(self.payload).__name__))
+
+        return (
+            '{}('
+            'chef={}, '
+            'driver={}, '
+            'payload={})'.format(
+                type(self).__name__,
+                repr(self.chef),
+                driver,
+                payload,
+            )
+        )
+
     def make(self):
         """
         Makes a complete JSON-serialized dumpling string from the Dumpling.

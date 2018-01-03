@@ -112,6 +112,35 @@ class TestDumplingEater:
         for mock_task in mock_all_tasks:
             mock_task.cancel.assert_called_once()
 
+    def test_repr(self):
+        """
+        Test the string representation.
+        """
+        def handler():
+            pass
+
+        eater = DumplingEater(
+            name='test_eater',
+            shifty='test_shifty',
+            chefs=['ChefOne', 'ChefTwo'],
+            on_connect=handler,
+            on_dumpling=handler,
+            on_connection_lost=handler,
+        )
+        assert repr(eater) == (
+            "DumplingEater("
+            "name='test_eater', "
+            "shifty='test_shifty', "
+            "chefs=['ChefOne', 'ChefTwo'], "
+            "on_connect={}, "
+            "on_dumpling={}, "
+            "on_connection_lost={})".format(
+                repr(handler),
+                repr(handler),
+                repr(handler)
+            )
+        )
+
 
 # -----------------------------------------------------------------------------
 

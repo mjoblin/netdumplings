@@ -61,6 +61,19 @@ class DumplingChef:
                 interval_handler=interval_handler
             )
 
+    def __repr__(self):
+        return (
+            '{}('
+            'kitchen={}, '
+            'dumpling_queue={}, '
+            'receive_pokes={})'.format(
+                type(self).__name__,
+                repr(self.kitchen),
+                repr(self.dumpling_queue),
+                self.receive_pokes,
+            )
+        )
+
     def packet_handler(self, packet):
         """
         This handler is called automatically by `nd-snifty` whenever a new

@@ -1,8 +1,9 @@
 import json
+from multiprocessing import Queue
 
 import pytest
 
-from netdumplings import DumplingChef, DumplingDriver
+from netdumplings import DumplingChef, DumplingDriver, DumplingKitchen
 
 
 class ChefForTests(DumplingChef):
@@ -145,3 +146,31 @@ class TestDumplingChef:
         # dumpling call (which is the same as Dumpling.make()) onto the queue.
         chef._send_dumpling(test_payload, driver=DumplingDriver.packet)
         mock_queue.put.assert_called_once_with(test_payload_json)
+
+    def test_repr(self):
+        """
+        Test the string representation.
+        """
+        chef = DumplingChef()
+        assert repr(chef) == (
+            'DumplingChef('
+            'kitchen=None, '
+            'dumpling_queue=None, '
+            'receive_pokes=False)'
+        )
+
+        kitchen = DumplingKitchen()
+        queue = Queue()
+
+        chef = DumplingChef(
+            kitchen=kitchen,
+            dumpling_queue=queue,
+            receive_pokes=True,
+        )
+
+        assert repr(chef) == (
+            'DumplingChef('
+            'kitchen={}, '
+            'dumpling_queue={}, '
+            'receive_pokes=True)'.format(repr(kitchen), repr(queue))
+        )

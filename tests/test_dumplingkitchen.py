@@ -72,6 +72,23 @@ class TestDumplingKitchen:
         ]
         assert kitchen._interval_handlers == ['TestIntervalHandlerOne']
 
+    def test_repr(self):
+        """
+        Test the string representation.
+        """
+        kitchen = DumplingKitchen()
+        assert repr(kitchen) == (
+            "DumplingKitchen(name='{}', "
+            "interface='{}', "
+            "sniffer_filter='{}', "
+            "chef_poke_interval={})".format(
+                kitchen.name,
+                kitchen.interface,
+                kitchen.filter,
+                kitchen.chef_poke_interval,
+            )
+        )
+
 
 class TestHandlerInvocations:
     """

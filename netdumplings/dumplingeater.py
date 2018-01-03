@@ -55,6 +55,7 @@ class DumplingEater:
     ):
         self.name = name
         self.chefs = chefs
+        self.shifty = shifty
         self.shifty_uri = "ws://{0}".format(shifty)
 
         # Configure handlers. If we're not provided with handlers then we
@@ -74,6 +75,25 @@ class DumplingEater:
         self._was_connected = False
         self._logger_name = "{}.{}".format(__name__, self.name)
         self.logger = logging.getLogger(self._logger_name)
+
+    def __repr__(self):
+        return (
+            '{}('
+            'name={}, '
+            'shifty={}, '
+            'chefs={}, '
+            'on_connect={}, '
+            'on_dumpling={}, '
+            'on_connection_lost={})'.format(
+                type(self).__name__,
+                repr(self.name),
+                repr(self.shifty),
+                repr(self.chefs),
+                repr(self.on_connect),
+                repr(self.on_dumpling),
+                repr(self.on_connection_lost),
+            )
+        )
 
     async def _grab_dumplings(self, dumpling_count=None):
         """

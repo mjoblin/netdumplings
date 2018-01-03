@@ -57,6 +57,21 @@ class DumplingHub:
 
         self._logger = logging.getLogger(__name__)
 
+    def __repr__(self):
+        return (
+            '{}('
+            'address={}, '
+            'in_port={}, '
+            'out_port={}, '
+            'status_freq={})'.format(
+                type(self).__name__,
+                repr(self.address),
+                repr(self.in_port),
+                repr(self.out_port),
+                repr(self.status_freq),
+            )
+        )
+
     def _get_system_status(self):
         """
         Generates a dictionary describing current system status.

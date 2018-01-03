@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from netdumplings import Dumpling, DumplingDriver
+from netdumplings import Dumpling, DumplingChef, DumplingDriver
 from netdumplings.exceptions import InvalidDumplingPayload
 
 
@@ -133,3 +133,53 @@ class TestDumpling:
 
         with pytest.raises(InvalidDumplingPayload):
             dumpling.make()
+
+    def test_repr(self):
+        """
+        Test the string representation.
+        """
+        dumpling = Dumpling()
+        assert repr(dumpling) == (
+            'Dumpling(chef=None, '
+            'driver=DumplingDriver.packet, '
+            'payload=None)'
+        )
+
+        chef = DumplingChef()
+        chef_repr = repr(chef)
+
+        dumpling = Dumpling(
+            chef=chef,
+            driver=DumplingDriver.interval,
+            payload='test_payload'
+        )
+
+        assert repr(dumpling) == (
+            'Dumpling(chef={}, '
+            'driver=DumplingDriver.interval, '
+            'payload=<str>)'.format(chef_repr)
+        )
+
+        dumpling = Dumpling(
+            chef=chef,
+            driver=DumplingDriver.interval,
+            payload=[1, 2, 3]
+        )
+
+        assert repr(dumpling) == (
+            'Dumpling(chef={}, '
+            'driver=DumplingDriver.interval, '
+            'payload=<list>)'.format(chef_repr)
+        )
+
+        dumpling = Dumpling(
+            chef=chef,
+            driver=DumplingDriver.interval,
+            payload={'test': 10}
+        )
+
+        assert repr(dumpling) == (
+            'Dumpling(chef={}, '
+            'driver=DumplingDriver.interval, '
+            'payload=<dict>)'.format(chef_repr)
+        )

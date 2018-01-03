@@ -111,6 +111,25 @@ class TestDumplingHub:
         assert hub.out_port == 456
         assert hub.status_freq == 10
 
+    def test_repr(self):
+        """
+        Test the string representation.
+        """
+        hub = DumplingHub(
+            address='test_host',
+            in_port=1234,
+            out_port=5678,
+            status_freq=10
+        )
+
+        assert repr(hub) == (
+            "DumplingHub("
+            "address='test_host', "
+            "in_port=1234, "
+            "out_port=5678, "
+            "status_freq=10)"
+        )
+
 
 # -----------------------------------------------------------------------------
 

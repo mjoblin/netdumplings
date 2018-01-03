@@ -42,6 +42,20 @@ class DumplingKitchen:
         self._interval_handlers = []
         self._logger = logging.getLogger(__name__)
 
+    def __repr__(self):
+        return (
+            '{}(name={}, '
+            'interface={}, '
+            'sniffer_filter={}, '
+            'chef_poke_interval={})'.format(
+                type(self).__name__,
+                repr(self.name),
+                repr(self.interface),
+                repr(self.filter),
+                repr(self.chef_poke_interval),
+            )
+        )
+
     def _process_packet(self, packet):
         """
         Passes the given network packet to each of the :class:`DumplingChef`
