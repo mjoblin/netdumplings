@@ -1,9 +1,6 @@
-import json
-from multiprocessing import Queue
-
 import pytest
 
-from netdumplings import DumplingChef, DumplingDriver, DumplingKitchen
+from netdumplings import DumplingChef, DumplingKitchen
 
 
 class ChefForTests(DumplingChef):
@@ -40,8 +37,6 @@ class TestDumplingChef:
         chef = DumplingChef()
 
         assert chef.kitchen is None
-        assert chef.dumpling_queue is None
-        assert chef.receive_pokes is False
         assert chef.name == 'DumplingChef'
         assert chef.dumplings_sent_count == 0
 
@@ -53,124 +48,45 @@ class TestDumplingChef:
         chef = ChefForTests()
         assert chef.name == 'ChefForTests'
 
-    def test_kitchen_registration_with_pokes(self, mock_kitchen):
+    def test_kitchen_registration(self, mock_kitchen):
         """
-        Test registering a chef with a kitchen with interval pokes enabled.
+        Test registering the chef with the given kitchen.
         """
-        chef = ChefForTests(kitchen=mock_kitchen, receive_pokes=True)
+        chef = ChefForTests(kitchen=mock_kitchen)
 
-        mock_kitchen.register_handler.assert_called_once_with(
-            chef_name='ChefForTests',
-            packet_handler=chef.packet_handler,
-            interval_handler=chef.interval_handler,
-        )
+        mock_kitchen.register_chef.assert_called_once_with(chef)
 
-    def test_kitchen_registration_without_pokes(self, mock_kitchen):
+    def test_default_packet_handler(self, mock_kitchen, mock_packet, mocker):
         """
-        Test registering a chef with a kitchen with interval pokes disabled.
-        """
-        chef = ChefForTests(kitchen=mock_kitchen, receive_pokes=False)
-
-        mock_kitchen.register_handler.assert_called_once_with(
-            chef_name='ChefForTests',
-            packet_handler=chef.packet_handler,
-            interval_handler=False,
-        )
-
-    def test_default_packet_handler(self, mocker, mock_kitchen, mock_packet):
-        """
-        Test the default packet handler. It should send a dumpling with a
+        Test the default packet handler. It should return a dumpling with a
         string payload matching "<ChefName>: <packet summary string>".
         """
-        chef = ChefForTests(kitchen=mock_kitchen, receive_pokes=False)
-        mocker.patch.object(chef, 'send_packet_dumpling')
+        chef = ChefForTests(kitchen=mock_kitchen)
+        mock_logger = mocker.patch.object(chef, '_logger')
 
-        expected_payload = 'ChefForTests: packet summary string'
-        chef.packet_handler(mock_packet)
-        chef.send_packet_dumpling.assert_called_with(expected_payload)
+        dumpling = chef.packet_handler(mock_packet)
+        assert dumpling == 'ChefForTests: packet summary string'
+        assert mock_logger.debug.call_count >= 1
 
-    def test_send_interval_dumpling(self, mocker, mock_kitchen):
+    def test_default_interval_handler(self, mock_kitchen, mocker):
         """
-        Test sending an interval dumpling. It should invoke _send_dumpling
-        with the interval dumpling driver.
+        Test the default interval handler. It should return None (no dumpling).
         """
-        chef = ChefForTests(kitchen=mock_kitchen, receive_pokes=True)
-        mocker.patch.object(chef, '_send_dumpling')
+        chef = ChefForTests(kitchen=mock_kitchen)
+        mock_logger = mocker.patch.object(chef, '_logger')
 
-        test_payload = {'one': 1, 'two': 2}
-        chef.send_interval_dumpling(test_payload)
-
-        chef._send_dumpling.assert_called_with(
-            test_payload, driver=DumplingDriver.interval
-        )
-
-    def test_send_packet_dumpling(self, mocker, mock_kitchen):
-        """
-        Test sending an interval dumpling. It should invoke _send_dumpling
-        with the packet dumpling driver.
-        """
-        chef = ChefForTests(kitchen=mock_kitchen, receive_pokes=True)
-        mocker.patch.object(chef, '_send_dumpling')
-
-        test_payload = {'one': 1, 'two': 2}
-        chef.send_packet_dumpling(test_payload)
-
-        chef._send_dumpling.assert_called_once_with(
-            test_payload, driver=DumplingDriver.packet
-        )
-
-    def test_dumpling_send(self, mocker, mock_kitchen):
-        """
-        Test the _send_dumpling method to ensure that it puts the dumpling
-        contents onto the queue.
-        """
-        test_payload = {
-            'one': 1,
-            'two': 2,
-        }
-        test_payload_json = json.dumps(test_payload)
-
-        mock_queue = mocker.Mock()
-        chef = ChefForTests(
-            kitchen=mock_kitchen,
-            dumpling_queue=mock_queue,
-            receive_pokes=True,
-        )
-
-        mocker.patch(
-            'netdumplings.dumplingchef.Dumpling.__call__',
-            return_value=test_payload_json,
-        )
-
-        # Ensure that _send_dumpling() puts the return value of the
-        # dumpling call (which is the same as Dumpling.make()) onto the queue.
-        chef._send_dumpling(test_payload, driver=DumplingDriver.packet)
-        mock_queue.put.assert_called_once_with(test_payload_json)
+        dumpling = chef.interval_handler(interval=5)
+        assert dumpling is None
+        assert mock_logger.debug.call_count >= 1
 
     def test_repr(self):
         """
         Test the string representation.
         """
         chef = DumplingChef()
-        assert repr(chef) == (
-            'DumplingChef('
-            'kitchen=None, '
-            'dumpling_queue=None, '
-            'receive_pokes=False)'
-        )
+        assert repr(chef) == 'DumplingChef(kitchen=None)'
 
         kitchen = DumplingKitchen()
-        queue = Queue()
+        chef = DumplingChef(kitchen=kitchen)
 
-        chef = DumplingChef(
-            kitchen=kitchen,
-            dumpling_queue=queue,
-            receive_pokes=True,
-        )
-
-        assert repr(chef) == (
-            'DumplingChef('
-            'kitchen={}, '
-            'dumpling_queue={}, '
-            'receive_pokes=True)'.format(repr(kitchen), repr(queue))
-        )
+        assert repr(chef) == 'DumplingChef(kitchen={})'.format(repr(kitchen))
