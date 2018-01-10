@@ -87,6 +87,7 @@ class TestHandlerInvocations:
         Test invocation of the packet handlers.
         """
         kitchen = DumplingKitchen()
+        mocker.patch.object(kitchen, '_send_dumpling')
 
         # Set up two valid chefs. One of them returns a dumpling when given a
         # packet, and the other one doesn't.
@@ -105,9 +106,10 @@ class TestHandlerInvocations:
         kitchen._process_packet(packet)
 
         # Check that we only sent one packet dumpling.
-        kitchen._send_packet_dumpling.assert_called_once_with(
+        kitchen._send_dumpling.assert_called_once_with(
             mock_chef_with_packet_dumpling,
-            'dumpling'
+            'dumpling',
+            DumplingDriver.packet,
         )
 
     def test_packet_processing_with_broken_handler(self, mocker):
@@ -117,6 +119,8 @@ class TestHandlerInvocations:
         created but the processing being otherwise unaffected.
         """
         kitchen = DumplingKitchen()
+        mocker.patch.object(kitchen, '_send_dumpling')
+        mocker.patch.object(kitchen, '_logger')
 
         # Set up two valid chefs. One of them returns a dumpling when given a
         # packet, and the raises an exception.
@@ -139,9 +143,10 @@ class TestHandlerInvocations:
 
         # Check that we only sent one packet dumpling, and that an
         # exception-level log was created.
-        kitchen._send_packet_dumpling.assert_called_once_with(
+        kitchen._send_dumpling.assert_called_once_with(
             mock_chef_with_packet_dumpling,
-            'dumpling'
+            'dumpling',
+            DumplingDriver.packet,
         )
         kitchen._logger.exception.assert_called_once()
 
@@ -150,7 +155,10 @@ class TestHandlerInvocations:
         Test interval-based chef poking.
         """
         test_interval = 3
-        kitchen = DumplingKitchen(chef_poke_interval=test_interval)
+        kitchen = DumplingKitchen(
+            chef_poke_interval=test_interval,
+        )
+        mocker.patch.object(kitchen, '_send_dumpling')
 
         # _poke_chefs() runs in an infinite loop which we need to break out of.
         # We do that by setting a side effect on the mocked call to sleep()
@@ -196,9 +204,10 @@ class TestHandlerInvocations:
             interval=test_interval
         )
 
-        kitchen._send_interval_dumpling.assert_called_once_with(
+        kitchen._send_dumpling.assert_called_once_with(
             mock_chef_with_interval_dumpling,
-            'dumpling'
+            'dumpling',
+            DumplingDriver.interval,
         )
 
     def test_chef_poking_with_broken_handler(self, mocker):
@@ -208,7 +217,11 @@ class TestHandlerInvocations:
         created but the processing being otherwise unaffected.
         """
         test_interval = 3
-        kitchen = DumplingKitchen(chef_poke_interval=test_interval)
+        kitchen = DumplingKitchen(
+            chef_poke_interval=test_interval,
+        )
+        mocker.patch.object(kitchen, '_send_dumpling')
+        mocker.patch.object(kitchen, '_logger')
 
         mocker.patch(
             'netdumplings.dumplingkitchen.sleep', side_effect=RuntimeError
@@ -241,9 +254,10 @@ class TestHandlerInvocations:
 
         # Check that the valid dumpling was sent, and that we logged an
         # exception for the other chef.
-        kitchen._send_interval_dumpling.assert_called_once_with(
+        kitchen._send_dumpling.assert_called_once_with(
             mock_chef_with_interval_dumpling,
-            'dumpling'
+            'dumpling',
+            DumplingDriver.interval,
         )
         kitchen._logger.exception.assert_called_once()
 
@@ -252,40 +266,6 @@ class TestDumplingSends:
     """
     Test the sending of dumplings.
     """
-    def test_send_interval_dumpling(self, mocker):
-        """
-        Test sending an interval dumpling. It should invoke _send_dumpling
-        with the interval dumpling driver.
-        """
-        kitchen = DumplingKitchen()
-        chef = DumplingChef()
-
-        mocker.patch.object(kitchen, '_send_dumpling')
-
-        test_payload = {'one': 1, 'two': 2}
-        kitchen._send_interval_dumpling(chef, test_payload)
-
-        kitchen._send_dumpling.assert_called_once_with(
-            chef, driver=DumplingDriver.interval, payload=test_payload
-        )
-
-    def test_send_packet_dumpling(self, mocker, mock_kitchen):
-        """
-        Test sending an interval dumpling. It should invoke _send_dumpling
-        with the packet dumpling driver.
-        """
-        kitchen = DumplingKitchen()
-        chef = DumplingChef()
-
-        mocker.patch.object(kitchen, '_send_dumpling')
-
-        test_payload = {'one': 1, 'two': 2}
-        kitchen._send_packet_dumpling(chef, test_payload)
-
-        kitchen._send_dumpling.assert_called_once_with(
-            chef, driver=DumplingDriver.packet, payload=test_payload
-        )
-
     def test_dumpling_send(self, mocker, test_dumpling_dns):
         """
         Test the _send_dumpling method to ensure that it calls make() on a new
@@ -308,14 +288,14 @@ class TestDumplingSends:
 
         kitchen._send_dumpling(
             chef=mock_chef,
+            payload=test_dumpling_dns['payload'],
             driver=DumplingDriver.packet,
-            payload=test_dumpling_dns['payload']
         )
 
         mock_dumpling_class.assert_called_once_with(
             chef=mock_chef,
+            payload=test_dumpling_dns['payload'],
             driver=DumplingDriver.packet,
-            payload=test_dumpling_dns['payload']
         )
 
         mock_queue.put.assert_called_once_with(test_payload_json)
