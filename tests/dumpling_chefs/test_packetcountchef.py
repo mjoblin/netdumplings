@@ -42,18 +42,14 @@ class TestPacketCountChef:
         assert chef.packet_counts['Raw'] == 2
         assert chef.packet_counts['TCP'] == 2
 
-    def test_interval_handler(self, mocker):
+    def test_interval_handler(self):
         """
-        Test that a call to the interval handler sends an interval dumpling
-        which contains the packet count summaries.
+        Test that a call to the interval handler returns a dumpling which
+        contains the packet count summaries.
         """
         chef = PacketCountChef()
-        mock_send_interval_dumpling = mocker.patch.object(
-            chef, 'send_interval_dumpling'
-        )
+        dumpling = chef.interval_handler()
 
-        chef.interval_handler()
-
-        mock_send_interval_dumpling.assert_called_once_with({
+        assert dumpling == {
             'packet_counts': chef.packet_counts,
-        })
+        }

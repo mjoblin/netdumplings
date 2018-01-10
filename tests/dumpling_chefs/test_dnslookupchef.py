@@ -19,19 +19,15 @@ class TestDNSLookupChef:
         """
         Test the packet handler for a single DNS lookup. The lookup should be
         added to the list of lookups, and a packet dumpling representing the
-        lookup should be sent out to shifty.
+        lookup should be returned.
         """
         test_lookup_host = 'www.apple.com'
         packet = UDP() / DNS(rd=1, qd=DNSQR(qname=test_lookup_host))
 
-        chef = DNSLookupChef()
-        mock_send_packet_dumpling = mocker.patch.object(
-            chef, 'send_packet_dumpling'
-        )
-
         mock_time = mocker.patch('time.time', return_value=1234567890)
 
-        chef.packet_handler(packet)
+        chef = DNSLookupChef()
+        dumpling = chef.packet_handler(packet)
 
         # Check that the hostname is added to our list of lookups.
         assert len(chef.lookups_seen) == 1
@@ -42,12 +38,12 @@ class TestDNSLookupChef:
 
         # Check that the packet dumpling for this lookup was sent out, with the
         # correct payload.
-        mock_send_packet_dumpling.assert_called_once_with({
+        assert dumpling == {
             'lookup': {
                 'hostname': test_lookup_host,
                 'when': mock_time.return_value,
             }
-        })
+        }
 
     def test_ignore_non_dns_packets(self, mocker):
         """
@@ -57,14 +53,10 @@ class TestDNSLookupChef:
         mock_getlayer = packet.getlayer = mocker.Mock()
 
         chef = DNSLookupChef()
-        mock_send_packet_dumpling = mocker.patch.object(
-            chef, 'send_packet_dumpling'
-        )
-
-        chef.packet_handler(packet)
+        dumpling = chef.packet_handler(packet)
 
         assert mock_getlayer.call_count == 0
-        assert mock_send_packet_dumpling.call_count == 0
+        assert dumpling is None
 
     def test_stripping_trailing_period(self, mocker):
         """
@@ -74,14 +66,10 @@ class TestDNSLookupChef:
         test_host_without_period = 'www.apple.com'
         packet = UDP() / DNS(rd=1, qd=DNSQR(qname=test_host_with_period))
 
-        chef = DNSLookupChef()
-        mock_send_packet_dumpling = mocker.patch.object(
-            chef, 'send_packet_dumpling'
-        )
-
         mock_time = mocker.patch('time.time', return_value=1234567890)
 
-        chef.packet_handler(packet)
+        chef = DNSLookupChef()
+        dumpling = chef.packet_handler(packet)
 
         # Check that the hostname is added to our list of lookups.
         assert len(chef.lookups_seen) == 1
@@ -92,25 +80,21 @@ class TestDNSLookupChef:
 
         # Check that the packet dumpling for this lookup was sent out, with the
         # correct payload.
-        mock_send_packet_dumpling.assert_called_once_with({
+        assert dumpling == {
             'lookup': {
                 'hostname': test_host_without_period,
                 'when': mock_time.return_value,
             }
-        })
+        }
 
-    def test_interval_handler(self, mocker):
+    def test_interval_handler(self):
         """
-        Test that a call to the interval handler sends an interval dumpling
+        Test that a call to the interval handler returns an interval dumpling
         which contains the lookups seen.
         """
         chef = DNSLookupChef()
-        mock_send_interval_dumpling = mocker.patch.object(
-            chef, 'send_interval_dumpling'
-        )
+        dumpling = chef.interval_handler()
 
-        chef.interval_handler()
-
-        mock_send_interval_dumpling.assert_called_once_with({
+        assert dumpling == {
             'lookups_seen': chef.lookups_seen,
-        })
+        }

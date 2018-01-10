@@ -15,7 +15,7 @@ class TestARPChef:
 
         assert chef.ip_mac == {}
 
-    def test_packet_handler_arp_request(self, mocker):
+    def test_packet_handler_arp_request(self):
         """
         Test an ARP request packet.
         """
@@ -23,13 +23,9 @@ class TestARPChef:
         arp = packet[ARP]
 
         chef = ARPChef()
-        mock_send_packet_dumpling = mocker.patch.object(
-            chef, 'send_packet_dumpling'
-        )
+        dumpling = chef.packet_handler(packet)
 
-        chef.packet_handler(packet)
-
-        mock_send_packet_dumpling.assert_called_once_with({
+        assert dumpling == {
             'operation': 'request',
             'src_hw': arp.hwsrc,
             'src_ip': arp.psrc,
@@ -37,11 +33,11 @@ class TestARPChef:
             'dst_ip': arp.pdst,
             'time': arp.time,
             'notes': None,
-        })
+        }
 
         assert chef.ip_mac == {}
 
-    def test_packet_handler_arp_reply_new_device(self, mocker):
+    def test_packet_handler_arp_reply_new_device(self):
         """
         Test an ARP reply packet for a new device.
         """
@@ -49,20 +45,17 @@ class TestARPChef:
         arp = packet[ARP]
 
         chef = ARPChef()
-        mock_send_packet_dumpling = mocker.patch.object(
-            chef, 'send_packet_dumpling'
-        )
 
         assert chef.ip_mac == {}
 
-        chef.packet_handler(packet)
+        dumpling = chef.packet_handler(packet)
 
         # We should have added the new device to our ip_mac structure.
         assert len(chef.ip_mac.keys()) == 1
         assert chef.ip_mac[arp.psrc] == arp.hwsrc
 
         # Check dumpling payload, including 'notes'.
-        mock_send_packet_dumpling.assert_called_once_with({
+        assert dumpling == {
             'operation': 'reply',
             'src_hw': arp.hwsrc,
             'src_ip': arp.psrc,
@@ -70,9 +63,9 @@ class TestARPChef:
             'dst_ip': arp.pdst,
             'time': arp.time,
             'notes': 'source device is new',
-        })
+        }
 
-    def test_packet_handler_arp_reply_new_ip(self, mocker):
+    def test_packet_handler_arp_reply_new_ip(self):
         """
         Test an ARP reply packet for a new ip address for a known device.
         """
@@ -80,22 +73,19 @@ class TestARPChef:
         arp = packet[ARP]
 
         chef = ARPChef()
-        mock_send_packet_dumpling = mocker.patch.object(
-            chef, 'send_packet_dumpling'
-        )
 
         # Configure the ip_mac struct to think it's already seen the source.
         chef.ip_mac = {
             arp.psrc: 'old_ip',
         }
 
-        chef.packet_handler(packet)
+        dumpling = chef.packet_handler(packet)
 
         # We should have updated the ip_mac structure with the new ip address.
         assert chef.ip_mac[arp.psrc] == arp.hwsrc
 
         # Check dumpling payload, including 'notes'.
-        mock_send_packet_dumpling.assert_called_once_with({
+        assert dumpling == {
             'operation': 'reply',
             'src_hw': arp.hwsrc,
             'src_ip': arp.psrc,
@@ -103,20 +93,16 @@ class TestARPChef:
             'dst_ip': arp.pdst,
             'time': arp.time,
             'notes': 'source device has new IP address',
-        })
+        }
 
-    def test_ignore_non_arp_packets(self, mocker):
+    def test_ignore_non_arp_packets(self):
         """
         Test that non-ARP packets are ignored.
         """
         packet = IP(dst='www.apple.com') / TCP(dport=80) / Raw(b'test')
 
         chef = ARPChef()
-        mock_send_packet_dumpling = mocker.patch.object(
-            chef, 'send_packet_dumpling'
-        )
-
-        chef.packet_handler(packet)
+        dumpling = chef.packet_handler(packet)
 
         assert chef.ip_mac == {}
-        assert mock_send_packet_dumpling.call_count == 0
+        assert dumpling is None
