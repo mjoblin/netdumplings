@@ -203,13 +203,13 @@ class TestSniftyNetworkSniffer:
             interface=interface,
             sniffer_filter=sniffer_filter,
             chef_poke_interval=chef_poke_interval,
+            dumpling_queue=dumpling_queue,
         )
 
         mock_dumpling_kitchen.return_value.run.assert_called_once()
 
         chef_class_callable.assert_called_once_with(
             kitchen=mock_dumpling_kitchen.return_value,
-            dumpling_queue=dumpling_queue,
         )
 
 
