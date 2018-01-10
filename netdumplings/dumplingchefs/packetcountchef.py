@@ -23,9 +23,8 @@ class PacketCountChef(DumplingChef):
             }
         }
     """
-    def __init__(self, kitchen=None, dumpling_queue=None, receive_pokes=True):
-        super().__init__(kitchen=kitchen, dumpling_queue=dumpling_queue,
-                         receive_pokes=receive_pokes)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.packet_counts = defaultdict(int)
         self.poke_count = 0
 
@@ -37,14 +36,16 @@ class PacketCountChef(DumplingChef):
         :param packet: Packet from nd-snifty.
         """
         self.packet_counts[packet.name] += 1
+
         while packet.payload:
             packet = packet.payload
             self.packet_counts[packet.name] += 1
+
+        return None
 
     def interval_handler(self, interval=None):
         """
         Makes a dumpling at regular intervals which lists all the layers seen
         in all the packets so far, and the count for each layer.
         """
-        payload = {'packet_counts': self.packet_counts}
-        self.send_interval_dumpling(payload)
+        return {'packet_counts': self.packet_counts}
