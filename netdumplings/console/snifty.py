@@ -63,8 +63,12 @@ def network_sniffer(kitchen_name, interface, chefs, chef_modules, valid_chefs,
         kitchen_name, chef_poke_interval))
 
     sniffer_kitchen = netdumplings.DumplingKitchen(
-        name=kitchen_name, interface=interface, sniffer_filter=sniffer_filter,
-        chef_poke_interval=chef_poke_interval)
+        name=kitchen_name,
+        interface=interface,
+        sniffer_filter=sniffer_filter,
+        chef_poke_interval=chef_poke_interval,
+        dumpling_queue=dumpling_queue,
+    )
 
     # Instantiate all the valid DumplingChef classes and register them with
     # the kitchen.
@@ -76,7 +80,7 @@ def network_sniffer(kitchen_name, interface, chefs, chef_modules, valid_chefs,
             log.info("{0}: Registering {1}.{2} with kitchen".format(
                 kitchen_name, chef_module, chef_class_name))
             klass = getattr(mod, chef_class_name)
-            klass(kitchen=sniffer_kitchen, dumpling_queue=dumpling_queue)
+            klass(kitchen=sniffer_kitchen)
 
     sniffer_kitchen.run()
 
