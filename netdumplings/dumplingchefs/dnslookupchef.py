@@ -40,11 +40,8 @@ class DNSLookupChef(DumplingChef):
             }
         }
     """
-    def __init__(self, kitchen=None, dumpling_queue=None, receive_pokes=True):
-        """
-        """
-        super().__init__(kitchen=kitchen, dumpling_queue=dumpling_queue,
-                         receive_pokes=receive_pokes)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.lookups_seen = {}
 
     def packet_handler(self, packet):
@@ -82,7 +79,7 @@ class DNSLookupChef(DumplingChef):
             }
         }
 
-        self.send_packet_dumpling(payload)
+        return payload
 
     def interval_handler(self, interval=None):
         """
@@ -94,4 +91,4 @@ class DNSLookupChef(DumplingChef):
             'lookups_seen': self.lookups_seen
         }
 
-        self.send_interval_dumpling(payload)
+        return payload

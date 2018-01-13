@@ -1,8 +1,9 @@
 import importlib
+import json
 
 import pytest
 
-from netdumplings import DumplingKitchen
+from netdumplings import DumplingKitchen, DumplingChef, DumplingDriver
 
 
 class TestDumplingKitchen:
@@ -20,8 +21,7 @@ class TestDumplingKitchen:
         assert kitchen.filter == 'tcp'
         assert kitchen.chef_poke_interval == 5
 
-        assert len(kitchen._packet_handlers) == 0
-        assert len(kitchen._interval_handlers) == 0
+        assert len(kitchen._chefs) == 0
 
     def test_init_with_overrides(self):
         """
@@ -39,38 +39,24 @@ class TestDumplingKitchen:
         assert kitchen.filter == 'test filter'
         assert kitchen.chef_poke_interval == 10
 
-        assert len(kitchen._packet_handlers) == 0
-        assert len(kitchen._interval_handlers) == 0
+        assert len(kitchen._chefs) == 0
 
-    def test_handler_registration(self):
+    def test_chef_registration(self):
         """
-        Test registration of packet and interval handlers.
+        Test registration of chefs with the kitchen.
         """
         kitchen = DumplingKitchen()
 
-        assert len(kitchen._packet_handlers) == 0
-        assert len(kitchen._interval_handlers) == 0
+        assert len(kitchen._chefs) == 0
 
-        # For these tests we don't care that we're not registering callables.
+        test_chef_1 = DumplingChef()
+        test_chef_2 = DumplingChef()
 
-        kitchen.register_handler(
-            chef_name='TestChefOne',
-            packet_handler='TestPacketHandlerOne',
-        )
+        kitchen.register_chef(test_chef_1)
+        assert kitchen._chefs == [test_chef_1]
 
-        assert kitchen._packet_handlers == ['TestPacketHandlerOne']
-        assert len(kitchen._interval_handlers) == 0
-
-        kitchen.register_handler(
-            chef_name='TestChefTwo',
-            packet_handler='TestPacketHandlerTwo',
-            interval_handler='TestIntervalHandlerOne',
-        )
-
-        assert kitchen._packet_handlers == [
-            'TestPacketHandlerOne', 'TestPacketHandlerTwo'
-        ]
-        assert kitchen._interval_handlers == ['TestIntervalHandlerOne']
+        kitchen.register_chef(test_chef_2)
+        assert kitchen._chefs == [test_chef_1, test_chef_2]
 
     def test_repr(self):
         """
@@ -78,14 +64,16 @@ class TestDumplingKitchen:
         """
         kitchen = DumplingKitchen()
         assert repr(kitchen) == (
-            "DumplingKitchen(name='{}', "
-            "interface='{}', "
-            "sniffer_filter='{}', "
-            "chef_poke_interval={})".format(
-                kitchen.name,
-                kitchen.interface,
-                kitchen.filter,
-                kitchen.chef_poke_interval,
+            "DumplingKitchen(name={}, "
+            "interface={}, "
+            "sniffer_filter={}, "
+            "chef_poke_interval={} "
+            "dumpling_queue={})".format(
+                repr(kitchen.name),
+                repr(kitchen.interface),
+                repr(kitchen.filter),
+                repr(kitchen.chef_poke_interval),
+                repr(kitchen.dumpling_queue),
             )
         )
 
@@ -94,53 +82,72 @@ class TestHandlerInvocations:
     """
     Test DumplingKitchen invocations of the packet and interval handlers.
     """
-    def test_packet_handling(self, mocker):
+    def test_packet_processing(self, mocker):
         """
-        Test invocations of the packet handlers.
+        Test invocation of the packet handlers.
         """
         kitchen = DumplingKitchen()
+        mocker.patch.object(kitchen, '_send_dumpling')
 
-        # Set up two valid mock packet handlers (pretending to be chef packet
-        # handlers).
-        mock_handler_1 = mocker.Mock()
-        mock_handler_2 = mocker.Mock()
-        kitchen._packet_handlers = [mock_handler_1, mock_handler_2]
+        # Set up two valid chefs. One of them returns a dumpling when given a
+        # packet, and the other one doesn't.
+        mock_chef_with_packet_dumpling = mocker.Mock()
+        mock_chef_with_no_packet_dumpling = mocker.Mock()
+
+        mock_chef_with_packet_dumpling.packet_handler.return_value = 'dumpling'
+        mock_chef_with_no_packet_dumpling.packet_handler.return_value = None
+
+        kitchen._chefs = [
+            mock_chef_with_packet_dumpling,
+            mock_chef_with_no_packet_dumpling,
+        ]
 
         packet = 'test_packet'
-
         kitchen._process_packet(packet)
 
-        # Now check that that the two mock packet handlers got called as
-        # expected.
-        mock_handler_1.assert_called_once_with(packet)
-        mock_handler_2.assert_called_once_with(packet)
+        # Check that we only sent one packet dumpling.
+        kitchen._send_dumpling.assert_called_once_with(
+            mock_chef_with_packet_dumpling,
+            'dumpling',
+            DumplingDriver.packet,
+        )
 
-    def test_packet_handling_with_broken_handler(self, mocker):
+    def test_packet_processing_with_broken_handler(self, mocker):
         """
         Test invocations of the packet handlers where one of them raises an
         exception, which should result in an exception-level log entry being
         created but the processing being otherwise unaffected.
         """
         kitchen = DumplingKitchen()
+        mocker.patch.object(kitchen, '_send_dumpling')
+        mocker.patch.object(kitchen, '_logger')
 
-        # Set up a valid packet handler, and a paxket handler which raises an
-        # exception. The exception should only result in a log entry being
-        # made.
-        mock_handler_1 = mocker.Mock()
-        mock_handler_2 = mocker.Mock(side_effect=KeyError)
-        kitchen._packet_handlers = [mock_handler_1, mock_handler_2]
+        # Set up two valid chefs. One of them returns a dumpling when given a
+        # packet, and the raises an exception.
+        mock_chef_with_packet_dumpling = mocker.Mock()
+        mock_chef_with_no_packet_dumpling = mocker.Mock()
+
+        mock_chef_with_packet_dumpling.packet_handler.return_value = 'dumpling'
+        mock_chef_with_no_packet_dumpling.packet_handler.side_effect = KeyError
+
+        kitchen._chefs = [
+            mock_chef_with_packet_dumpling,
+            mock_chef_with_no_packet_dumpling,
+        ]
 
         # Add a spy on the logger so we can check it got called.
         mocker.spy(kitchen._logger, 'exception')
 
         packet = 'test_packet'
-
         kitchen._process_packet(packet)
 
-        # Check that the two handlers got called, and that an exception-level
-        # log was created.
-        mock_handler_1.assert_called_once_with(packet)
-        mock_handler_2.assert_called_once_with(packet)
+        # Check that we only sent one packet dumpling, and that an
+        # exception-level log was created.
+        kitchen._send_dumpling.assert_called_once_with(
+            mock_chef_with_packet_dumpling,
+            'dumpling',
+            DumplingDriver.packet,
+        )
         kitchen._logger.exception.assert_called_once()
 
     def test_chef_poking(self, mocker):
@@ -148,33 +155,60 @@ class TestHandlerInvocations:
         Test interval-based chef poking.
         """
         test_interval = 3
-        kitchen = DumplingKitchen(chef_poke_interval=test_interval)
+        kitchen = DumplingKitchen(
+            chef_poke_interval=test_interval,
+        )
+        mocker.patch.object(kitchen, '_send_dumpling')
 
         # _poke_chefs() runs in an infinite loop which we need to break out of.
         # We do that by setting a side effect on the mocked call to sleep()
-        # which will raise an Exception. This doesn't interfere with being able
-        # to determine the value passed to sleep().
+        # which will raise a RuntimeError. This doesn't interfere with being
+        # able to determine the value passed to sleep().
         mock_sleep = mocker.patch(
-            'netdumplings.dumplingkitchen.sleep', side_effect=Exception
+            'netdumplings.dumplingkitchen.sleep', side_effect=RuntimeError
         )
 
-        # Set up two valid mock interval handlers (pretending to be chef
-        # interval handlers).
-        mock_handler_1 = mocker.Mock()
-        mock_handler_2 = mocker.Mock()
-        kitchen._interval_handlers = [mock_handler_1, mock_handler_2]
+        # Set up two valid chefs. One of them returns a dumpling when poked and
+        # and the other one doesn't.
+        mock_chef_with_interval_dumpling = mocker.Mock()
+        mock_chef_with_no_interval_dumpling = mocker.Mock()
 
-        # Run the function under test. We've configured it to throw an
-        # exception the first time it attempts to sleep.
-        with pytest.raises(Exception):
+        dumpling_interval_handler = (
+            mock_chef_with_interval_dumpling.interval_handler
+        )
+        no_dumpling_interval_handler = (
+            mock_chef_with_no_interval_dumpling.interval_handler
+        )
+
+        dumpling_interval_handler.return_value = 'dumpling'
+        no_dumpling_interval_handler.return_value = None
+
+        kitchen._chefs = [
+            mock_chef_with_interval_dumpling,
+            mock_chef_with_no_interval_dumpling,
+        ]
+
+        # Run once through the poker infinite loop.
+        with pytest.raises(RuntimeError):
             kitchen._poke_chefs(test_interval)
 
-        # Now check that that the two mock interval handlers got called as
-        # expected, and that the mock sleep also got called as expected.
+        # Check that we were asked to sleep by the test interval.
         mock_sleep.assert_called_once_with(test_interval)
 
-        mock_handler_1.assert_called_once_with(interval=test_interval)
-        mock_handler_2.assert_called_once_with(interval=test_interval)
+        # Check that the two interval handlers were invoked, and that the one
+        # that returned a dumpling resulted in that dumpling being sent.
+        dumpling_interval_handler.assert_called_once_with(
+            interval=test_interval
+        )
+        no_dumpling_interval_handler.assert_called_once_with(
+            interval=test_interval
+        )
+
+        kitchen._send_dumpling.assert_called_once_with(
+            mock_chef_with_interval_dumpling,
+            'dumpling',
+            DumplingDriver.interval,
+        )
 
     def test_chef_poking_with_broken_handler(self, mocker):
         """
@@ -183,29 +217,88 @@ class TestHandlerInvocations:
         created but the processing being otherwise unaffected.
         """
         test_interval = 3
-        kitchen = DumplingKitchen(chef_poke_interval=test_interval)
+        kitchen = DumplingKitchen(
+            chef_poke_interval=test_interval,
+        )
+        mocker.patch.object(kitchen, '_send_dumpling')
+        mocker.patch.object(kitchen, '_logger')
+
         mocker.patch(
-            'netdumplings.dumplingkitchen.sleep', side_effect=Exception
+            'netdumplings.dumplingkitchen.sleep', side_effect=RuntimeError
         )
 
-        # Set up a valid interval handler, and an interval handler which raises
-        # an exception. The exception should only result in a log entry being
-        # made.
-        mock_handler_1 = mocker.Mock()
-        mock_handler_2 = mocker.Mock(side_effect=KeyError)
-        kitchen._interval_handlers = [mock_handler_1, mock_handler_2]
+        # Set up one valid chefs which returns an interval dumpling, and one
+        # chef which raises an exception in its interval handler.
+        # and the other one doesn't.
+        mock_chef_with_interval_dumpling = mocker.Mock()
+        mock_chef_with_interval_error = mocker.Mock()
 
-        # Add a spy on the logger so we can check it got called.
-        mocker.spy(kitchen._logger, 'exception')
+        dumpling_interval_handler = (
+            mock_chef_with_interval_dumpling.interval_handler
+        )
+        error_interval_handler = (
+            mock_chef_with_interval_error.interval_handler
+        )
 
-        with pytest.raises(Exception):
+        dumpling_interval_handler.return_value = 'dumpling'
+        error_interval_handler.side_effect = KeyError
+
+        kitchen._chefs = [
+            mock_chef_with_interval_dumpling,
+            mock_chef_with_interval_error,
+        ]
+
+        # Run once through the poker infinite loop.
+        with pytest.raises(RuntimeError):
             kitchen._poke_chefs(test_interval)
 
-        # Check that the two handlers got called, and that an exception-level
-        # log was created.
-        mock_handler_1.assert_called_once_with(interval=test_interval)
-        mock_handler_2.assert_called_once_with(interval=test_interval)
+        # Check that the valid dumpling was sent, and that we logged an
+        # exception for the other chef.
+        kitchen._send_dumpling.assert_called_once_with(
+            mock_chef_with_interval_dumpling,
+            'dumpling',
+            DumplingDriver.interval,
+        )
         kitchen._logger.exception.assert_called_once()
+
+
+class TestDumplingSends:
+    """
+    Test the sending of dumplings.
+    """
+    def test_dumpling_send(self, mocker, test_dumpling_dns):
+        """
+        Test the _send_dumpling method to ensure that it calls make() on a new
+        Dumpling and puts the resulting dumpling contents onto the queue.
+        """
+        test_payload_json = json.dumps(test_dumpling_dns)
+
+        mock_dumpling_class = mocker.patch(
+            'netdumplings.dumplingkitchen.Dumpling'
+        )
+
+        mock_dumpling_class.return_value.make.return_value = (
+            test_payload_json
+        )
+
+        mock_chef = mocker.Mock()
+        mock_queue = mocker.Mock()
+
+        kitchen = DumplingKitchen(dumpling_queue=mock_queue)
+
+        kitchen._send_dumpling(
+            chef=mock_chef,
+            payload=test_dumpling_dns['payload'],
+            driver=DumplingDriver.packet,
+        )
+
+        mock_dumpling_class.assert_called_once_with(
+            chef=mock_chef,
+            payload=test_dumpling_dns['payload'],
+            driver=DumplingDriver.packet,
+        )
+
+        mock_queue.put.assert_called_once_with(test_payload_json)
 
 
 class TestChefDiscovery:
@@ -218,7 +311,7 @@ class TestChefDiscovery:
         """
         kitchen = DumplingKitchen()
 
-        # This will actually allow the imports to take place, so we're
+        # WARNING: This will actually allow the imports to take place, so we're
         # technically letting this test pollute our namespace.
         spy_importlib = mocker.spy(importlib, 'import_module')
 
@@ -255,7 +348,7 @@ class TestChefDiscovery:
             'MoreTestChefOne', 'MoreTestChefTwo'
         ])
 
-    def test_chef_discovery_with_invalid_nodule(self):
+    def test_chef_discovery_with_invalid_module(self):
         """
         Test that attempting to discover chefs from an invalid module
         successfully results in an error for that module, while chefs from a

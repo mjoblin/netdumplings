@@ -22,10 +22,8 @@ class ARPChef(DumplingChef):
     request = 1
     reply = 2
 
-    def __init__(self, kitchen=None, dumpling_queue=None, receive_pokes=False):
-        super().__init__(kitchen=kitchen, dumpling_queue=dumpling_queue,
-                         receive_pokes=receive_pokes)
-
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.ip_mac = {}
 
     def packet_handler(self, packet):
@@ -67,4 +65,4 @@ class ARPChef(DumplingChef):
             # Remember this IP -> MAC mapping.
             self.ip_mac[arp.psrc] = arp.hwsrc
 
-        self.send_packet_dumpling(payload)
+        return payload

@@ -8,7 +8,7 @@ from time import sleep
 
 from scapy.all import sniff
 
-from netdumplings import DumplingChef
+from netdumplings import Dumpling, DumplingChef, DumplingDriver
 
 
 class DumplingKitchen:
@@ -25,21 +25,22 @@ class DumplingKitchen:
     for poking the chefs at regular time intervals.
     """
     def __init__(self, name='default', interface='all', sniffer_filter='tcp',
-                 chef_poke_interval=5):
+                 chef_poke_interval=5, dumpling_queue=None):
         """
         :param name: Kitchen name.
         :param sniffer_filter: PCAP-compliant sniffer filter (``None`` means
             sniff all packets).
         :param chef_poke_interval: Frequency (in secs) to call all registered
             chef poke handlers.  ``None`` disables poking.
+        :param dumpling_queue: Queue for sending dumplings to nd-shifty.
         """
         self.name = name
         self.interface = interface
         self.filter = sniffer_filter
         self.chef_poke_interval = chef_poke_interval
+        self.dumpling_queue = dumpling_queue
 
-        self._packet_handlers = []
-        self._interval_handlers = []
+        self._chefs = []
         self._logger = logging.getLogger(__name__)
 
     def __repr__(self):
@@ -47,38 +48,64 @@ class DumplingKitchen:
             '{}(name={}, '
             'interface={}, '
             'sniffer_filter={}, '
-            'chef_poke_interval={})'.format(
+            'chef_poke_interval={} '
+            'dumpling_queue={})'.format(
                 type(self).__name__,
                 repr(self.name),
                 repr(self.interface),
                 repr(self.filter),
                 repr(self.chef_poke_interval),
+                repr(self.dumpling_queue),
             )
         )
 
+    def _send_dumpling(self, chef, payload, driver):
+        """
+        Initiates a send of a dumpling to all the dumpling eaters by putting
+        the dumpling on the dumpling queue.
+
+        :param payload: The dumpling payload.  Can be anything which is JSON
+            serializable.  It's up to the dumpling eaters to make sense of it.
+        :param driver: The DumplingDriver; either ``DumplingDriver.packet`` or
+            ``DumplingDriver.interval``.
+        """
+        dumpling = Dumpling(chef=chef, payload=payload, driver=driver)
+        dumpling_json = dumpling.make()
+        self.dumpling_queue.put(dumpling_json)
+        self._logger.debug("{0}: Put dumpling on queue, {1} bytes".format(
+            self.name, len(dumpling_json)
+        ))
+
     def _process_packet(self, packet):
         """
-        Passes the given network packet to each of the :class:`DumplingChef`
-        packet handlers.
+        Passes the given network packet to each of the registered
+        :class:`DumplingChef` packet handlers. Takes the returned payload and
+        sends it to nd-shifty.
 
         If a packet handler raises an exception then the exception will be
         logged and otherwise ignored.
 
         :param packet: The network packet to process (from scapy).
         """
-        for handler in self._packet_handlers:
+        for chef in self._chefs:
             try:
-                handler(packet)
+                payload = chef.packet_handler(packet)
             except Exception as e:
                 self._logger.exception(
-                    "{0}: Error invoking packet handler {1}: {2}".format(
-                        self.name, handler, e))
+                    "{0}: Error invoking packet handler for chef {1}: "
+                    "{2}".format(self.name, chef.name, e)
+                )
+
+                continue
+
+            if payload is not None:
+                self._send_dumpling(chef, payload, DumplingDriver.packet)
 
     def _poke_chefs(self, interval):
         """
-        Poke any :class:`DumplingChef` objects (who have registered an interval
-        handler) at regular time intervals.  Intended to be run in a separate
-        thread managed by the ``DumplingKitchen``.
+        Call any registered :class:`DumplingChef` interval handlers at regular
+        time intervals.  Intended to be run in a separate thread managed by the
+        ``DumplingKitchen``.
 
         If an interval handler raises an exception then the exception will be
         logged and otherwise ignored.
@@ -88,13 +115,20 @@ class DumplingKitchen:
         while True:
             self._logger.debug("{0}: Poking chefs".format(self.name))
 
-            for handler in self._interval_handlers:
+            for chef in self._chefs:
                 try:
-                    handler(interval=interval)
+                    payload = chef.interval_handler(interval=interval)
                 except Exception as e:
                     self._logger.exception(
-                        "{0}: Error invoking interval handler {1}: {2}".format(
-                            self.name, handler, e))
+                        "{0}: Error invoking interval handler for chef {1}: "
+                        "{2}".format(self.name, chef.name, e)
+                    )
+
+                    continue
+
+                if payload is not None:
+                    self._send_dumpling(chef, payload, DumplingDriver.interval)
+
             sleep(interval)
 
     @staticmethod
@@ -143,26 +177,18 @@ class DumplingKitchen:
 
         return chef_info
 
-    def register_handler(
-            self, chef_name=None, packet_handler=None, interval_handler=None):
+    def register_chef(self, chef=None):
         """
-        Called by each :class:`DumplingChef` to register their packet and/or
-        interval handlers with the sniffer kitchen.
+        Called by each :class:`DumplingChef` to register themselves with the
+        kitchen.
 
-        :param chef_name: Name of the chef registering their handler(s).
-        :param packet_handler: A callable which will be passed each packet as
-            they come in via the sniffer.
-        :param interval_handler: A callable which will be invoked every time
-            the interval number of seconds has passed.
+        :param chef: The DumplingChef being registered.
         """
-        self._packet_handlers.append(packet_handler)
+        self._chefs.append(chef)
 
-        if interval_handler:
-            self._interval_handlers.append(interval_handler)
-
-        self._logger.debug(
-            "{0}: Received chef handler registration from {1}".format(
-                self.name, chef_name))
+        self._logger.debug("{0}: Received chef registration from {1}".format(
+            self.name, chef.name
+        ))
 
     def run(self):
         """
