@@ -10,11 +10,13 @@ class TestDumplingKitchen:
     """
     Test the DumplingKitchen class.
     """
-    def test_init_default(self):
+    def test_init_default(self, mocker):
         """
         Test default DumplingKitchen initialization.
         """
-        kitchen = DumplingKitchen()
+        mock_queue = mocker.Mock()
+
+        kitchen = DumplingKitchen(dumpling_queue=mock_queue)
 
         assert kitchen.name == 'default'
         assert kitchen.interface == 'all'
@@ -23,17 +25,21 @@ class TestDumplingKitchen:
 
         assert len(kitchen._chefs) == 0
 
-    def test_init_with_overrides(self):
+    def test_init_with_overrides(self, mocker):
         """
         Test DumplingKitchen initialization with overrides.
         """
+        mock_queue = mocker.Mock()
+
         kitchen = DumplingKitchen(
+            dumpling_queue=mock_queue,
             name='test_kitchen',
             interface='en0',
             sniffer_filter='test filter',
             chef_poke_interval=10,
         )
 
+        assert kitchen.dumpling_queue == mock_queue
         assert kitchen.name == 'test_kitchen'
         assert kitchen.interface == 'en0'
         assert kitchen.filter == 'test filter'
@@ -41,11 +47,11 @@ class TestDumplingKitchen:
 
         assert len(kitchen._chefs) == 0
 
-    def test_chef_registration(self):
+    def test_chef_registration(self, mocker):
         """
         Test registration of chefs with the kitchen.
         """
-        kitchen = DumplingKitchen()
+        kitchen = DumplingKitchen(dumpling_queue=mocker.Mock())
 
         assert len(kitchen._chefs) == 0
 
@@ -58,22 +64,23 @@ class TestDumplingKitchen:
         kitchen.register_chef(test_chef_2)
         assert kitchen._chefs == [test_chef_1, test_chef_2]
 
-    def test_repr(self):
+    def test_repr(self, mocker):
         """
         Test the string representation.
         """
-        kitchen = DumplingKitchen()
+        kitchen = DumplingKitchen(dumpling_queue=mocker.Mock())
         assert repr(kitchen) == (
-            "DumplingKitchen(name={}, "
+            "DumplingKitchen("
+            "dumpling_queue={}, "
+            "name={}, "
             "interface={}, "
             "sniffer_filter={}, "
-            "chef_poke_interval={} "
-            "dumpling_queue={})".format(
+            "chef_poke_interval={})".format(
+                repr(kitchen.dumpling_queue),
                 repr(kitchen.name),
                 repr(kitchen.interface),
                 repr(kitchen.filter),
                 repr(kitchen.chef_poke_interval),
-                repr(kitchen.dumpling_queue),
             )
         )
 
@@ -86,7 +93,7 @@ class TestHandlerInvocations:
         """
         Test invocation of the packet handlers.
         """
-        kitchen = DumplingKitchen()
+        kitchen = DumplingKitchen(dumpling_queue=mocker.Mock())
         mocker.patch.object(kitchen, '_send_dumpling')
 
         # Set up two valid chefs. One of them returns a dumpling when given a
@@ -118,7 +125,7 @@ class TestHandlerInvocations:
         exception, which should result in an exception-level log entry being
         created but the processing being otherwise unaffected.
         """
-        kitchen = DumplingKitchen()
+        kitchen = DumplingKitchen(dumpling_queue=mocker.Mock())
         mocker.patch.object(kitchen, '_send_dumpling')
         mocker.patch.object(kitchen, '_logger')
 
@@ -156,6 +163,7 @@ class TestHandlerInvocations:
         """
         test_interval = 3
         kitchen = DumplingKitchen(
+            dumpling_queue=mocker.Mock(),
             chef_poke_interval=test_interval,
         )
         mocker.patch.object(kitchen, '_send_dumpling')
@@ -218,6 +226,7 @@ class TestHandlerInvocations:
         """
         test_interval = 3
         kitchen = DumplingKitchen(
+            dumpling_queue=mocker.Mock(),
             chef_poke_interval=test_interval,
         )
         mocker.patch.object(kitchen, '_send_dumpling')
@@ -309,7 +318,7 @@ class TestChefDiscovery:
         """
         Test discovery of chefs from the two valid test chef modules.
         """
-        kitchen = DumplingKitchen()
+        kitchen = DumplingKitchen(dumpling_queue=mocker.Mock())
 
         # WARNING: This will actually allow the imports to take place, so we're
         # technically letting this test pollute our namespace.
@@ -348,13 +357,13 @@ class TestChefDiscovery:
             'MoreTestChefOne', 'MoreTestChefTwo'
         ])
 
-    def test_chef_discovery_with_invalid_module(self):
+    def test_chef_discovery_with_invalid_module(self, mocker):
         """
         Test that attempting to discover chefs from an invalid module
         successfully results in an error for that module, while chefs from a
         valid module are still properly imported.
         """
-        kitchen = DumplingKitchen()
+        kitchen = DumplingKitchen(dumpling_queue=mocker.Mock())
 
         chef_info = kitchen.get_chefs_in_modules([
             'tests.data.dumplingchefs',
@@ -384,7 +393,10 @@ class TestKitchenRun:
         Test that an attempt is made to start the poke thread when poking is
         enabled.
         """
-        kitchen = DumplingKitchen(chef_poke_interval=5)
+        kitchen = DumplingKitchen(
+            dumpling_queue=mocker.Mock(),
+            chef_poke_interval=5,
+        )
 
         mock_thread = mocker.patch('netdumplings.dumplingkitchen.Thread')
         mocker.patch('netdumplings.dumplingkitchen.sniff')
@@ -400,7 +412,10 @@ class TestKitchenRun:
         Test that the poke thread is not started when the kitchen is not
         poking.
         """
-        kitchen = DumplingKitchen(chef_poke_interval=None)
+        kitchen = DumplingKitchen(
+            dumpling_queue=mocker.Mock(),
+            chef_poke_interval=None,
+        )
 
         mock_thread = mocker.patch('netdumplings.dumplingkitchen.Thread')
         mocker.patch('netdumplings.dumplingkitchen.sniff')
@@ -412,7 +427,10 @@ class TestKitchenRun:
         """
         Test that the sniffer was started with the specified interface.
         """
-        kitchen = DumplingKitchen(interface='en0')
+        kitchen = DumplingKitchen(
+            dumpling_queue=mocker.Mock(),
+            interface='en0',
+        )
 
         mocker.patch('netdumplings.dumplingkitchen.Thread')
         mock_sniffer = mocker.patch('netdumplings.dumplingkitchen.sniff')
@@ -431,7 +449,10 @@ class TestKitchenRun:
         'all' interface is requested. Not passing an interface to the sniffer
         results in all interfaces being sniffed.
         """
-        kitchen = DumplingKitchen(interface='all')
+        kitchen = DumplingKitchen(
+            dumpling_queue=mocker.Mock(),
+            interface='all',
+        )
 
         mocker.patch('netdumplings.dumplingkitchen.Thread')
         mock_sniffer = mocker.patch('netdumplings.dumplingkitchen.sniff')
