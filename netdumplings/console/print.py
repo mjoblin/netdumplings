@@ -173,7 +173,7 @@ def print_cli(hub, chef, kitchen, eater_name, interval_dumplings,
         color=color,
         name=eater_name,
         hub=hub,
-        chefs=chef if chef else None,
+        chef_filter=chef if chef else None,
     )
 
     eater.run()
