@@ -52,7 +52,8 @@ class DumplingHub:
         self._start_time = datetime.datetime.now()
 
         self._system_stats = {
-            'dumplings_sent': 0
+            'dumplings_in': 0,
+            'dumplings_out': 0
         }
 
         self._logger = logging.getLogger(__name__)
@@ -81,7 +82,8 @@ class DumplingHub:
         uptime = (datetime.datetime.now() - self._start_time).total_seconds()
 
         system_status = {
-            'total_dumplings_sent': self._system_stats['dumplings_sent'],
+            'total_dumplings_in': self._system_stats['dumplings_in'],
+            'total_dumplings_out': self._system_stats['dumplings_out'],
             'server_uptime': uptime,
             'dumpling_kitchen_count': len(self._dumpling_kitchens),
             'dumpling_eater_count': len(self._dumpling_eaters),
@@ -143,6 +145,8 @@ class DumplingHub:
                             )
                         ))
                     continue
+
+                self._system_stats['dumplings_in'] += 1
 
                 chef = dumpling['metadata']['chef']
                 self._logger.debug(
@@ -208,9 +212,9 @@ class DumplingHub:
                 self._logger.debug(
                     "Sending {0} dumpling to {1} at {2}:{3}; {4} bytes".format(
                         chef, eater_name, host, port, len(dumpling)))
-                self._system_stats['dumplings_sent'] += 1
 
                 await websocket.send(dumpling)
+                self._system_stats['dumplings_out'] += 1
         except ConnectionClosed as e:
             self._logger.info(
                 "Dumpling eater {0} connection closed: {1}".format(

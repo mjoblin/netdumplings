@@ -152,10 +152,12 @@ class TestSystemStatus:
             'dumpling_kitchen_count',
             'dumpling_kitchens',
             'server_uptime',
-            'total_dumplings_sent',
+            'total_dumplings_in',
+            'total_dumplings_out',
         ]
 
-        assert start_status['total_dumplings_sent'] == 0
+        assert start_status['total_dumplings_in'] == 0
+        assert start_status['total_dumplings_out'] == 0
         assert start_status['dumpling_kitchen_count'] == 0
         assert start_status['dumpling_eater_count'] == 0
         assert start_status['dumpling_kitchens'] == []
@@ -272,7 +274,7 @@ class TestDumplingGrabber:
         hub._dumpling_eaters[eater_1]['queue'].put = asynctest.CoroutineMock()
         hub._dumpling_eaters[eater_2]['queue'].put = asynctest.CoroutineMock()
 
-        # We should start with no kitchens.
+        # We should start with no kitchens and no dumplings sent.
         assert len(hub._dumpling_kitchens) == 0
 
         try:
@@ -301,6 +303,9 @@ class TestDumplingGrabber:
         hub._dumpling_eaters[eater_2]['queue'].put.assert_called_once_with(
             json.dumps(test_dumpling_pktcount)
         )
+
+        # Check that we counted the received dumpling.
+        assert hub._system_stats['dumplings_in'] == 1
 
     @pytest.mark.asyncio
     async def test_invalid_dumpling_from_kitchen(
@@ -345,8 +350,10 @@ class TestDumplingGrabber:
         # We should have logged the error.
         hub._logger.error.assert_called_once()
 
-        # Check the eater only had 1 dumpling put on its queue.
+        # Check the eater only had 1 dumpling put on its queue and that the hub
+        # only counted 1 dumpling (the valid one).
         assert hub._dumpling_eaters[eater_1]['queue'].put.call_count == 1
+        assert hub._system_stats['dumplings_in'] == 1
 
     @pytest.mark.asyncio
     async def test_kitchen_connection_closed(
@@ -431,7 +438,7 @@ class TestDumplingEmitter:
         hub = DumplingHub()
 
         assert len(hub._dumpling_eaters) == 0
-        assert hub._system_stats['dumplings_sent'] == 0
+        assert hub._system_stats['dumplings_out'] == 0
 
         try:
             await hub._emit_dumplings(mock_websocket, path=None)
@@ -441,7 +448,7 @@ class TestDumplingEmitter:
         # We expect to have one eater registered with the hub, and to have sent
         # two dumplings.
         assert len(hub._dumpling_eaters) == 1
-        assert hub._system_stats['dumplings_sent'] == 2
+        assert hub._system_stats['dumplings_out'] == 2
 
         assert hub._dumpling_eaters[mock_websocket] == {
             'metadata': {
@@ -490,14 +497,14 @@ class TestDumplingEmitter:
         hub = DumplingHub()
 
         assert len(hub._dumpling_eaters) == 0
-        assert hub._system_stats['dumplings_sent'] == 0
+        assert hub._system_stats['dumplings_out'] == 0
 
         await hub._emit_dumplings(mock_websocket, path=None)
 
-        # Check that we don't have any eaters in the eater list, but that we
-        # still sent a dumpling.
+        # Check that we no longer have any eaters in the eater list, but that
+        # we still sent a dumpling.
         assert len(hub._dumpling_eaters) == 0
-        assert hub._system_stats['dumplings_sent'] == 1
+        assert hub._system_stats['dumplings_out'] == 1
 
         mock_websocket.send.assert_called_once_with(
             json.dumps(test_dumpling_pktcount)
