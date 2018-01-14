@@ -26,13 +26,13 @@ class TestSniftyCLI:
         mock_dumpling_emitter_process = mocker.Mock()
         mock_dumpling_emitter_process.is_alive.return_value = True
 
-        mock_queue = mocker.patch('netdumplings.console.snifty.Queue')
+        mock_queue = mocker.patch('multiprocessing.Queue')
         mock_configure_logging = mocker.patch(
             'netdumplings.console.snifty.configure_logging'
         )
         mocker.patch('netdumplings.console.snifty.sleep')
         mock_process = mocker.patch(
-            'netdumplings.console.snifty.Process',
+            'multiprocessing.Process',
             side_effect=[mock_sniffer_process, mock_dumpling_emitter_process],
         )
 
