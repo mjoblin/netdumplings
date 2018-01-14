@@ -85,6 +85,16 @@ class DumplingEater:
         self.logger = logging.getLogger(self._logger_name)
 
     def __repr__(self):
+        def handler_string(attr):
+            # We can't use 'repr(self.handler)' for callables because it causes
+            # an infinite loop as the repr of the handler includes the repr of
+            # the handler (etc). So we replace handler reprs with
+            # '<callable: name>'.
+            return (
+                '<callable: {}>'.format(attr.__name__) if callable(attr)
+                else repr(attr)
+            )
+
         return (
             '{}('
             'name={}, '
@@ -97,9 +107,9 @@ class DumplingEater:
                 repr(self.name),
                 repr(self.hub),
                 repr(self.chef_filter),
-                repr(self.on_connect),
-                repr(self.on_dumpling),
-                repr(self.on_connection_lost),
+                handler_string(self.on_connect),
+                handler_string(self.on_dumpling),
+                handler_string(self.on_connection_lost),
             )
         )
 
