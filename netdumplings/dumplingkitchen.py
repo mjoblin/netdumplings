@@ -5,10 +5,14 @@ import os
 import sys
 from threading import Thread
 from time import sleep
+from typing import Dict, List, Optional
 
 from scapy.all import sniff
+import scapy.packet
 
-from netdumplings import Dumpling, DumplingChef, DumplingDriver
+from .dumpling import Dumpling, DumplingDriver
+from .dumplingchef import DumplingChef
+from ._shared import JSONSerializable
 
 
 class DumplingKitchen:
@@ -59,7 +63,12 @@ class DumplingKitchen:
             )
         )
 
-    def _send_dumpling(self, chef, payload, driver):
+    def _send_dumpling(
+            self,
+            chef: DumplingChef,
+            payload: JSONSerializable,
+            driver: DumplingDriver,
+    ):
         """
         Initiates a send of a dumpling to all the dumpling eaters by putting
         the dumpling on the dumpling queue.
@@ -76,7 +85,7 @@ class DumplingKitchen:
             self.name, len(dumpling_json)
         ))
 
-    def _process_packet(self, packet):
+    def _process_packet(self, packet: scapy.packet.Raw):
         """
         Passes the given network packet to each of the registered
         :class:`DumplingChef` packet handlers. Takes the returned payload and
@@ -101,7 +110,7 @@ class DumplingKitchen:
             if payload is not None:
                 self._send_dumpling(chef, payload, DumplingDriver.packet)
 
-    def _poke_chefs(self, interval):
+    def _poke_chefs(self, interval: int):
         """
         Call any registered :class:`DumplingChef` interval handlers at regular
         time intervals.  Intended to be run in a separate thread managed by the
@@ -132,7 +141,7 @@ class DumplingKitchen:
             sleep(interval)
 
     @staticmethod
-    def get_chefs_in_modules(chef_modules=None):
+    def get_chefs_in_modules(chef_modules: Optional[List[str]] = None) -> Dict:
         """
         Finds available :class:`DumplingChef` subclasses.  Looks inside the
         given ``chef_modules`` list of Python module names for classes which
@@ -177,7 +186,7 @@ class DumplingKitchen:
 
         return chef_info
 
-    def register_chef(self, chef=None):
+    def register_chef(self, chef: DumplingChef):
         """
         Called by each :class:`DumplingChef` to register themselves with the
         kitchen.
