@@ -133,9 +133,9 @@ class TestDumplingEater:
             "on_connect={}, "
             "on_dumpling={}, "
             "on_connection_lost={})".format(
-                repr(handler),
-                repr(handler),
-                repr(handler)
+                '<callable: {}>'.format(handler.__name__),
+                '<callable: {}>'.format(handler.__name__),
+                '<callable: {}>'.format(handler.__name__),
             )
         )
 
