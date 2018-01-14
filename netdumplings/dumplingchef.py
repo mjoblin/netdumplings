@@ -1,4 +1,10 @@
 import logging
+from typing import Optional
+
+import scapy.packet
+
+import netdumplings
+from ._shared import JSONSerializable
 
 
 class DumplingChef:
@@ -30,7 +36,10 @@ class DumplingChef:
     # chef cannot be assigned to any kitchens via snifty.
     assignable_to_kitchen = True
 
-    def __init__(self, kitchen=None):
+    def __init__(
+            self,
+            kitchen: Optional['netdumplings.DumplingKitchen'] = None,
+    ):
         """
         :param kitchen: The :class:`DumplingKitchen` which is providing the
             network packet ingredients used to create the dumplings.
@@ -46,7 +55,7 @@ class DumplingChef:
     def __repr__(self):
         return '{}(kitchen={})'.format(type(self).__name__, repr(self.kitchen))
 
-    def packet_handler(self, packet):
+    def packet_handler(self, packet: scapy.packet.Raw) -> JSONSerializable:
         """
         Called automatically by `nd-snifty` whenever a new packet has been
         sniffed.
@@ -64,7 +73,8 @@ class DumplingChef:
 
         return payload
 
-    def interval_handler(self, interval=None):
+    def interval_handler(
+            self, interval: Optional[int] = None) -> JSONSerializable:
         """
         Called automatically at regular intervals by `nd-snifty`.  Allows for
         time-based (rather than purely packet-based) chefs to keep on cheffing

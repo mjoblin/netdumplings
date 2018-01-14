@@ -2,9 +2,10 @@ import asyncio
 import json
 import logging
 import signal
+from typing import Awaitable, Callable, Dict, List, Optional
 import websockets
 
-from netdumplings.exceptions import InvalidDumpling
+from .exceptions import InvalidDumpling
 
 from ._shared import (
     validate_dumpling, ND_CLOSE_MSGS, DEFAULT_SHIFTY_HOST,
@@ -43,15 +44,24 @@ class DumplingEater:
     """
     def __init__(
             self,
-            name='nameless_eater',
-            shifty='{}:{}'.format(
+            name: str = 'nameless_eater',
+            shifty: str ='{}:{}'.format(
                 DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT
             ),
             *,
-            chefs=None,
-            on_connect=None,
-            on_dumpling=None,
-            on_connection_lost=None
+            chefs: Optional[List[str]] = None,
+            on_connect: Optional[
+                Callable[
+                    [str, websockets.client.WebSocketClientProtocol],
+                    Awaitable[None]
+                ]
+            ] = None,
+            on_dumpling: Optional[
+                Callable[[Dict], Awaitable[None]]
+            ] = None,
+            on_connection_lost: Optional[
+                Callable[[Exception], Awaitable[None]]
+            ] = None,
     ):
         self.name = name
         self.chefs = chefs

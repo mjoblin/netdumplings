@@ -3,9 +3,13 @@ import logging
 import logging.config
 import os
 import time
+from typing import Dict, List
 
-from netdumplings.exceptions import InvalidDumpling
+from .exceptions import InvalidDumpling
 
+
+# For typing.
+JSONSerializable = [str, int, List, Dict, None]
 
 # Tuples of (code, msg) for sending when closing websocket connections.
 ND_CLOSE_MSGS = {

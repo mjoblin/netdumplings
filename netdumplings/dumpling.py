@@ -1,21 +1,25 @@
 from enum import Enum
 import json
 import time
+from typing import Any, Union
 
-from netdumplings.exceptions import InvalidDumplingPayload
+from .dumplingchef import DumplingChef
+from .exceptions import InvalidDumplingPayload
 
 
-DumplingDriver = Enum('DumplingDriver', 'packet interval')
-"""
-When a new :class:`Dumpling` is created it wants to be told why it's being
-created.  Its creation will be the result of one of two things:
+class DumplingDriver(Enum):
+    """
+    When a new :class:`Dumpling` is created it wants to be told why it's being
+    created.  Its creation will be the result of one of two things:
 
-``DumplingDriver.packet``
-    a network packet being received by a :class:`DumplingChef`.
+    ``DumplingDriver.packet``
+        a network packet being received by a :class:`DumplingChef`.
 
-``DumplingDriver.interval``
-    a regular time-based poke being received by a :class:`DumplingChef`.
-"""
+    ``DumplingDriver.interval``
+        a regular time-based poke being received by a :class:`DumplingChef`.
+    """
+    packet = 1
+    interval = 2
 
 
 class Dumpling:
@@ -53,7 +57,12 @@ class Dumpling:
         }
     """
     def __init__(
-            self, *, chef=None, driver=DumplingDriver.packet, payload=None):
+            self,
+            *,
+            chef: Union[DumplingChef, str],
+            driver: DumplingDriver = DumplingDriver.packet,
+            payload: Any,
+    ):
         """
         :param chef: The :class:`DumplingChef` who created the dumpling, or
             a string representing the dumpling chef name.  A string can be
@@ -109,7 +118,7 @@ class Dumpling:
             )
         )
 
-    def make(self):
+    def make(self) -> str:
         """
         Makes a complete JSON-serialized dumpling string from the Dumpling.
 
@@ -121,8 +130,8 @@ class Dumpling:
         :class:`DumplingKitchen`.
 
         :return: A JSON string representation of the dumpling.
-        :raises :class:`InvalidDumplingPayload` if `payload` cannot be
-            JSON-serialized.
+        :raises: :class:`InvalidDumplingPayload` if the Dumpling ``payload``
+            cannot be JSON-serialized.
         """
         dumpling = {
             'metadata': {

@@ -5,8 +5,8 @@ import logging
 import websockets
 from websockets.exceptions import ConnectionClosed
 
-from netdumplings import Dumpling, DumplingDriver
-from netdumplings.exceptions import InvalidDumpling, NetDumplingsError
+from .dumpling import Dumpling, DumplingDriver
+from .exceptions import InvalidDumpling, NetDumplingsError
 
 from ._shared import (
     validate_dumpling, DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_IN_PORT,
@@ -26,10 +26,10 @@ class DumplingHub:
     """
     def __init__(
             self,
-            address=DEFAULT_SHIFTY_HOST,
-            in_port=DEFAULT_SHIFTY_IN_PORT,
-            out_port=DEFAULT_SHIFTY_OUT_PORT,
-            status_freq=SHIFTY_STATUS_FREQ,
+            address: str = DEFAULT_SHIFTY_HOST,
+            in_port: int = DEFAULT_SHIFTY_IN_PORT,
+            out_port: int = DEFAULT_SHIFTY_OUT_PORT,
+            status_freq: int = SHIFTY_STATUS_FREQ,
     ):
         """
         :param address: Address the hub is running on.

@@ -30,23 +30,11 @@ class TestDumpling:
     """
     Test the Dumpling class.
     """
-    def test_init_default(self):
-        """
-        Test default Dumpling initialization.
-        """
-        dumpling = Dumpling()
-
-        assert dumpling.chef is None
-        assert dumpling.chef_name is None
-        assert dumpling.kitchen is None
-        assert dumpling.driver is DumplingDriver.packet
-        assert dumpling.payload is None
-
     def test_init_with_chef_instance(self, mock_chef, mock_kitchen):
         """
-        Test initialization of a Dumpling with a DumplingChef instance.
+        Test initialization of a Dumpling.
         """
-        dumpling = Dumpling(chef=mock_chef)
+        dumpling = Dumpling(chef=mock_chef, payload=None)
 
         assert dumpling.chef is mock_chef
         assert dumpling.chef_name == 'TestChef'
@@ -58,7 +46,7 @@ class TestDumpling:
         """
         Test initialization of a Dumpling with a chef string.
         """
-        dumpling = Dumpling(chef='test_chef')
+        dumpling = Dumpling(chef='test_chef', payload=None)
 
         assert dumpling.chef == 'test_chef'
         assert dumpling.chef_name == 'test_chef'
@@ -72,7 +60,7 @@ class TestDumpling:
         """
         mocker.patch('time.time', return_value='test_timestamp')
 
-        dumpling = Dumpling(chef=mock_chef)
+        dumpling = Dumpling(chef=mock_chef, payload=None)
         assert dumpling() == dumpling.make()
 
     def test_metadata(self, mocker, mock_chef):
@@ -81,7 +69,7 @@ class TestDumpling:
         """
         mocker.patch('time.time', return_value='test_timestamp')
 
-        dumpling = Dumpling(chef=mock_chef)
+        dumpling = Dumpling(chef=mock_chef, payload=None)
         data = json.loads(dumpling.make())
         metadata = data['metadata']
 
@@ -138,9 +126,9 @@ class TestDumpling:
         """
         Test the string representation.
         """
-        dumpling = Dumpling()
+        dumpling = Dumpling(chef='test_chef', payload=None)
         assert repr(dumpling) == (
-            'Dumpling(chef=None, '
+            "Dumpling(chef='test_chef', "
             'driver=DumplingDriver.packet, '
             'payload=None)'
         )

@@ -2,8 +2,9 @@ import asyncio
 import json
 import logging
 import sys
-from multiprocessing import Process, Queue
+import multiprocessing
 from time import sleep
+from typing import Dict, List, Optional, Union
 
 import click
 import websockets
@@ -17,8 +18,16 @@ from netdumplings._shared import (
 from ._shared import CLICK_CONTEXT_SETTINGS
 
 
-def network_sniffer(kitchen_name, interface, chefs, chef_modules, valid_chefs,
-                    sniffer_filter, chef_poke_interval, dumpling_queue):
+def network_sniffer(
+        kitchen_name: str,
+        interface: str,
+        chefs: Union[List[str], bool],
+        chef_modules: List[str],
+        valid_chefs: Dict,
+        sniffer_filter: str,
+        chef_poke_interval: int,
+        dumpling_queue: multiprocessing.Queue,
+):
     """
     Top-level function for managing the flow of sniffed network packets to
     dumpling chefs (via a kitchen).
@@ -86,7 +95,12 @@ def network_sniffer(kitchen_name, interface, chefs, chef_modules, valid_chefs,
 
 
 async def notify_shifty(
-        kitchen_name, shifty, dumpling_queue, kitchen_info, log):
+        kitchen_name: str,
+        shifty: str,
+        dumpling_queue: multiprocessing.Queue,
+        kitchen_info: dict,
+        log: logging.Logger,
+):
     """
     Grabs fresh dumplings from the sniffers dumpling queue and sends them on to
     `nd-shifty` (the dumpling hub).
@@ -137,7 +151,12 @@ async def notify_shifty(
                 kitchen_name, e))
 
 
-def dumpling_emitter(kitchen_name, shifty, dumpling_queue, kitchen_info):
+def dumpling_emitter(
+        kitchen_name: str,
+        shifty: str,
+        dumpling_queue: multiprocessing.Queue,
+        kitchen_info: Dict,
+):
     """
     Kick off an async event loop to manage funneling dumplings from the queue
     to shifty.
@@ -166,7 +185,7 @@ def dumpling_emitter(kitchen_name, shifty, dumpling_queue, kitchen_info):
         pass
 
 
-def list_chefs(chef_modules=None):
+def list_chefs(chef_modules: Optional[List[str]] = None):
     """
     Lists all the chef classes (subclassed from :class:`DumplingChef`) found in
     the given list of ``chef_modules``.
@@ -189,7 +208,12 @@ def list_chefs(chef_modules=None):
         print()
 
 
-def get_valid_chefs(kitchen_name, chef_modules, chefs_requested, log):
+def get_valid_chefs(
+        kitchen_name: str,
+        chef_modules: List[str],
+        chefs_requested: List[str],
+        log: logging.Logger,
+) -> Dict:
     """
     Retrieves the names of all valid DumplingChef subclasses for later
     instantiation.  Valid chefs are all the classes in ``chef_modules`` which
@@ -268,7 +292,7 @@ def get_valid_chefs(kitchen_name, chef_modules, chefs_requested, log):
     show_default=True,
 )
 @click.option(
-    '--filter', '-f',
+    '--filter', '-f', 'pkt_filter',
     help='PCAP-style sniffer packet filter.',
     metavar='PCAP_FILTER',
     default='tcp or udp or arp',
@@ -308,7 +332,7 @@ def get_valid_chefs(kitchen_name, chef_modules, chefs_requested, log):
     default=False,
 )
 @click.version_option(version=netdumplings.__version__)
-def snifty_cli(kitchen_name, shifty, interface, filter, chef_module, chef,
+def snifty_cli(kitchen_name, shifty, interface, pkt_filter, chef_module, chef,
                poke_interval, chef_list):
     """
     A dumpling kitchen.
@@ -341,7 +365,7 @@ def snifty_cli(kitchen_name, shifty, interface, filter, chef_module, chef,
 
     # A queue for sending dumplings from the sniffer process (dumplings made
     # by the dumplingchef packet handlers) to the dumpling-emitter process.
-    dumpling_emitter_queue = Queue()
+    dumpling_emitter_queue = multiprocessing.Queue()
 
     # Determine what chefs we'll be sending packets to.
     valid_chefs = get_valid_chefs(kitchen_name, chef_module, chef, logger)
@@ -366,23 +390,23 @@ def snifty_cli(kitchen_name, shifty, interface, filter, chef_module, chef,
     # dumpling chefs populate the queue with new dumplings whenever they're
     # excited to share a tasty new dumpling -- which may or may not be every
     # time they receive a packet to process (it's up to them really).
-    sniffer_process = Process(
+    sniffer_process = multiprocessing.Process(
         target=network_sniffer,
         args=(
-            kitchen_name, interface, chef, chef_module, valid_chefs, filter,
-            poke_interval, dumpling_emitter_queue
+            kitchen_name, interface, chef, chef_module, valid_chefs,
+            pkt_filter, poke_interval, dumpling_emitter_queue,
         )
     )
 
     kitchen_info = {
         'kitchen_name': kitchen_name,
         'interface': interface,
-        'filter': filter,
+        'filter': pkt_filter,
         'chefs': valid_chef_list,
         'poke_interval': poke_interval,
     }
 
-    dumpling_emitter_process = Process(
+    dumpling_emitter_process = multiprocessing.Process(
         target=dumpling_emitter,
         args=(kitchen_name, shifty, dumpling_emitter_queue, kitchen_info)
     )
