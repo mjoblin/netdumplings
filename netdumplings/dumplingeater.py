@@ -62,7 +62,7 @@ class DumplingEater:
             on_connection_lost: Optional[
                 Callable[[Exception], Awaitable[None]]
             ] = None,
-    ):
+    ) -> None:
         self.name = name
         self.chefs = chefs
         self.shifty = shifty
