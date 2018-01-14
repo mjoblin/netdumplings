@@ -38,6 +38,7 @@ tests_require = [
 extras_require = {
     'dev': [
         'flake8',
+        'mypy',
         'sphinx',
         'sphinx-autodoc-typehints',
     ] + tests_require,
