@@ -43,9 +43,14 @@ async def on_dumpling(dumpling):
         termcolor.colored(up_str, attrs=['bold']) if PRINT_COLOR else up_str
     )
 
-    dumplings = (
-        termcolor.colored(payload['total_dumplings_sent'], attrs=['bold'])
-        if PRINT_COLOR else payload['total_dumplings_sent']
+    dumplings_in = (
+        termcolor.colored(payload['total_dumplings_in'], attrs=['bold'])
+        if PRINT_COLOR else payload['total_dumplings_in']
+    )
+
+    dumplings_out = (
+        termcolor.colored(payload['total_dumplings_out'], attrs=['bold'])
+        if PRINT_COLOR else payload['total_dumplings_out']
     )
 
     kitchens = (
@@ -59,10 +64,11 @@ async def on_dumpling(dumpling):
     )
 
     status_msg = (
-        '\r{now}  uptime: {uptime}  dumplings: {dumplings}  '
-        'kitchens: {kitchens}  eaters: {eaters} '.format(
+        '\r{now}  uptime: {uptime}  dumplings in: {dumplings_in}  '
+        'out: {dumplings_out}  kitchens: {kitchens}  eaters: {eaters} '.format(
             now=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            dumplings=dumplings,
+            dumplings_in=dumplings_in,
+            dumplings_out=dumplings_out,
             uptime=up_str,
             kitchens=kitchens,
             eaters=eaters,
