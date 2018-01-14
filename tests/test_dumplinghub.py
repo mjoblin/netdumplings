@@ -285,7 +285,7 @@ class TestDumplingGrabber:
         assert hub._dumpling_kitchens[mock_websocket] == {
             'metadata': {
                 'info_from_kitchen': test_kitchen,
-                'info_from_shifty': {
+                'info_from_hub': {
                     'host': 'kitchenhost',
                     'port': 11111,
                 }
@@ -446,7 +446,7 @@ class TestDumplingEmitter:
         assert hub._dumpling_eaters[mock_websocket] == {
             'metadata': {
                 'info_from_eater': test_eater,
-                'info_from_shifty': {
+                'info_from_hub': {
                     'host': 'eaterhost',
                     'port': 22222,
                 }

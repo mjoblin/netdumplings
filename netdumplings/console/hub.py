@@ -5,8 +5,8 @@ import click
 import netdumplings
 from netdumplings.exceptions import NetDumplingsError
 from netdumplings._shared import (
-    configure_logging, DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_IN_PORT,
-    DEFAULT_SHIFTY_OUT_PORT, SHIFTY_STATUS_FREQ,
+    configure_logging, HUB_HOST, HUB_IN_PORT,
+    HUB_OUT_PORT, HUB_STATUS_FREQ,
 )
 
 from ._shared import CLICK_CONTEXT_SETTINGS
@@ -17,9 +17,9 @@ from ._shared import CLICK_CONTEXT_SETTINGS
 )
 @click.option(
     '--address', '-a',
-    help='Address where nd-shifty will send dumplings from.',
+    help='Address where nd-hub will send dumplings from.',
     metavar='HOSTNAME',
-    default=DEFAULT_SHIFTY_HOST,
+    default=HUB_HOST,
     show_default=True,
 )
 @click.option(
@@ -27,7 +27,7 @@ from ._shared import CLICK_CONTEXT_SETTINGS
     help='Port to receive incoming dumplings from.',
     metavar='PORT',
     type=click.INT,
-    default=DEFAULT_SHIFTY_IN_PORT,
+    default=HUB_IN_PORT,
     show_default=True,
 )
 @click.option(
@@ -35,7 +35,7 @@ from ._shared import CLICK_CONTEXT_SETTINGS
     help='Port to send outgoing dumplings on.',
     metavar='PORT',
     type=click.INT,
-    default=DEFAULT_SHIFTY_OUT_PORT,
+    default=HUB_OUT_PORT,
     show_default=True,
 )
 @click.option(
@@ -43,17 +43,17 @@ from ._shared import CLICK_CONTEXT_SETTINGS
     help='Frequency (in seconds) to send status dumplings.',
     metavar='SECONDS',
     type=click.INT,
-    default=SHIFTY_STATUS_FREQ,
+    default=HUB_STATUS_FREQ,
     show_default=True,
 )
 @click.version_option(version=netdumplings.__version__)
-def shifty_cli(address, in_port, out_port, status_freq):
+def hub_cli(address, in_port, out_port, status_freq):
     """
     The dumpling hub.
 
     Sends dumplings received from all kitchens (usually any running instances
-    of nd-snifty) to all dumpling eaters. All kitchens and eaters need to
-    connect to the nd-shifty --in-port or --out-port respectively.
+    of nd-sniff) to all dumpling eaters. All kitchens and eaters need to
+    connect to the nd-hub --in-port or --out-port respectively.
     """
     configure_logging()
 
@@ -67,9 +67,9 @@ def shifty_cli(address, in_port, out_port, status_freq):
     try:
         dumpling_hub.run()
     except NetDumplingsError as e:
-        print('shifty error: {0}'.format(e))
+        print('hub error: {0}'.format(e))
         sys.exit(1)
 
 
 if __name__ == '__main__':
-    shifty_cli()
+    hub_cli()

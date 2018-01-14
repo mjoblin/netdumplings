@@ -20,10 +20,11 @@ ND_CLOSE_MSGS = {
 LOGGING_CONFIG_FILE = os.path.join(
     os.path.dirname(__file__), 'data', 'logging.json'
 )
-DEFAULT_SHIFTY_HOST = 'localhost'
-DEFAULT_SHIFTY_IN_PORT = 11347
-DEFAULT_SHIFTY_OUT_PORT = 11348
-SHIFTY_STATUS_FREQ = 5
+
+HUB_HOST = 'localhost'
+HUB_IN_PORT = 11347
+HUB_OUT_PORT = 11348
+HUB_STATUS_FREQ = 5
 
 
 def configure_logging(log_level=logging.INFO, config_file=LOGGING_CONFIG_FILE):
@@ -69,9 +70,9 @@ def configure_logging(log_level=logging.INFO, config_file=LOGGING_CONFIG_FILE):
 
 def validate_dumpling(dumpling_json):
     """
-    Validates a dumpling received from (or about to be sent to) `nd-shifty`.
-    Validation involves ensuring that it's valid JSON and that it includes a
-    ``metadata.chef`` key.
+    Validates a dumpling received from (or about to be sent to) the dumpling
+    hub. Validation involves ensuring that it's valid JSON and that it includes
+    a ``metadata.chef`` key.
 
     :param dumpling_json: The dumpling JSON.
     :raise: :class:`netdumplings.exceptions.InvalidDumpling` if the

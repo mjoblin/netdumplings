@@ -9,31 +9,31 @@ from .dumpling import Dumpling, DumplingDriver
 from .exceptions import InvalidDumpling, NetDumplingsError
 
 from ._shared import (
-    validate_dumpling, DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_IN_PORT,
-    DEFAULT_SHIFTY_OUT_PORT, SHIFTY_STATUS_FREQ,
+    validate_dumpling, HUB_HOST, HUB_IN_PORT,
+    HUB_OUT_PORT, HUB_STATUS_FREQ,
 )
 
 
 class DumplingHub:
     """
     Implements a dumpling hub.  A dumpling hub is two websocket servers: one
-    receives dumplings from any number of running `nd-snifty` scripts; and the
+    receives dumplings from any number of running `nd-sniff` scripts; and the
     other sends those dumplings to any number of `dumpling eaters`.  The hub
     also makes its own dumplings which describe its own system status which are
     also sent to all the dumpling eaters at regular intervals.
 
-    `nd-shifty` is a simple wrapper around ``DumplingHub``.
+    `nd-hub` is a simple wrapper around ``DumplingHub``.
     """
     def __init__(
             self,
-            address: str = DEFAULT_SHIFTY_HOST,
-            in_port: int = DEFAULT_SHIFTY_IN_PORT,
-            out_port: int = DEFAULT_SHIFTY_OUT_PORT,
-            status_freq: int = SHIFTY_STATUS_FREQ,
+            address: str = HUB_HOST,
+            in_port: int = HUB_IN_PORT,
+            out_port: int = HUB_OUT_PORT,
+            status_freq: int = HUB_STATUS_FREQ,
     ) -> None:
         """
         :param address: Address the hub is running on.
-        :param in_port: Port used to receive dumplings from `nd-snifty`.
+        :param in_port: Port used to receive dumplings from `nd-sniff`.
         :param out_port: Port used to send dumplings to `dumpling eaters`.
         :param status_freq: Frequency (in secs) to send system status
             dumplings.
@@ -98,8 +98,8 @@ class DumplingHub:
     async def _grab_dumplings(self, websocket, path):
         """
         A coroutine for grabbing dumplings from a single instance of
-        `nd-snifty`.  A single instance of this coroutine exists for each
-        `nd-snifty` and is invoked via :meth:`websockets.server.serve`.
+        `nd-sniff`.  A single instance of this coroutine exists for each
+        `nd-sniff` and is invoked via :meth:`websockets.server.serve`.
 
         :param websocket: A :class:`websockets.server.WebSocketServerProtocol`.
         :param path: Websocket request URI.
@@ -112,7 +112,7 @@ class DumplingHub:
         kitchen = {
             'metadata': {
                 'info_from_kitchen': json.loads(kitchen_json),
-                'info_from_shifty': {
+                'info_from_hub': {
                     'host': host,
                     'port': port
                 }
@@ -178,7 +178,7 @@ class DumplingHub:
         eater = {
             'metadata': {
                 'info_from_eater': json.loads(eater_json),
-                'info_from_shifty': {
+                'info_from_hub': {
                     'host': host,
                     'port': port
                 }
@@ -239,7 +239,7 @@ class DumplingHub:
     def run(self):
         """
         Run the dumpling hub.  Starts two websocket servers: one to receive
-        dumplings from zero or more instances of `nd-snifty`; and another to
+        dumplings from zero or more instances of `nd-sniff`; and another to
         send those dumplings to zero or more dumpling eaters.  Also creates its
         own dumplings at regular intervals to send system status information to
         all connected dumpling eaters.

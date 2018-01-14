@@ -4,7 +4,7 @@ import click
 import termcolor
 
 import netdumplings
-from netdumplings._shared import DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT
+from netdumplings._shared import HUB_HOST, HUB_OUT_PORT
 
 from ._shared import CLICK_CONTEXT_SETTINGS
 
@@ -12,23 +12,23 @@ from ._shared import CLICK_CONTEXT_SETTINGS
 PRINT_COLOR = False
 
 
-async def on_connect(shifty_uri, websocket):
+async def on_connect(hub_uri, websocket):
     """
-    Called when the connection to nd-shifty has been created.
+    Called when the connection to nd-hub has been created.
 
-    :param shifty_uri: The nd-shifty websocket URI.
-    :param websocket: The websocket object used for talking to nd-shifty
+    :param hub_uri: The nd-hub websocket URI.
+    :param websocket: The websocket object used for talking to nd-hub
         (websockets.WebSocketClientProtocol).
     :return: None
     """
-    print('Shifty status from {0}'.format(shifty_uri))
+    print('Shifty status from {0}'.format(hub_uri))
     print('Waiting for data... ', end='', flush=True)
 
 
 async def on_dumpling(dumpling):
     """
-    Called when a new dumpling is received from nd-shifty.  Prints information
-    about the current state of nd-shifty.
+    Called when a new dumpling is received from nd-hub.  Prints summary
+    information about the current state of nd-hub.
 
     :param dumpling: The freshly-made new dumpling.
     :return: None
@@ -74,12 +74,12 @@ async def on_dumpling(dumpling):
 
 async def on_connection_lost(e):
     """
-    Called when nd-shifty connection is lost.
+    Called when nd-hub connection is lost.
 
     :param e: The exception thrown during the connection close.
     :return: None
     """
-    print('\nLost connection to nd-shifty: {}'.format(e))
+    print('\nLost connection to nd-hub: {}'.format(e))
 
 
 # -----------------------------------------------------------------------------
@@ -88,15 +88,15 @@ async def on_connection_lost(e):
     context_settings=CLICK_CONTEXT_SETTINGS,
 )
 @click.option(
-    '--shifty', '-h',
-    help='Address where nd-shifty is sending dumplings from.',
+    '--hub', '-h',
+    help='Address where nd-hub is sending dumplings from.',
     metavar='HOST:PORT',
-    default='{}:{}'.format(DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT),
+    default='{}:{}'.format(HUB_HOST, HUB_OUT_PORT),
     show_default=True,
 )
 @click.option(
     '--eater-name', '-n',
-    help='Dumpling eater name for this tool when connecting to nd-shifty.',
+    help='Dumpling eater name for this tool when connecting to nd-hub.',
     metavar='EATER_NAME',
     default='statuseater',
     show_default=True,
@@ -108,21 +108,22 @@ async def on_connection_lost(e):
     show_default=True,
 )
 @click.version_option(version=netdumplings.__version__)
-def shiftysummary_cli(shifty, eater_name, color):
+def hubstatus_cli(hub, eater_name, color):
     """
     A dumpling eater.
 
-    Connects to nd-shifty (the dumpling hub) and prints information from any
-    SystemStatusChef dumplings. This is a system-monitoring dumpling eater
-    which can be used to keep an eye on nd-shifty.
+    Connects to nd-hub (the dumpling hub) and continually prints summary status
+    information from any SystemStatusChef dumplings. This is a
+    system monitoring dumpling eater which can be used to keep an eye on
+    nd-hub.
     """
     global PRINT_COLOR
     PRINT_COLOR = color
 
     eater = netdumplings.DumplingEater(
         name=eater_name,
-        shifty=shifty,
-        chefs=['SystemStatusChef'],
+        hub=hub,
+        chef_filter=['SystemStatusChef'],
         on_connect=on_connect,
         on_dumpling=on_dumpling,
         on_connection_lost=on_connection_lost,
@@ -132,4 +133,4 @@ def shiftysummary_cli(shifty, eater_name, color):
 
 
 if __name__ == '__main__':
-    shiftysummary_cli()
+    hubstatus_cli()

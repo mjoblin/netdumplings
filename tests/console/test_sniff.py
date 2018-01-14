@@ -8,15 +8,14 @@ import asynctest
 import click.testing
 import pytest
 
-from netdumplings.console.snifty import (
-    snifty_cli, get_valid_chefs, network_sniffer, dumpling_emitter,
-    notify_shifty,
+from netdumplings.console.sniff import (
+    sniff_cli, get_valid_chefs, network_sniffer, dumpling_emitter, notify_hub,
 )
 
 
-class TestSniftyCLI:
+class TestSniffCLI:
     """
-    Test the snifty_cli() function.
+    Test the sniff_cli() function.
     """
     def test_default_case(self, mocker):
         # We exit the infinite loop by faking the death of the sniffer process.
@@ -28,9 +27,9 @@ class TestSniftyCLI:
 
         mock_queue = mocker.patch('multiprocessing.Queue')
         mock_configure_logging = mocker.patch(
-            'netdumplings.console.snifty.configure_logging'
+            'netdumplings.console.sniff.configure_logging'
         )
-        mocker.patch('netdumplings.console.snifty.sleep')
+        mocker.patch('netdumplings.console.sniff.sleep')
         mock_process = mocker.patch(
             'multiprocessing.Process',
             side_effect=[mock_sniffer_process, mock_dumpling_emitter_process],
@@ -38,10 +37,10 @@ class TestSniftyCLI:
 
         runner = click.testing.CliRunner()
         result = runner.invoke(
-            snifty_cli,
+            sniff_cli,
             [
                 '--kitchen-name', 'test_kitchen',
-                '--shifty', 'test_shifty:5000',
+                '--hub', 'test_hub:5000',
                 '--interface', 'test_interface',
                 '--filter', 'test_filter',
                 '--chef-module', 'netdumplings.dumplingchefs',
@@ -77,7 +76,7 @@ class TestSniftyCLI:
             target=dumpling_emitter,
             args=(
                 'test_kitchen',
-                'test_shifty:5000',
+                'test_hub:5000',
                 mock_queue.return_value,
                 {
                     'kitchen_name': 'test_kitchen',
@@ -104,16 +103,16 @@ class TestSniftyCLI:
         Test that no valid chefs results in an error log and an exit code of 1.
         """
         mocker.patch(
-            'netdumplings.console.snifty.get_valid_chefs',
+            'netdumplings.console.sniff.get_valid_chefs',
             return_value={},
         )
 
-        logger = logging.getLogger('netdumplings.console.snifty')
+        logger = logging.getLogger('netdumplings.console.sniff')
         mock_error = mocker.patch.object(logger, 'error')
 
         runner = click.testing.CliRunner()
         result = runner.invoke(
-            snifty_cli,
+            sniff_cli,
             [
                 '--kitchen-name', 'test_kitchen',
             ],
@@ -126,7 +125,7 @@ class TestSniftyCLI:
         assert result.exit_code == 1
 
 
-class TestSniftyChefList:
+class TestSniffChefList:
     """
     Test the chef_list() function.
     """
@@ -135,12 +134,12 @@ class TestSniftyChefList:
         Test requesting a chef list.
         """
         mock_list_chefs = mocker.patch(
-            'netdumplings.console.snifty.list_chefs'
+            'netdumplings.console.sniff.list_chefs'
         )
 
         runner = click.testing.CliRunner()
         result = runner.invoke(
-            snifty_cli,
+            sniff_cli,
             [
                 '--chef-list',
                 '--chef-module', 'testchefs.one',
@@ -152,7 +151,7 @@ class TestSniftyChefList:
         mock_list_chefs.assert_called_once_with(('testchefs.one', 'morechefs'))
 
 
-class TestSniftyNetworkSniffer:
+class TestSniffNetworkSniffer:
     """
     Test the network_sniffer() function.
     """
@@ -213,7 +212,7 @@ class TestSniftyNetworkSniffer:
         )
 
 
-class TestSniftyListChefs:
+class TestSniffListChefs:
     """
     Test the list_chefs() function.
     """
@@ -223,7 +222,7 @@ class TestSniftyListChefs:
         """
         runner = click.testing.CliRunner()
         result = runner.invoke(
-            snifty_cli,
+            sniff_cli,
             [
                 '--chef-list',
             ],
@@ -257,7 +256,7 @@ class TestSniftyListChefs:
 
         runner = click.testing.CliRunner()
         result = runner.invoke(
-            snifty_cli,
+            sniff_cli,
             [
                 '--chef-list',
                 '--chef-module', 'doesnotexist'
@@ -277,7 +276,7 @@ class TestSniftyListChefs:
         )
 
 
-class TestSniftyGetValidChefs:
+class TestSniffGetValidChefs:
     """
     Test the get_valid_chefs() function.
     """
@@ -359,39 +358,39 @@ class TestSniftyGetValidChefs:
         )
 
 
-class TestSniftyDumplingEmitter:
+class TestSniffDumplingEmitter:
     """
-    Test the dumpling_emitter() function and the closely-related
-    notify_shifty() async function.
+    Test the dumpling_emitter() function and the closely-related notify_hub()
+    async function.
     """
     def test_dumpling_emitter(self, mocker):
         """
         Test that the dumpling emitter kicks off an async event loop running
-        notify_shifty().
+        notify_hub().
         """
-        log = logging.getLogger('netdumplings.snifty')
+        log = logging.getLogger('netdumplings.sniff')
 
         mock_queue = mocker.Mock()
         mock_get_event_loop = mocker.patch('asyncio.get_event_loop')
 
-        mock_notify_shifty = mocker.patch(
-            'netdumplings.console.snifty.notify_shifty',
+        mock_notify_hub = mocker.patch(
+            'netdumplings.console.sniff.notify_hub',
             return_value=asynctest.CoroutineMock(),
         )
 
-        dumpling_emitter('test_kitchen', 'test_shifty:5000', mock_queue, {})
+        dumpling_emitter('test_kitchen', 'test_hub:5000', mock_queue, {})
 
         # Check that an event loop was retrieved, and that run_until_complete
-        # wa called on it, running notify_shifty.
+        # wa called on it, running notify_hub.
         mock_get_event_loop.assert_called_once()
 
-        mock_notify_shifty.assert_called_once_with(
-            'test_kitchen', 'test_shifty:5000', mock_queue, {}, log
+        mock_notify_hub.assert_called_once_with(
+            'test_kitchen', 'test_hub:5000', mock_queue, {}, log
         )
 
         mock_loop = mock_get_event_loop.return_value
         mock_loop.run_until_complete.assert_called_once_with(
-            mock_notify_shifty.return_value
+            mock_notify_hub.return_value
         )
 
     @pytest.mark.asyncio
@@ -399,12 +398,12 @@ class TestSniftyDumplingEmitter:
             self, mocker, test_dumpling_dns, test_dumpling_pktcount,
             test_kitchen):
         """
-        Test a conventional execution of notify_shifty(). We make sure a
-        websocket connection is opened to shifty; and that two dumplings are
+        Test a conventional execution of notify_hub(). We make sure a websocket
+        connection is opened to the hub; and that two dumplings are
         successfully retrieved from the dumpling queue and re-emitted down the
         websocket connection.
         """
-        log = logging.getLogger('netdumplings.snifty')
+        log = logging.getLogger('netdumplings.sniff')
 
         # Mock the dumpling queue to contain a dumpling then throw a
         # RuntimeError to break out of the infinite loop.
@@ -416,7 +415,7 @@ class TestSniftyDumplingEmitter:
         ]
 
         test_kitchen_name = 'test_kitchen'
-        test_shifty = 'test_shifty:5000'
+        test_hub = 'test_hub:5000'
 
         mock_websockets_connect = mocker.patch(
             'websockets.connect',
@@ -427,9 +426,9 @@ class TestSniftyDumplingEmitter:
         mock_websocket.send = asynctest.CoroutineMock()
 
         try:
-            await notify_shifty(
+            await notify_hub(
                 kitchen_name=test_kitchen_name,
-                shifty=test_shifty,
+                hub=test_hub,
                 dumpling_queue=mock_queue,
                 kitchen_info=test_kitchen,
                 log=log,
@@ -437,13 +436,11 @@ class TestSniftyDumplingEmitter:
         except RuntimeError:
             pass
 
-        # Check that we connected to shifty.
-        mock_websockets_connect.assert_called_with(
-            'ws://{}'.format(test_shifty)
-        )
+        # Check that we connected to the hub.
+        mock_websockets_connect.assert_called_with('ws://{}'.format(test_hub))
 
         # Check that the kitchen announced itself first, before forwarding
-        # a dumpling from the queue to shifty.
+        # a dumpling from the queue to the hub.
         assert mock_queue.get.call_count == 3
 
         assert mock_websocket.send.call_args_list == [
@@ -456,9 +453,9 @@ class TestSniftyDumplingEmitter:
     async def test_websocket_connection_problem(self, mocker, test_kitchen):
         """
         Test that we log an error when there's a probem connection over the
-        websocket to shifty.
+        websocket to the hub.
         """
-        log = logging.getLogger('netdumplings.snifty')
+        log = logging.getLogger('netdumplings.sniff')
         mock_error = mocker.patch.object(log, 'error')
 
         mock_websockets_connect = mocker.patch(
@@ -470,11 +467,11 @@ class TestSniftyDumplingEmitter:
         mock_websocket.send = asynctest.CoroutineMock()
 
         test_kitchen_name = 'test_kitchen'
-        test_shifty = 'test_shifty:5000'
+        test_hub = 'test_hub:5000'
 
-        await notify_shifty(
+        await notify_hub(
             kitchen_name=test_kitchen_name,
-            shifty=test_shifty,
+            hub=test_hub,
             dumpling_queue=mocker.Mock(),
             kitchen_info=test_kitchen,
             log=log,
@@ -490,7 +487,7 @@ class TestSniftyDumplingEmitter:
         """
         Test that an asyncio.CancelledError attempts to close the websocket.
         """
-        log = logging.getLogger('netdumplings.snifty')
+        log = logging.getLogger('netdumplings.sniff')
 
         mock_queue = mocker.Mock()
         mock_queue.get.side_effect = [
@@ -498,7 +495,7 @@ class TestSniftyDumplingEmitter:
         ]
 
         test_kitchen_name = 'test_kitchen'
-        test_shifty = 'test_shifty:5000'
+        test_hub = 'test_hub:5000'
 
         mock_websockets_connect = mocker.patch(
             'websockets.connect',
@@ -509,9 +506,9 @@ class TestSniftyDumplingEmitter:
         mock_websocket.send = asynctest.CoroutineMock()
         mock_websocket.close = asynctest.CoroutineMock()
 
-        await notify_shifty(
+        await notify_hub(
             kitchen_name=test_kitchen_name,
-            shifty=test_shifty,
+            hub=test_hub,
             dumpling_queue=mock_queue,
             kitchen_info=test_kitchen,
             log=log,

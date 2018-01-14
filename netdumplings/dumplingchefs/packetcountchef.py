@@ -30,10 +30,10 @@ class PacketCountChef(DumplingChef):
 
     def packet_handler(self, packet):
         """
-        Processes a packet from nd-snifty.  Adds 1 to the layer count for
-        each layer found in the packet.  This does not make any dumplings.
+        Processes a packet from nd-sniff.  Adds 1 to the layer count for each
+        layer found in the packet.  This does not make any dumplings.
 
-        :param packet: Packet from nd-snifty.
+        :param packet: Packet from nd-sniff.
         """
         self.packet_counts[packet.name] += 1
 

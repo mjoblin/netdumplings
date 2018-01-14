@@ -38,7 +38,7 @@ class DumplingKitchen:
             chef_poke_interval: int = 5,
     ) -> None:
         """
-        :param dumpling_queue: Queue for sending dumplings to nd-shifty.
+        :param dumpling_queue: Queue for sending dumplings to the dumpling hub.
         :param name: Kitchen name.
         :param sniffer_filter: PCAP-compliant sniffer filter (``None`` means
             sniff all packets).
@@ -97,7 +97,7 @@ class DumplingKitchen:
         """
         Passes the given network packet to each of the registered
         :class:`DumplingChef` packet handlers. Takes the returned payload and
-        sends it to nd-shifty.
+        sends it to the dumpling hub.
 
         If a packet handler raises an exception then the exception will be
         logged and otherwise ignored.

@@ -4,7 +4,7 @@ import click
 import termcolor
 
 import netdumplings
-from netdumplings._shared import DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT
+from netdumplings._shared import HUB_HOST, HUB_OUT_PORT
 
 from ._shared import CLICK_CONTEXT_SETTINGS, printable_dumpling
 
@@ -12,7 +12,7 @@ from ._shared import CLICK_CONTEXT_SETTINGS, printable_dumpling
 class PrinterEater(netdumplings.DumplingEater):
     """
     A dumpling eater which displays dumpling information to the terminal as it
-    arrives from nd-shifty.
+    arrives from nd-hub.
     """
     def __init__(
             self,
@@ -21,7 +21,7 @@ class PrinterEater(netdumplings.DumplingEater):
             packet_dumplings=True,
             contents=True,
             color=True,
-            **kwargs
+            **kwargs,
     ):
         super().__init__(**kwargs)
 
@@ -31,20 +31,20 @@ class PrinterEater(netdumplings.DumplingEater):
         self._contents = contents
         self._color = color
 
-    async def on_connect(self, shifty_uri, websocket):
+    async def on_connect(self, hub_uri, websocket):
         """
-        Called when the connection to nd-shifty has been created.
+        Called when the connection to nd-hub has been created.
 
-        :param shifty_uri: The nd-shifty websocket URI.
-        :param websocket: The websocket object used for talking to nd-shifty
+        :param hub_uri: The nd-hub websocket URI.
+        :param websocket: The websocket object used for talking to nd-hub
             (websockets.WebSocketClientProtocol).
         """
-        print('Connected to nd-shifty at {0}'.format(shifty_uri))
+        print('Connected to nd-hub at {0}'.format(hub_uri))
         print('Waiting for dumplings...\n')
 
     async def on_dumpling(self, dumpling):
         """
-        Called when a new dumpling is received from nd-shifty. Prints the
+        Called when a new dumpling is received from nd-hub. Prints the
         dumpling summary and contents.
 
         :param dumpling: The freshly-made new dumpling.
@@ -92,11 +92,11 @@ class PrinterEater(netdumplings.DumplingEater):
 
     async def on_connection_lost(self, e):
         """
-        Called when the nd-shifty connection is lost.
+        Called when the nd-hub connection is lost.
 
         :param e: The exception thrown during the connection close.
         """
-        print('\nLost connection to nd-shifty: {}'.format(e))
+        print('\nLost connection to nd-hub: {}'.format(e))
 
 
 # -----------------------------------------------------------------------------
@@ -105,10 +105,10 @@ class PrinterEater(netdumplings.DumplingEater):
     context_settings=CLICK_CONTEXT_SETTINGS,
 )
 @click.option(
-    '--shifty', '-h',
-    help='Address where nd-shifty is sending dumplings from.',
+    '--hub', '-h',
+    help='Address where nd-hub is sending dumplings from.',
     metavar='HOST:PORT',
-    default='{}:{}'.format(DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT),
+    default='{}:{}'.format(HUB_HOST, HUB_OUT_PORT),
     show_default=True,
 )
 @click.option(
@@ -127,7 +127,7 @@ class PrinterEater(netdumplings.DumplingEater):
 )
 @click.option(
     '--eater-name', '-n',
-    help='Dumpling eater name for this tool when connecting to nd-shifty.',
+    help='Dumpling eater name for this tool when connecting to nd-hub.',
     default='printereater',
     metavar='EATER_NAME',
     show_default=True,
@@ -157,12 +157,12 @@ class PrinterEater(netdumplings.DumplingEater):
     show_default=True,
 )
 @click.version_option(version=netdumplings.__version__)
-def printer_cli(shifty, chef, kitchen, eater_name, interval_dumplings,
-                packet_dumplings, contents, color):
+def print_cli(hub, chef, kitchen, eater_name, interval_dumplings,
+              packet_dumplings, contents, color):
     """
     A dumpling eater.
 
-    Connects to nd-shifty (the dumpling hub) and prints the contents of the
+    Connects to nd-hub (the dumpling hub) and prints the contents of the
     dumplings made by the given chefs.
     """
     eater = PrinterEater(
@@ -172,7 +172,7 @@ def printer_cli(shifty, chef, kitchen, eater_name, interval_dumplings,
         contents=contents,
         color=color,
         name=eater_name,
-        shifty=shifty,
+        hub=hub,
         chefs=chef if chef else None,
     )
 
@@ -180,4 +180,4 @@ def printer_cli(shifty, chef, kitchen, eater_name, interval_dumplings,
 
 
 if __name__ == '__main__':
-    printer_cli()
+    print_cli()

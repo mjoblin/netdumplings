@@ -1,14 +1,14 @@
-from .printer import printer_cli
-from .shifty import shifty_cli
-from .shiftydetails import shiftydetails_cli
-from .shiftysummary import shiftysummary_cli
-from .snifty import snifty_cli
+from .hub import hub_cli
+from .hubdetails import hubdetails_cli
+from .hubstatus import hubstatus_cli
+from .print import print_cli
+from .sniff import sniff_cli
 
 
 (
-    printer_cli,
-    shifty_cli,
-    shiftydetails_cli,
-    shiftysummary_cli,
-    snifty_cli,
+    hub_cli,
+    hubdetails_cli,
+    hubstatus_cli,
+    print_cli,
+    sniff_cli,
 )
