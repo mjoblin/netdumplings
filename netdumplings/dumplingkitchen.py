@@ -1,6 +1,7 @@
 import importlib
 import inspect
 import logging
+import multiprocessing
 import os
 import sys
 from threading import Thread
@@ -28,15 +29,21 @@ class DumplingKitchen:
     The ``DumplingKitchen`` runs the sniffer and maintains a separate thread
     for poking the chefs at regular time intervals.
     """
-    def __init__(self, name='default', interface='all', sniffer_filter='tcp',
-                 chef_poke_interval=5, dumpling_queue=None):
+    def __init__(
+            self,
+            dumpling_queue: multiprocessing.Queue,
+            name: str = 'default',
+            interface: str = 'all',
+            sniffer_filter: str = 'tcp',
+            chef_poke_interval: int = 5,
+    ) -> None:
         """
+        :param dumpling_queue: Queue for sending dumplings to nd-shifty.
         :param name: Kitchen name.
         :param sniffer_filter: PCAP-compliant sniffer filter (``None`` means
             sniff all packets).
         :param chef_poke_interval: Frequency (in secs) to call all registered
             chef poke handlers.  ``None`` disables poking.
-        :param dumpling_queue: Queue for sending dumplings to nd-shifty.
         """
         self.name = name
         self.interface = interface
@@ -49,17 +56,18 @@ class DumplingKitchen:
 
     def __repr__(self):
         return (
-            '{}(name={}, '
+            '{}('
+            'dumpling_queue={}, '
+            'name={}, '
             'interface={}, '
             'sniffer_filter={}, '
-            'chef_poke_interval={} '
-            'dumpling_queue={})'.format(
+            'chef_poke_interval={})'.format(
                 type(self).__name__,
+                repr(self.dumpling_queue),
                 repr(self.name),
                 repr(self.interface),
                 repr(self.filter),
                 repr(self.chef_poke_interval),
-                repr(self.dumpling_queue),
             )
         )
 

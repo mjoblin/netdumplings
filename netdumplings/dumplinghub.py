@@ -30,7 +30,7 @@ class DumplingHub:
             in_port: int = DEFAULT_SHIFTY_IN_PORT,
             out_port: int = DEFAULT_SHIFTY_OUT_PORT,
             status_freq: int = SHIFTY_STATUS_FREQ,
-    ):
+    ) -> None:
         """
         :param address: Address the hub is running on.
         :param in_port: Port used to receive dumplings from `nd-snifty`.

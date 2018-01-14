@@ -79,14 +79,14 @@ class TestDumplingChef:
         assert dumpling is None
         assert mock_logger.debug.call_count >= 1
 
-    def test_repr(self):
+    def test_repr(self, mocker):
         """
         Test the string representation.
         """
         chef = DumplingChef()
         assert repr(chef) == 'DumplingChef(kitchen=None)'
 
-        kitchen = DumplingKitchen()
+        kitchen = DumplingKitchen(dumpling_queue=mocker.Mock())
         chef = DumplingChef(kitchen=kitchen)
 
         assert repr(chef) == 'DumplingChef(kitchen={})'.format(repr(kitchen))

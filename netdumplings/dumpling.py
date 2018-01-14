@@ -62,7 +62,7 @@ class Dumpling:
             chef: Union[DumplingChef, str],
             driver: DumplingDriver = DumplingDriver.packet,
             payload: Any,
-    ):
+    ) -> None:
         """
         :param chef: The :class:`DumplingChef` who created the dumpling, or
             a string representing the dumpling chef name.  A string can be

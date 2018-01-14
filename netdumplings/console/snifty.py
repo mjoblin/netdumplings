@@ -72,11 +72,11 @@ def network_sniffer(
         kitchen_name, chef_poke_interval))
 
     sniffer_kitchen = netdumplings.DumplingKitchen(
+        dumpling_queue=dumpling_queue,
         name=kitchen_name,
         interface=interface,
         sniffer_filter=sniffer_filter,
         chef_poke_interval=chef_poke_interval,
-        dumpling_queue=dumpling_queue,
     )
 
     # Instantiate all the valid DumplingChef classes and register them with

@@ -3,7 +3,7 @@ from typing import Optional
 
 import scapy.packet
 
-import netdumplings
+import netdumplings  # noqa
 from ._shared import JSONSerializable
 
 
@@ -39,7 +39,7 @@ class DumplingChef:
     def __init__(
             self,
             kitchen: Optional['netdumplings.DumplingKitchen'] = None,
-    ):
+    ) -> None:
         """
         :param kitchen: The :class:`DumplingKitchen` which is providing the
             network packet ingredients used to create the dumplings.
