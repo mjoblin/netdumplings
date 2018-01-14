@@ -51,7 +51,7 @@ class TestPrint:
             color=color,
             name=eater_name,
             hub=hub,
-            chefs=chefs,
+            chef_filter=chefs,
         )
 
         mock_eater_instance.run.assert_called_once_with()
