@@ -18,7 +18,7 @@ class DumplingEater:
     Base helper class for Python-based dumpling eaters.
 
     Connects to `nd-shifty` and listens for any dumplings made by the provided
-    list of chefs (or all chefs if ``chefs`` is ``None``).  Can be given
+    chef_filter (or all chefs if ``chef_filter`` is ``None``).  Can be given
     callables for any of the following events:
 
     ``on_connect(websocket_uri, websocket_obj)``
@@ -32,7 +32,7 @@ class DumplingEater:
 
     :param name: Name of the dumpling eater. Is ideally unique per eater.
     :param shifty: Address where `nd-shifty` is sending dumplings from.
-    :param chefs: List of chef names whose dumplings this eater wants to
+    :param chef_filter: List of chef names whose dumplings this eater wants to
         receive. ``None`` means get all chefs' dumplings.
     :param on_connect: Called when connection to shifty is made. Is passed two
         parameters: the shifty websocket URI (string) and websocket
@@ -49,7 +49,7 @@ class DumplingEater:
                 DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT
             ),
             *,
-            chefs: Optional[List[str]] = None,
+            chef_filter: Optional[List[str]] = None,
             on_connect: Optional[
                 Callable[
                     [str, websockets.client.WebSocketClientProtocol],
@@ -64,7 +64,7 @@ class DumplingEater:
             ] = None,
     ) -> None:
         self.name = name
-        self.chefs = chefs
+        self.chef_filter = chef_filter
         self.shifty = shifty
         self.shifty_uri = "ws://{0}".format(shifty)
 
@@ -91,14 +91,14 @@ class DumplingEater:
             '{}('
             'name={}, '
             'shifty={}, '
-            'chefs={}, '
+            'chef_filter={}, '
             'on_connect={}, '
             'on_dumpling={}, '
             'on_connection_lost={})'.format(
                 type(self).__name__,
                 repr(self.name),
                 repr(self.shifty),
-                repr(self.chefs),
+                repr(self.chef_filter),
                 repr(self.on_connect),
                 repr(self.on_dumpling),
                 repr(self.on_connection_lost),
@@ -149,7 +149,8 @@ class DumplingEater:
 
                 # Call the on_dumpling handler if this dumpling is from a
                 # chef that we've registered interest in.
-                if self.chefs is None or dumpling_chef in self.chefs:
+                if (self.chef_filter is None or
+                        dumpling_chef in self.chef_filter):
                     self.logger.debug(
                         "{0}: Calling dumpling handler {1}".format(
                             self.name, self.on_dumpling))
@@ -204,7 +205,9 @@ class DumplingEater:
         self.logger.debug("{0}: Looking for shifty at {1}".format(
             self.name, self.shifty_uri))
         self.logger.debug("{0}: Chefs: {1}".format(
-            self.name, ", ".join(self.chefs) if self.chefs else 'all'))
+            self.name,
+            ", ".join(self.chef_filter) if self.chef_filter else 'all')
+        )
 
         loop = asyncio.get_event_loop()
         task = loop.create_task(self._grab_dumplings(dumpling_count))

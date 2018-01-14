@@ -58,7 +58,7 @@ class TestDumplingEater:
         eater = DumplingEater()
 
         assert eater.name == 'nameless_eater'
-        assert eater.chefs is None
+        assert eater.chef_filter is None
         assert eater.shifty_uri == 'ws://{}:{}'.format(
             DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT
         )
@@ -77,14 +77,14 @@ class TestDumplingEater:
         eater = DumplingEater(
             name=test_eater_name,
             shifty=test_shifty,
-            chefs=test_chefs,
+            chef_filter=test_chefs,
             on_connect=test_handler,
             on_dumpling=test_handler,
             on_connection_lost=test_handler
         )
 
         assert eater.name == test_eater_name
-        assert eater.chefs == test_chefs
+        assert eater.chef_filter == test_chefs
         assert eater.shifty_uri == 'ws://{}'.format(test_shifty)
         assert eater.on_connect == test_handler
         assert eater.on_dumpling == test_handler
@@ -122,7 +122,7 @@ class TestDumplingEater:
         eater = DumplingEater(
             name='test_eater',
             shifty='test_shifty',
-            chefs=['ChefOne', 'ChefTwo'],
+            chef_filter=['ChefOne', 'ChefTwo'],
             on_connect=handler,
             on_dumpling=handler,
             on_connection_lost=handler,
@@ -131,7 +131,7 @@ class TestDumplingEater:
             "DumplingEater("
             "name='test_eater', "
             "shifty='test_shifty', "
-            "chefs=['ChefOne', 'ChefTwo'], "
+            "chef_filter=['ChefOne', 'ChefTwo'], "
             "on_connect={}, "
             "on_dumpling={}, "
             "on_connection_lost={})".format(
@@ -313,7 +313,7 @@ class TestDumplingEaterGrabDumplings:
         ]
 
         eater = DumplingEater(
-            chefs=['DNSLookupChef'],
+            chef_filter=['DNSLookupChef'],
             on_connect=asynctest.CoroutineMock(),
             on_dumpling=asynctest.CoroutineMock(),
             on_connection_lost=asynctest.CoroutineMock(),
