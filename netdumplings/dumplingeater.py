@@ -8,8 +8,8 @@ import websockets
 from .exceptions import InvalidDumpling
 
 from ._shared import (
-    validate_dumpling, ND_CLOSE_MSGS, DEFAULT_SHIFTY_HOST,
-    DEFAULT_SHIFTY_OUT_PORT
+    validate_dumpling, ND_CLOSE_MSGS, HUB_HOST,
+    HUB_OUT_PORT
 )
 
 
@@ -17,37 +17,35 @@ class DumplingEater:
     """
     Base helper class for Python-based dumpling eaters.
 
-    Connects to `nd-shifty` and listens for any dumplings made by the provided
+    Connects to `nd-hub` and listens for any dumplings made by the provided
     chef_filter (or all chefs if ``chef_filter`` is ``None``).  Can be given
     callables for any of the following events:
 
     ``on_connect(websocket_uri, websocket_obj)``
-        invoked when the connection to `nd-shifty` is made.
+        invoked when the connection to `nd-hub` is made.
 
     ``on_dumpling(dumpling)``
-        invoked whenever a dumpling is emitted from `nd-shifty`.
+        invoked whenever a dumpling is emitted from `nd-hub`.
 
     ``on_connection_lost(e)``
-        invoked when the connection to `nd-shifty` is closed.
+        invoked when the connection to `nd-hub` is closed.
 
     :param name: Name of the dumpling eater. Is ideally unique per eater.
-    :param shifty: Address where `nd-shifty` is sending dumplings from.
+    :param hub: Address where `nd-hub` is sending dumplings from.
     :param chef_filter: List of chef names whose dumplings this eater wants to
         receive. ``None`` means get all chefs' dumplings.
-    :param on_connect: Called when connection to shifty is made. Is passed two
-        parameters: the shifty websocket URI (string) and websocket
+    :param on_connect: Called when connection to `nd-hub` is made. Is passed
+        two parameters: the `nd-hub` websocket URI (string) and websocket
         object (:class:`websockets.client.WebSocketClientProtocol`).
     :param on_dumpling: Called whenever a dumpling is received. Is passed the
         dumpling as a Python dict.
-    :param on_connection_lost: Called when connection to `nd-shifty` is lost.
+    :param on_connection_lost: Called when connection to `nd-hub` is lost.
         Is passed the associated exception object.
     """
     def __init__(
             self,
             name: str = 'nameless_eater',
-            shifty: str ='{}:{}'.format(
-                DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT
-            ),
+            hub: str ='{}:{}'.format(HUB_HOST, HUB_OUT_PORT),
             *,
             chef_filter: Optional[List[str]] = None,
             on_connect: Optional[
@@ -65,8 +63,8 @@ class DumplingEater:
     ) -> None:
         self.name = name
         self.chef_filter = chef_filter
-        self.shifty = shifty
-        self.shifty_uri = "ws://{0}".format(shifty)
+        self.hub = hub
+        self.hub_ws = "ws://{0}".format(hub)
 
         # Configure handlers. If we're not provided with handlers then we
         # fall back on the default handlers or the handlers provided by a
@@ -90,14 +88,14 @@ class DumplingEater:
         return (
             '{}('
             'name={}, '
-            'shifty={}, '
+            'hub={}, '
             'chef_filter={}, '
             'on_connect={}, '
             'on_dumpling={}, '
             'on_connection_lost={})'.format(
                 type(self).__name__,
                 repr(self.name),
-                repr(self.shifty),
+                repr(self.hub),
                 repr(self.chef_filter),
                 repr(self.on_connect),
                 repr(self.on_dumpling),
@@ -107,7 +105,7 @@ class DumplingEater:
 
     async def _grab_dumplings(self, dumpling_count=None):
         """
-        Receives all dumplings from shifty and looks for any dumplings which
+        Receives all dumplings from the hub and looks for any dumplings which
         were created by the chef(s) we're interested in.  All those dumplings
         are then passed to the on_dumpling handler.
 
@@ -116,25 +114,25 @@ class DumplingEater:
         """
         dumplings_eaten = 0
 
-        websocket = await websockets.client.connect(self.shifty_uri)
+        websocket = await websockets.client.connect(self.hub_ws)
         self._was_connected = True
 
-        self.logger.info("{0}: Connected to shifty at {1}".format(
-            self.name, self.shifty_uri))
+        self.logger.info("{0}: Connected to dumpling hub at {1}".format(
+            self.name, self.hub_ws))
 
         try:
-            # Announce ourselves to shifty.
+            # Announce ourselves to the dumpling hub.
             await websocket.send(json.dumps({'eater_name': self.name}))
 
             if self.on_connect:
-                await self.on_connect(self.shifty_uri, websocket)
+                await self.on_connect(self.hub_ws, websocket)
 
             while True:
                 # Eat a single dumpling.
                 dumpling_json = await websocket.recv()
 
                 # Validate the dumpling.  Note that invalid dumplings will
-                # probably be stripped out by shifty (the DumplingHub).
+                # probably be stripped out by the hub.
                 try:
                     dumpling = validate_dumpling(dumpling_json)
                 except InvalidDumpling as e:
@@ -165,7 +163,7 @@ class DumplingEater:
                     break
         except asyncio.CancelledError:
             self.logger.warning(
-                "{0}: Connection to shifty cancelled; closing...".format(
+                "{0}: Connection to dumpling hub cancelled; closing...".format(
                     self.name))
 
             try:
@@ -173,8 +171,9 @@ class DumplingEater:
             except websockets.exceptions.InvalidState:
                 pass
         except websockets.exceptions.ConnectionClosed as e:
-            self.logger.warning("{0}: Lost connection to shifty: {1}".format(
-                self.name, e))
+            self.logger.warning(
+                "{}: Lost connection to dumpling hub: {}".format(self.name, e)
+            )
 
             if self.on_connection_lost:
                 await self.on_connection_lost(e)
@@ -202,8 +201,8 @@ class DumplingEater:
                 "{0}: on_dumpling handler is not callable".format(self.name))
             return
 
-        self.logger.debug("{0}: Looking for shifty at {1}".format(
-            self.name, self.shifty_uri))
+        self.logger.debug("{0}: Looking for dumpling hub at {1}".format(
+            self.name, self.hub_ws))
         self.logger.debug("{0}: Chefs: {1}".format(
             self.name,
             ", ".join(self.chef_filter) if self.chef_filter else 'all')
@@ -228,8 +227,8 @@ class DumplingEater:
             loop.run_forever()
         except OSError as e:
             self.logger.warning(
-                "{0}: There was a problem with the shifty connection. "
-                "Is shifty available?".format(self.name))
+                "{0}: There was a problem with the dumpling hub connection. "
+                "Is nd-hub available?".format(self.name))
             self.logger.warning("{0}: {1}".format(self.name, e))
         finally:
             if self._was_connected:

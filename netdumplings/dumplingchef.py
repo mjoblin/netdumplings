@@ -11,9 +11,9 @@ class DumplingChef:
     """
     Base class for all dumpling chefs.
 
-    **NOTE: DumplingChef objects are instantiated for you by nd-snifty. You
+    **NOTE: DumplingChef objects are instantiated for you by nd-sniff. You
     normally won't need to instantiate DumplingChef objects yourself.  Instead
-    you'll normally subclass DumplingChef and let nd-snifty take care of
+    you'll normally subclass DumplingChef and let nd-sniff take care of
     instantiating it.**
 
     When instantiated, a DumplingChef registers itself with the given
@@ -33,7 +33,7 @@ class DumplingChef:
     * :meth:`interval_handler`
     """
     # Setting assignable_to_kitchen to False (in a subclass) will ensure the
-    # chef cannot be assigned to any kitchens via snifty.
+    # chef cannot be assigned to any kitchens via nd-sniff.
     assignable_to_kitchen = True
 
     def __init__(
@@ -57,8 +57,8 @@ class DumplingChef:
 
     def packet_handler(self, packet: scapy.packet.Raw) -> JSONSerializable:
         """
-        Called automatically by `nd-snifty` whenever a new packet has been
-        sniffed.
+        Called automatically by the DumplingKitchen whenever a new packet has
+        been sniffed.
 
         This method is expected to be overridden by child classes. This base
         implementation returns a payload which is the string representation of
@@ -76,9 +76,9 @@ class DumplingChef:
     def interval_handler(
             self, interval: Optional[int] = None) -> JSONSerializable:
         """
-        Called automatically at regular intervals by `nd-snifty`.  Allows for
-        time-based (rather than purely packet-based) chefs to keep on cheffing
-        even in the absence of fresh packets.
+        Called automatically at regular intervals by the DumplingKitchen.
+        Allows for time-based (rather than purely packet-based) chefs to keep
+        on cheffing even in the absence of fresh packets.
 
         This method is expected to be overridden by child classes. This base
         implementation does nothing.

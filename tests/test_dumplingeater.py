@@ -7,7 +7,7 @@ import pytest
 import websockets.exceptions
 
 from netdumplings import DumplingEater
-from netdumplings._shared import DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT
+from netdumplings._shared import HUB_HOST, HUB_OUT_PORT
 
 
 # -----------------------------------------------------------------------------
@@ -59,16 +59,14 @@ class TestDumplingEater:
 
         assert eater.name == 'nameless_eater'
         assert eater.chef_filter is None
-        assert eater.shifty_uri == 'ws://{}:{}'.format(
-            DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_OUT_PORT
-        )
+        assert eater.hub_ws == 'ws://{}:{}'.format(HUB_HOST, HUB_OUT_PORT)
 
     def test_init_overrides(self):
         """
         Test DumplingEater initialization with overrides.
         """
         test_eater_name = 'test_eater'
-        test_shifty = 'there:1234'
+        test_hub = 'there:1234'
         test_chefs = ['ChefOne', 'ChefTwo', 'ChefThree']
 
         async def test_handler():
@@ -76,7 +74,7 @@ class TestDumplingEater:
 
         eater = DumplingEater(
             name=test_eater_name,
-            shifty=test_shifty,
+            hub=test_hub,
             chef_filter=test_chefs,
             on_connect=test_handler,
             on_dumpling=test_handler,
@@ -85,7 +83,7 @@ class TestDumplingEater:
 
         assert eater.name == test_eater_name
         assert eater.chef_filter == test_chefs
-        assert eater.shifty_uri == 'ws://{}'.format(test_shifty)
+        assert eater.hub_ws == 'ws://{}'.format(test_hub)
         assert eater.on_connect == test_handler
         assert eater.on_dumpling == test_handler
         assert eater.on_connection_lost == test_handler
@@ -121,7 +119,7 @@ class TestDumplingEater:
 
         eater = DumplingEater(
             name='test_eater',
-            shifty='test_shifty',
+            hub='test_hub',
             chef_filter=['ChefOne', 'ChefTwo'],
             on_connect=handler,
             on_dumpling=handler,
@@ -130,7 +128,7 @@ class TestDumplingEater:
         assert repr(eater) == (
             "DumplingEater("
             "name='test_eater', "
-            "shifty='test_shifty', "
+            "hub='test_hub', "
             "chef_filter=['ChefOne', 'ChefTwo'], "
             "on_connect={}, "
             "on_dumpling={}, "
@@ -213,7 +211,7 @@ class TestDumplingEaterGrabDumplings:
 
         eater = DumplingEater(
             name='test_eater',
-            shifty='testshifty:5000',
+            hub='testhub:5000',
             on_connect=asynctest.CoroutineMock(),
             on_dumpling=asynctest.CoroutineMock(),
             on_connection_lost=asynctest.CoroutineMock(),
@@ -221,9 +219,9 @@ class TestDumplingEaterGrabDumplings:
 
         await eater._grab_dumplings(dumpling_count=1)
 
-        # Check that the eater connected to the expected shifty and announced
+        # Check that the eater connected to the expected hub and announced
         # itself.
-        mock_connect.assert_called_with('ws://testshifty:5000')
+        mock_connect.assert_called_with('ws://testhub:5000')
         mock_connect.return_value.send.assert_called_once_with(json.dumps({
             'eater_name': 'test_eater',
         }))

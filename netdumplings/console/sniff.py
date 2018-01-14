@@ -11,8 +11,8 @@ import websockets
 
 import netdumplings
 from netdumplings._shared import (
-    configure_logging, ND_CLOSE_MSGS, DEFAULT_SHIFTY_HOST,
-    DEFAULT_SHIFTY_IN_PORT,
+    configure_logging, ND_CLOSE_MSGS, HUB_HOST,
+    HUB_IN_PORT,
 )
 
 from ._shared import CLICK_CONTEXT_SETTINGS
@@ -57,9 +57,9 @@ def network_sniffer(
     :param sniffer_filter: PCAP-compliant sniffer filter.
     :param chef_poke_interval: Interval (in secs) to poke chefs.
     :param dumpling_queue: Queue to send fresh dumplings to so they can be
-        forwarded on to `nd-shifty` (the dumpling hub).
+        forwarded on to `nd-hub` (the dumpling hub).
     """
-    log = logging.getLogger('netdumplings.snifty')
+    log = logging.getLogger('netdumplings.sniff')
     log.info("{0}: Starting network sniffer process".format(kitchen_name))
     log.info("{0}: Interface: {1}".format(kitchen_name, interface))
     log.info("{0}: Requested chefs: {1}".format(kitchen_name,
@@ -94,81 +94,81 @@ def network_sniffer(
     sniffer_kitchen.run()
 
 
-async def notify_shifty(
+async def notify_hub(
         kitchen_name: str,
-        shifty: str,
+        hub: str,
         dumpling_queue: multiprocessing.Queue,
         kitchen_info: dict,
         log: logging.Logger,
 ):
     """
     Grabs fresh dumplings from the sniffers dumpling queue and sends them on to
-    `nd-shifty` (the dumpling hub).
+    `nd-hub` (the dumpling hub).
 
     :param kitchen_name: The name of the kitchen.
-    :param shifty: The address where shifty is receiving dumplings.
+    :param hub: The address where `nd-hub` is receiving dumplings.
     :param dumpling_queue: Queue to grab fresh dumplings from.
     :param kitchen_info: Dict describing the kitchen.
     :param log: Logger.
     """
-    shifty_uri = 'ws://{0}'.format(shifty)
+    hub_ws = 'ws://{0}'.format(hub)
 
-    log.info("{0}: Connecting to shifty at {1}".format(
-        kitchen_name, shifty_uri)
+    log.info("{0}: Connecting to the dumpling hub at {1}".format(
+        kitchen_name, hub_ws)
     )
 
     try:
-        websocket = await websockets.connect(shifty_uri)
+        websocket = await websockets.connect(hub_ws)
     except OSError as e:
         log.error(
-            "{0}: There was a problem with the shifty connection. "
-            "Is shifty available?".format(kitchen_name))
+            "{0}: There was a problem with the dumpling hub connection. "
+            "Is nd-hub available?".format(kitchen_name))
         log.error("{0}: {1}".format(kitchen_name, e))
         return
 
     try:
-        # Register our kitchen information with shifty.
+        # Register our kitchen information with the dumpling hub.
         await websocket.send(json.dumps(kitchen_info))
 
-        # Send dumplings to shifty when they come in from the chefs.
+        # Send dumplings to the hub when they come in from the chefs.
         while True:
             dumpling = dumpling_queue.get()
             await websocket.send(dumpling)
     except asyncio.CancelledError:
         log.warning(
-            "{0}: Connection to shifty cancelled; closing...".format(
+            "{0}: Connection to dumpling hub cancelled; closing...".format(
                 kitchen_name))
         try:
             await websocket.close(*ND_CLOSE_MSGS['conn_cancelled'])
         except websockets.exceptions.InvalidState:
             pass
     except websockets.exceptions.ConnectionClosed as e:
-        log.warning("{0}: Lost connection to shifty: {1}".format(
+        log.warning("{0}: Lost connection to dumpling hub: {1}".format(
             kitchen_name, e))
     except OSError as e:
         log.exception(
-            "{0}: Error talking to shifty websocket hub: {1}".format(
-                kitchen_name, e))
+            "{0}: Error talking to dumpling hub: {1}".format(kitchen_name, e)
+        )
 
 
 def dumpling_emitter(
         kitchen_name: str,
-        shifty: str,
+        hub: str,
         dumpling_queue: multiprocessing.Queue,
         kitchen_info: Dict,
 ):
     """
     Kick off an async event loop to manage funneling dumplings from the queue
-    to shifty.
+    to the dumpling hub.
 
     This function is intended to be invoked as a Python process.
 
     :param kitchen_name: The name of the kitchen.
-    :param shifty: The address where shifty is receiving dumplings.
+    :param hub: The address where `nd-hub` is receiving dumplings.
     :param dumpling_queue: Queue to grab fresh dumplings from.
     :param kitchen_info: Dict describing the kitchen.
     """
-    log = logging.getLogger('netdumplings.snifty')
+    log = logging.getLogger('netdumplings.sniff')
     log.info("{0}: Starting dumpling emitter process".format(kitchen_name))
     # TODO: Confirm that this new event loop creation is unnecessary.
     loop = asyncio.new_event_loop()
@@ -177,9 +177,7 @@ def dumpling_emitter(
 
     try:
         loop.run_until_complete(
-            notify_shifty(
-                kitchen_name, shifty, dumpling_queue, kitchen_info, log
-            )
+            notify_hub(kitchen_name, hub, dumpling_queue, kitchen_info, log)
         )
     except KeyboardInterrupt:
         pass
@@ -278,10 +276,10 @@ def get_valid_chefs(
     show_default=True,
 )
 @click.option(
-    '--shifty', '-h',
-    help='Address where nd-shifty is receiving dumplings.',
+    '--hub', '-h',
+    help='Address where nd-hub is receiving dumplings.',
     metavar='HOST:PORT',
-    default='{}:{}'.format(DEFAULT_SHIFTY_HOST, DEFAULT_SHIFTY_IN_PORT),
+    default='{}:{}'.format(HUB_HOST, HUB_IN_PORT),
     show_default=True,
 )
 @click.option(
@@ -332,14 +330,14 @@ def get_valid_chefs(
     default=False,
 )
 @click.version_option(version=netdumplings.__version__)
-def snifty_cli(kitchen_name, shifty, interface, pkt_filter, chef_module, chef,
-               poke_interval, chef_list):
+def sniff_cli(kitchen_name, hub, interface, pkt_filter, chef_module, chef,
+              poke_interval, chef_list):
     """
     A dumpling kitchen.
 
     Sniffs network packets matching the given PCAP-style filter and sends them
     to chefs for processing into dumplings. Dumplings are then sent to
-    nd-shifty for distribution to the dumpling eaters.
+    nd-hub for distribution to the dumpling eaters.
     """
     # NOTE: Since the --chef-module and --chef flags can be specified multiple
     #   times, the associated 'chef_module' and 'chef' parameters are tuples of
@@ -351,17 +349,17 @@ def snifty_cli(kitchen_name, shifty, interface, pkt_filter, chef_module, chef,
         list_chefs(chef_module)
         sys.exit(0)
 
-    # snifty now does the following:
+    # sniff now does the following:
     #
     # * Starts a network-sniffing dumpling-making kitchen process.
     # * Starts a dumpling emitter process for sending dumplings (over a
-    #   websocket) from the kitchen to shifty (a websocket hub which ferries
+    #   websocket) from the kitchen to nd-hub (a websocket hub which ferries
     #   dumplings between dumpling emitters and dumpling eaters).
     # * Creates a queue for the kitchen process to send freshly-made dumplings
     #   to the emitter process.
 
     configure_logging()
-    logger = logging.getLogger('netdumplings.console.snifty')
+    logger = logging.getLogger('netdumplings.console.sniff')
 
     # A queue for sending dumplings from the sniffer process (dumplings made
     # by the dumplingchef packet handlers) to the dumpling-emitter process.
@@ -408,7 +406,7 @@ def snifty_cli(kitchen_name, shifty, interface, pkt_filter, chef_module, chef,
 
     dumpling_emitter_process = multiprocessing.Process(
         target=dumpling_emitter,
-        args=(kitchen_name, shifty, dumpling_emitter_queue, kitchen_info)
+        args=(kitchen_name, hub, dumpling_emitter_queue, kitchen_info),
     )
 
     sniffer_process.start()
@@ -440,4 +438,4 @@ def snifty_cli(kitchen_name, shifty, interface, pkt_filter, chef_module, chef,
 
 
 if __name__ == '__main__':
-    snifty_cli()
+    sniff_cli()

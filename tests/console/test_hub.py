@@ -1,14 +1,14 @@
 import click.testing
 
-from netdumplings.console.shifty import shifty_cli
+from netdumplings.console.hub import hub_cli
 from netdumplings.exceptions import NetDumplingsError
 
 
-class TestShifty:
+class TestHub:
     """
-    Test the nd-shifty commandline tool.
+    Test the nd-hub commandline tool.
     """
-    def test_shifty(self, mocker):
+    def test_hub(self, mocker):
         """
         Test that the DumplingHub is instantiated as expected and that run()
         is called.
@@ -17,7 +17,7 @@ class TestShifty:
 
         runner = click.testing.CliRunner()
         result = runner.invoke(
-            shifty_cli,
+            hub_cli,
             [
                 '--address', 'testhost',
                 '--in-port', 1001,
@@ -36,15 +36,15 @@ class TestShifty:
         mock_hub.return_value.run.assert_called_once()
         assert result.exit_code == 0
 
-    def test_shifty_with_error(self, mocker):
+    def test_hub_with_error(self, mocker):
         """
-        Test that a NetDumplingsError in DumplingHub.run() results in shifty
+        Test that a NetDumplingsError in DumplingHub.run() results in the hub
         exiting with status code 1.
         """
         mock_hub = mocker.patch('netdumplings.DumplingHub')
         mock_hub.return_value.run.side_effect = NetDumplingsError
 
         runner = click.testing.CliRunner()
-        result = runner.invoke(shifty_cli)
+        result = runner.invoke(hub_cli)
 
         assert result.exit_code == 1

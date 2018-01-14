@@ -46,10 +46,10 @@ class DNSLookupChef(DumplingChef):
 
     def packet_handler(self, packet):
         """
-        Processes a packet from nd-snifty.  Makes a dumpling summarizing the
+        Processes a packet from nd-sniff.  Makes a dumpling summarizing the
         contents of each each valid DNS lookup.
 
-        :param packet: Packet from nd-snifty.
+        :param packet: Packet from nd-sniff.
         """
         if not packet.haslayer('DNS'):
             return

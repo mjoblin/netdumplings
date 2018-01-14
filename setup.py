@@ -60,11 +60,11 @@ setup(
     download_url='https://pypi.python.org/pypi/netdumplings',
     entry_points={
         'console_scripts': [
-            'nd-printer=netdumplings.console:printer_cli',
-            'nd-shifty=netdumplings.console:shifty_cli',
-            'nd-shiftydetails=netdumplings.console:shiftydetails_cli',
-            'nd-shiftysummary=netdumplings.console:shiftysummary_cli',
-            'nd-snifty=netdumplings.console:snifty_cli',
+            'nd-hub=netdumplings.console:hub_cli',
+            'nd-hubdetails=netdumplings.console:hubdetails_cli',
+            'nd-hubstatus=netdumplings.console:hubstatus_cli',
+            'nd-print=netdumplings.console:print_cli',
+            'nd-sniff=netdumplings.console:sniff_cli',
         ]
     },
     license='MIT',
