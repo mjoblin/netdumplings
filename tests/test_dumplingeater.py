@@ -6,7 +6,7 @@ import asynctest
 import pytest
 import websockets.exceptions
 
-from netdumplings import DumplingEater
+from netdumplings import Dumpling, DumplingEater
 from netdumplings._shared import HUB_HOST, HUB_OUT_PORT
 
 
@@ -197,6 +197,12 @@ class TestDumplingEaterGrabDumplings:
             new=asynctest.CoroutineMock(),
         )
 
+        mock_dumpling_class = mocker.patch(
+            'netdumplings.dumplingeater.Dumpling'
+        )
+        mock_from_json = mock_dumpling_class.from_json
+        mock_from_json.return_value = mocker.Mock()
+
         mock_websocket = mock_connect.return_value
         mock_websocket.send = asynctest.CoroutineMock()
         mock_websocket.recv = asynctest.CoroutineMock()
@@ -204,8 +210,9 @@ class TestDumplingEaterGrabDumplings:
 
         # Configure recv() to receive a dumpling and then fake a websocket
         # connection close.
+        test_dumpling_dns_json = json.dumps(test_dumpling_dns)
         mock_websocket.recv.side_effect = [
-            json.dumps(test_dumpling_dns),
+            test_dumpling_dns_json,
             websockets.exceptions.ConnectionClosed(1006, reason='unknown'),
         ]
 
@@ -226,10 +233,15 @@ class TestDumplingEaterGrabDumplings:
             'eater_name': 'test_eater',
         }))
 
-        # Check the on_connect and on_dumpling handlers were called; and that
-        # on_connection_lost was not.
+        # Check the on_connect handler was called.
         eater.on_connect.assert_called_once()
-        eater.on_dumpling.assert_called_once_with(test_dumpling_dns)
+
+        # Check that a dumpling was created and passed into the on_dumpling
+        # handler. Also confirm we never called on_connection_lost.
+        mock_dumpling_class.from_json.assert_called_once_with(
+            test_dumpling_dns_json
+        )
+        eater.on_dumpling.assert_called_once_with(mock_from_json.return_value)
         assert eater.on_connection_lost.call_count == 0
 
         # Check that the eater closed the websocket (it was only eating a
@@ -238,13 +250,24 @@ class TestDumplingEaterGrabDumplings:
 
     @pytest.mark.asyncio
     async def test_unlimited_dumplings(
-            self, mock_websocket, test_dumpling_dns, test_dumpling_pktcount,
-            eater_with_mocked_handlers):
+            self, mocker, mock_websocket, test_dumpling_dns,
+            test_dumpling_pktcount, eater_with_mocked_handlers):
         """
         Test asking for a unlimited dumplings.
         """
         # Configure recv() to receive 3 dumplings then we use RuntimeError to
         # break out of the infinite loop.
+
+        dns_dumpling = Dumpling.from_json(json.dumps(test_dumpling_dns))
+        pktcount_dumpling = Dumpling.from_json(
+            json.dumps(test_dumpling_pktcount)
+        )
+
+        mocker.patch(
+            'netdumplings.dumplingeater.Dumpling.from_json',
+            side_effect=[dns_dumpling, pktcount_dumpling, dns_dumpling],
+        )
+
         mock_websocket.recv.side_effect = [
             json.dumps(test_dumpling_dns),
             json.dumps(test_dumpling_pktcount),
@@ -262,9 +285,9 @@ class TestDumplingEaterGrabDumplings:
         eater_with_mocked_handlers.on_connect.assert_called_once()
 
         assert eater_with_mocked_handlers.on_dumpling.call_args_list == [
-            ((test_dumpling_dns,),),
-            ((test_dumpling_pktcount,),),
-            ((test_dumpling_dns,),),
+            ((dns_dumpling,),),
+            ((pktcount_dumpling,),),
+            ((dns_dumpling,),),
         ]
 
     @pytest.mark.asyncio
@@ -294,12 +317,19 @@ class TestDumplingEaterGrabDumplings:
 
     @pytest.mark.asyncio
     async def test_chef_filter(
-            self, mock_websocket, test_dumpling_dns, test_dumpling_pktcount):
+            self, mocker, mock_websocket, test_dumpling_dns,
+            test_dumpling_pktcount):
         """
         Test restricting the eater to receive dumplings from only one chef.
         We also limit the desired dumpling count to 2 to ensure that also works
         with a chef filter.
         """
+        dns_dumpling = Dumpling.from_json(json.dumps(test_dumpling_dns))
+        mocker.patch(
+            'netdumplings.dumplingeater.Dumpling.from_json',
+            return_value=dns_dumpling,
+        )
+
         mock_websocket.recv.side_effect = [
             json.dumps(test_dumpling_pktcount),
             json.dumps(test_dumpling_pktcount),
@@ -325,8 +355,8 @@ class TestDumplingEaterGrabDumplings:
         assert eater.on_dumpling.call_count == 2
 
         assert eater.on_dumpling.call_args_list == [
-            ((test_dumpling_dns,),),
-            ((test_dumpling_dns,),),
+            ((dns_dumpling,),),
+            ((dns_dumpling,),),
         ]
 
     @pytest.mark.asyncio

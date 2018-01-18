@@ -277,8 +277,8 @@ class TestDumplingSends:
     """
     def test_dumpling_send(self, mocker, test_dumpling_dns):
         """
-        Test the _send_dumpling method to ensure that it calls make() on a new
-        Dumpling and puts the resulting dumpling contents onto the queue.
+        Test the _send_dumpling method to ensure that it creates a new Dumpling
+        and puts the resulting dumpling contents onto the queue.
         """
         test_payload_json = json.dumps(test_dumpling_dns)
 
@@ -286,7 +286,7 @@ class TestDumplingSends:
             'netdumplings.dumplingkitchen.Dumpling'
         )
 
-        mock_dumpling_class.return_value.make.return_value = (
+        mock_dumpling_class.return_value.to_json.return_value = (
             test_payload_json
         )
 

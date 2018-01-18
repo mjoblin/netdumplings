@@ -20,7 +20,7 @@ class TestPrint:
         kitchens = ('TestKitchen1', 'TestKitchen2')
         interval_dumplings = False
         packet_dumplings = True
-        contents = True
+        payload = True
         color = True
         eater_name = 'test_printer'
         hub = 'test_hub'
@@ -34,7 +34,7 @@ class TestPrint:
                 '--kitchen', 'TestKitchen2',
                 '--no-interval-dumplings',
                 '--packet-dumplings',
-                '--contents',
+                '--payload',
                 '--color',
                 '--eater-name', 'test_printer',
                 '--hub', 'test_hub',
@@ -47,7 +47,7 @@ class TestPrint:
             kitchens=kitchens,
             interval_dumplings=interval_dumplings,
             packet_dumplings=packet_dumplings,
-            contents=contents,
+            payload=payload,
             color=color,
             name=eater_name,
             hub=hub,

@@ -234,9 +234,12 @@ class DumplingHub:
                 chef='SystemStatusChef', driver=DumplingDriver.interval,
                 payload=self._get_system_status())
 
+            status_dumpling_json = status_dumpling.to_json()
+
             for eater in self._dumpling_eaters:
                 await self._dumpling_eaters[eater]['queue'].put(
-                    status_dumpling.make())
+                    status_dumpling_json
+                )
 
             await asyncio.sleep(self.status_freq)
 

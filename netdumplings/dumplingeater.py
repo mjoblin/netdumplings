@@ -5,12 +5,10 @@ import signal
 from typing import Awaitable, Callable, Dict, List, Optional
 import websockets
 
+from .dumpling import Dumpling
 from .exceptions import InvalidDumpling
 
-from ._shared import (
-    validate_dumpling, ND_CLOSE_MSGS, HUB_HOST,
-    HUB_OUT_PORT
-)
+from ._shared import ND_CLOSE_MSGS, HUB_HOST, HUB_OUT_PORT
 
 
 class DumplingEater:
@@ -117,7 +115,8 @@ class DumplingEater:
         """
         Receives all dumplings from the hub and looks for any dumplings which
         were created by the chef(s) we're interested in.  All those dumplings
-        are then passed to the on_dumpling handler.
+        are then passed to the on_dumpling handler (after being converted from
+        their JSON form back into a Dumpling instance).
 
         :param dumpling_count: Number of dumplings to eat.  None means eat
             forever.
@@ -141,24 +140,23 @@ class DumplingEater:
                 # Eat a single dumpling.
                 dumpling_json = await websocket.recv()
 
-                # Validate the dumpling.  Note that invalid dumplings will
-                # probably be stripped out by the hub.
+                # Create a Dumpling from the JSON received over the websocket.
+                # Note that invalid dumplings will probably be stripped out by
+                # the hub already.
                 try:
-                    dumpling = validate_dumpling(dumpling_json)
+                    dumpling = Dumpling.from_json(dumpling_json)
                 except InvalidDumpling as e:
                     self.logger.error("{0}: Invalid dumpling: {1}".format(
                         self.name, e))
                     continue
 
-                dumpling_chef = dumpling['metadata']['chef']
-
                 self.logger.debug("{0}: Received dumpling from {1}".format(
-                    self.name, dumpling_chef))
+                    self.name, dumpling.chef_name))
 
                 # Call the on_dumpling handler if this dumpling is from a
                 # chef that we've registered interest in.
                 if (self.chef_filter is None or
-                        dumpling_chef in self.chef_filter):
+                        dumpling.chef_name in self.chef_filter):
                     self.logger.debug(
                         "{0}: Calling dumpling handler {1}".format(
                             self.name, self.on_dumpling))

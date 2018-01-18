@@ -195,7 +195,7 @@ class TestSystemStatus:
         }
 
         mock_dumpling = mocker.patch('netdumplings.dumplinghub.Dumpling')
-        mock_dumpling.return_value.make.return_value = (
+        mock_dumpling.return_value.to_json.return_value = (
             test_status_dumpling_json
         )
 

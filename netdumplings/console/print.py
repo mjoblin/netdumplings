@@ -4,12 +4,13 @@ import click
 import termcolor
 
 import netdumplings
+from netdumplings import DumplingDriver, DumplingEater
 from netdumplings._shared import HUB_HOST, HUB_OUT_PORT
 
 from ._shared import CLICK_CONTEXT_SETTINGS, printable_dumpling
 
 
-class PrinterEater(netdumplings.DumplingEater):
+class PrinterEater(DumplingEater):
     """
     A dumpling eater which displays dumpling information to the terminal as it
     arrives from nd-hub.
@@ -19,7 +20,7 @@ class PrinterEater(netdumplings.DumplingEater):
             kitchens=None,
             interval_dumplings=True,
             packet_dumplings=True,
-            contents=True,
+            payload=True,
             color=True,
             **kwargs,
     ):
@@ -28,7 +29,7 @@ class PrinterEater(netdumplings.DumplingEater):
         self._kitchens = kitchens
         self._interval_dumplings = interval_dumplings
         self._packet_dumplings = packet_dumplings
-        self._contents = contents
+        self._payload = payload
         self._color = color
 
     async def on_connect(self, hub_uri, websocket):
@@ -45,50 +46,49 @@ class PrinterEater(netdumplings.DumplingEater):
     async def on_dumpling(self, dumpling):
         """
         Called when a new dumpling is received from nd-hub. Prints the
-        dumpling summary and contents.
+        dumpling summary and payload.
 
         :param dumpling: The freshly-made new dumpling.
         """
-        kitchen = dumpling['metadata']['kitchen']
-        dumpling_driver = dumpling['metadata']['driver']
+        driver = dumpling.driver
 
         should_print_dumpling = (
-            (dumpling_driver == 'interval' and self._interval_dumplings) or
-            (dumpling_driver == 'packet' and self._packet_dumplings)
+            (driver == DumplingDriver.interval and self._interval_dumplings) or
+            (driver == DumplingDriver.packet and self._packet_dumplings)
         ) and (
-            self._kitchens is None or kitchen in self._kitchens
+            self._kitchens is None or dumpling.kitchen in self._kitchens
         )
 
         if not should_print_dumpling:
             return
 
         dumpling_creation_time = (
-            datetime.datetime.fromtimestamp(
-                int(dumpling['metadata']['creation_time'])
-            ).isoformat()
+            datetime.datetime.fromtimestamp(dumpling.creation_time).isoformat()
         )
 
         dumpling_chef = (
-            termcolor.colored(dumpling['metadata']['chef'], attrs=['bold'])
-            if self._color else dumpling['metadata']['chef']
+            termcolor.colored(dumpling.chef_name, attrs=['bold'])
+            if self._color else dumpling.chef_name
         )
 
         dumpling_kitchen = (
-            termcolor.colored(dumpling['metadata']['kitchen'], attrs=['bold'])
-            if self._color else dumpling['metadata']['kitchen']
+            termcolor.colored(dumpling.kitchen, attrs=['bold'])
+            if self._color else dumpling.kitchen
         )
 
         summary = '{} [{:8s}] {} from {}'.format(
             dumpling_creation_time,
-            dumpling_driver,
+            'packet' if driver == DumplingDriver.packet else 'interval',
             dumpling_chef,
             dumpling_kitchen,
         )
 
         print(summary)
 
-        if self._contents:
-            print('\n{}\n'.format(printable_dumpling(dumpling)))
+        if self._payload:
+            print('\n{}\n'.format(
+                printable_dumpling(dumpling.payload, colorize=self._color)
+            ))
 
     async def on_connection_lost(self, e):
         """
@@ -145,8 +145,8 @@ class PrinterEater(netdumplings.DumplingEater):
     show_default=True,
 )
 @click.option(
-    '--contents / --no-contents',
-    help='Print dumpling contents.',
+    '--payload / --no-payload',
+    help='Print dumpling payload.',
     default=True,
     show_default=True,
 )
@@ -158,18 +158,18 @@ class PrinterEater(netdumplings.DumplingEater):
 )
 @click.version_option(version=netdumplings.__version__)
 def print_cli(hub, chef, kitchen, eater_name, interval_dumplings,
-              packet_dumplings, contents, color):
+              packet_dumplings, payload, color):
     """
     A dumpling eater.
 
-    Connects to nd-hub (the dumpling hub) and prints the contents of the
-    dumplings made by the given chefs.
+    Connects to nd-hub (the dumpling hub) and prints information on the
+    received dumplings.
     """
     eater = PrinterEater(
         kitchens=kitchen if kitchen else None,
         interval_dumplings=interval_dumplings,
         packet_dumplings=packet_dumplings,
-        contents=contents,
+        payload=payload,
         color=color,
         name=eater_name,
         hub=hub,

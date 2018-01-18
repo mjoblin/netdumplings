@@ -29,7 +29,7 @@ async def on_dumpling(dumpling):
     :param dumpling: The freshly-made new dumpling.
     """
     print('\n{}\n'.format(
-        printable_dumpling(dumpling['payload'], colorize=PRINT_COLOR)
+        printable_dumpling(dumpling.payload, colorize=PRINT_COLOR)
     ))
 
 
