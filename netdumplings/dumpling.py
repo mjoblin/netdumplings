@@ -1,10 +1,10 @@
 from enum import Enum
 import json
 import time
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 from .dumplingchef import DumplingChef
-from .exceptions import InvalidDumplingPayload
+from .exceptions import InvalidDumpling, InvalidDumplingPayload
 
 
 class DumplingDriver(Enum):
@@ -61,6 +61,7 @@ class Dumpling:
             *,
             chef: Union[DumplingChef, str],
             driver: DumplingDriver = DumplingDriver.packet,
+            creation_time: Optional[float] = None,
             payload: Any,
     ) -> None:
         """
@@ -84,16 +85,10 @@ class Dumpling:
             self.kitchen = None
 
         self.driver = driver
+        self.creation_time = (
+            time.time() if creation_time is None else creation_time
+        )
         self.payload = payload
-
-    def __call__(self):
-        """
-        Makes ``Dumpling`` callable.  When called in this way, ``Dumpling``
-        will return the result of :meth:`make`.
-
-        :return: Result of :meth:`make`.
-        """
-        return self.make()
 
     def __repr__(self):
         if self.driver == DumplingDriver.packet:
@@ -110,15 +105,60 @@ class Dumpling:
             '{}('
             'chef={}, '
             'driver={}, '
+            'creation_time={}, '
             'payload={})'.format(
                 type(self).__name__,
                 repr(self.chef),
                 driver,
+                self.creation_time,
                 payload,
             )
         )
 
-    def make(self) -> str:
+    @classmethod
+    def from_json(cls, json_dumpling: str):
+        """
+        Creates a Dumpling from a given ``json_dumpling`` string. The input
+        JSON is expected to be a dumpling which has already been
+        JSON-serialized (presumably by a DumplingHub).
+
+        :param json_dumpling: JSON string to create the Dumpling from.
+        :return: A :class:`Dumpling` instance.
+        """
+        try:
+            dumpling_dict = json.loads(json_dumpling)
+        except (json.decoder.JSONDecodeError, TypeError, ValueError) as e:
+            raise InvalidDumpling(
+                'Could not interpret dumpling JSON: {}'.format(e)
+            )
+
+        metadata = dumpling_dict['metadata']
+
+        try:
+            if metadata['driver'] == 'packet':
+                driver = DumplingDriver.packet
+            elif metadata['driver'] == 'interval':
+                driver = DumplingDriver.interval
+            else:
+                raise InvalidDumpling(
+                    "Dumpling driver was not 'packet' or 'interval'"
+                )
+
+            dumpling = cls(
+                chef=metadata['chef'],
+                driver=driver,
+                creation_time=metadata['creation_time'],
+                payload=dumpling_dict['payload'],
+            )
+
+            dumpling.kitchen = metadata['kitchen']
+            return dumpling
+        except KeyError as e:
+            raise InvalidDumpling(
+                'Dumpling JSON was missing key: {}'.format(e)
+            )
+
+    def to_json(self) -> str:
         """
         Makes a complete JSON-serialized dumpling string from the Dumpling.
 
@@ -137,7 +177,7 @@ class Dumpling:
             'metadata': {
                 'chef': self.chef_name,
                 'kitchen': self.kitchen.name if self.kitchen else None,
-                'creation_time': time.time(),
+                'creation_time': self.creation_time,
                 'driver': self.driver.name,
             },
             'payload': self.payload,

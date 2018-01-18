@@ -33,7 +33,7 @@ async def on_dumpling(dumpling):
     :param dumpling: The freshly-made new dumpling.
     :return: None
     """
-    payload = dumpling['payload']
+    payload = dumpling.payload
 
     up_mins, up_secs = divmod(int(payload['server_uptime']), 60)
     up_hrs, up_mins = divmod(up_mins, 60)

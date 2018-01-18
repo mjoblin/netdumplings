@@ -87,7 +87,7 @@ class DumplingKitchen:
             ``DumplingDriver.interval``.
         """
         dumpling = Dumpling(chef=chef, payload=payload, driver=driver)
-        dumpling_json = dumpling.make()
+        dumpling_json = dumpling.to_json()
         self.dumpling_queue.put(dumpling_json)
         self._logger.debug("{0}: Put dumpling on queue, {1} bytes".format(
             self.name, len(dumpling_json)
