@@ -227,6 +227,15 @@ implement one or both of `packet_handler()` and `interval_handler()`. Whatever
 is returned from the handler is automatically packaged into a dumpling by
 `nd-sniff` and sent to `nd-hub`.
 
+Dumpling chefs can be housed in three places:
+ 
+1. Python modules accessible via `PYTHONPATH` (e.g. `module.with.chefs`)
+1. Python modules located under the directory where `nd-sniff` is run from
+1. Standalone Python files (e.g. `/path/to/chefs.py`)
+
+You tell `nd-sniff` where to find dumpling chefs using the `--chef-module`
+flag.
+
 The following dumpling chef creates a dumpling for every DNS lookup.
 
 ```python
@@ -257,6 +266,13 @@ class DNSLookupChef(netdumplings.DumplingChef):
         }
 
         return dumpling_payload
+```
+
+If you put the above chef code into a file in your home directory called
+`my_chefs.py` then you can tell `nd-sniff` where to find it with:
+
+```
+$ nd-sniff --chef-module ~/my_chefs.py
 ```
 
 ### Example dumpling eater
