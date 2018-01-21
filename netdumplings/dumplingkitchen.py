@@ -1,8 +1,10 @@
 import importlib
+import importlib.util
 import inspect
 import logging
 import multiprocessing
 import os
+import os.path
 import sys
 from threading import Thread
 from time import sleep
@@ -153,7 +155,9 @@ class DumplingKitchen:
         """
         Finds available :class:`DumplingChef` subclasses.  Looks inside the
         given ``chef_modules`` list of Python module names for classes which
-        are subclasses of :class:`DumplingChef`.
+        are subclasses of :class:`DumplingChef`.  An attempt is made to find
+        the given module in the existing PYTHONPATH, or under the current
+        directory, or as a standalone Python file.
 
         :return: A dict where the keys are the module name, and the values are
             a dict containing keys ``import_error`` (``False`` if no error),
@@ -169,17 +173,34 @@ class DumplingKitchen:
         chef_info = {}
 
         for chef_module in chef_modules:
+            is_py_file = True if os.path.isfile(chef_module) else False
+
             chef_info[chef_module] = {
                 'import_error': False,
-                'chef_classes': []
+                'chef_classes': [],
+                'is_py_file': is_py_file,
             }
 
             # Import the module for subsequent Chef extraction.
-            try:
-                module = importlib.import_module(chef_module)
-            except ImportError as e:
-                chef_info[chef_module]['import_error'] = str(e)
-                continue
+            if is_py_file:
+                try:
+                    spec = importlib.util.spec_from_file_location(
+                        'chefs', chef_module
+                    )
+                    module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(module)
+                except AttributeError:
+                    # Non-Python files result in spec not having a loader attr.
+                    chef_info[chef_module]['import_error'] = (
+                        'does not appear to be an importable Python file'
+                    )
+                    continue
+            else:
+                try:
+                    module = importlib.import_module(chef_module)
+                except ImportError as e:
+                    chef_info[chef_module]['import_error'] = str(e)
+                    continue
 
             chef_classes = inspect.getmembers(module, inspect.isclass)
 

@@ -1,6 +1,8 @@
 import asyncio
+import importlib.util
 import json
 import logging
+import os.path
 import sys
 import multiprocessing
 from time import sleep
@@ -83,7 +85,15 @@ def network_sniffer(
     # the kitchen.
     for chef_module in valid_chefs:
         chef_class_names = valid_chefs[chef_module]
-        mod = __import__(chef_module, fromlist=chef_class_names)
+
+        if os.path.isfile(chef_module):
+            spec = importlib.util.spec_from_file_location('chefs', chef_module)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+        else:
+            # TODO: Investigate replacing __import__ with
+            #   importlib.import_module
+            mod = __import__(chef_module, fromlist=chef_class_names)
 
         for chef_class_name in chef_class_names:
             log.info("{0}: Registering {1}.{2} with kitchen".format(
@@ -234,9 +244,22 @@ def get_valid_chefs(
 
     # Find all the valid chefs.
     for chef_module in chef_info:
+        import_error = chef_info[chef_module]['import_error']
+        if import_error:
+            log.error('Problem with {}: {}'.format(chef_module, import_error))
+            continue
+
         chef_class_names = chef_info[chef_module]['chef_classes']
-        # TODO: Investigate replacing __import__ with importlib.import_module
-        mod = __import__(chef_module, fromlist=chef_class_names)
+        is_py_file = chef_info[chef_module]['is_py_file']
+
+        if is_py_file:
+            spec = importlib.util.spec_from_file_location('chefs', chef_module)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+        else:
+            # TODO: Investigate replacing __import__ with
+            #   importlib.import_module
+            mod = __import__(chef_module, fromlist=chef_class_names)
 
         for chef_class_name in chef_class_names:
             chefs_seen.append(chef_class_name)
@@ -298,8 +321,8 @@ def get_valid_chefs(
 )
 @click.option(
     '--chef-module', '-m',
-    help='Python module containing chef implementations. Multiple can be '
-         'specified.',
+    help='Python module containing chef implementations. Can be module.name '
+         'or /path/to/file.py. Multiple can be specified.',
     metavar='PYTHON_MODULE',
     default=['netdumplings.dumplingchefs'],
     show_default=True,
@@ -313,6 +336,13 @@ def get_valid_chefs(
     multiple=True,
 )
 @click.option(
+    '--chef-list', '-l',
+    help='List all available chefs (as found in the given --chef-module '
+         'Python modules) and exit.',
+    is_flag=True,
+    default=False,
+)
+@click.option(
     '--poke-interval', '-p',
     help='Interval (in seconds) to poke chefs instructing them to send their '
          'interval dumplings.',
@@ -321,19 +351,11 @@ def get_valid_chefs(
     default=5.0,
     show_default=True,
 )
-@click.option(
-    '--chef-list', '-l',
-    help='List all available chefs (as found in the given --chef-module '
-         'Python modules, or the default netdumplings.dumplingchefs module) '
-         'and exit.',
-    is_flag=True,
-    default=False,
-)
 @click.version_option(version=netdumplings.__version__)
 def sniff_cli(kitchen_name, hub, interface, pkt_filter, chef_module, chef,
-              poke_interval, chef_list):
+              chef_list, poke_interval):
     """
-    A dumpling kitchen.
+    A dumpling sniffer kitchen.
 
     Sniffs network packets matching the given PCAP-style filter and sends them
     to chefs for processing into dumplings. Dumplings are then sent to

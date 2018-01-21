@@ -1,4 +1,5 @@
 import importlib
+import importlib.util
 import json
 
 import pytest
@@ -314,7 +315,7 @@ class TestChefDiscovery:
     """
     Test DumplingKitchen chef discovery.
     """
-    def test_chef_discovery(self, mocker):
+    def test_chef_discovery_from_module(self, mocker):
         """
         Test discovery of chefs from the two valid test chef modules.
         """
@@ -345,16 +346,47 @@ class TestChefDiscovery:
         chef_module_one = chef_info['tests.data.dumplingchefs']
 
         assert chef_module_one['import_error'] is False
+        assert chef_module_one['is_py_file'] is False
         assert sorted(chef_module_one['chef_classes']) == sorted([
-            'TestChefOne', 'TestChefTwo', 'TestChefThree'
+            'TestChefOne', 'TestChefTwo', 'TestChefThree',
         ])
 
         chef_module_two = chef_info['tests.data.moredumplingchefs']
 
         assert chef_module_two['import_error'] is False
+        assert chef_module_two['is_py_file'] is False
         assert 'NotAChef' not in chef_module_two['chef_classes']
         assert sorted(chef_module_two['chef_classes']) == sorted([
             'MoreTestChefOne', 'MoreTestChefTwo'
+        ])
+
+    def test_chef_discovery_from_file(self, mocker):
+        """
+        Test discovery of chefs from a standalone .py file.
+        """
+        kitchen = DumplingKitchen(dumpling_queue=mocker.Mock())
+
+        # WARNING: This will actually allow the imports to take place, so we're
+        # technically letting this test pollute our namespace.
+        spy_importlib = mocker.spy(importlib.util, 'spec_from_file_location')
+
+        chef_file = 'tests/data/chefs_in_a_file.py'
+
+        chef_info = kitchen.get_chefs_in_modules([chef_file])
+
+        # Assert that the two chef modules were actually imported.
+        spy_importlib.assert_called_once_with('chefs', chef_file)
+
+        # Assert that the return value of get_chefs_in_modules looks correct.
+        assert chef_file in chef_info
+        assert len(chef_info.keys()) == 1
+
+        chef_module = chef_info[chef_file]
+
+        assert chef_module['import_error'] is False
+        assert chef_module['is_py_file'] is True
+        assert sorted(chef_module['chef_classes']) == sorted([
+            'ChefOneFromFile', 'ChefTwoFromFile',
         ])
 
     def test_chef_discovery_with_invalid_module(self, mocker):
@@ -375,6 +407,7 @@ class TestChefDiscovery:
 
         valid_module = chef_info['tests.data.dumplingchefs']
         assert valid_module['import_error'] is False
+        assert len(valid_module['chef_classes']) == 3
 
         invalid_module = chef_info['tests.data.doesnotexist']
         assert (
@@ -382,6 +415,21 @@ class TestChefDiscovery:
             "No module named 'tests.data.doesnotexist'"
         )
         assert len(invalid_module['chef_classes']) == 0
+
+    def test_chef_discovery_with_invalid_file(self, mocker):
+        """
+        Test that attempting to discover chefs from an invalid standalone file
+        successfully results in an error.
+        """
+        kitchen = DumplingKitchen(dumpling_queue=mocker.Mock())
+        bogus_file = 'tests/data/bogus_chef_file.txt'
+
+        chef_info = kitchen.get_chefs_in_modules([bogus_file])
+
+        assert len(chef_info.keys()) == 1
+        assert chef_info[bogus_file]['import_error'] == (
+            'does not appear to be an importable Python file'
+        )
 
 
 class TestKitchenRun:

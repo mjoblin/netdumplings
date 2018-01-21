@@ -1,5 +1,6 @@
 import asyncio
 import builtins
+import importlib.util
 import json
 import logging
 import types
@@ -211,6 +212,63 @@ class TestSniffNetworkSniffer:
             kitchen=mock_dumpling_kitchen.return_value,
         )
 
+    def test_network_sniffer_with_module_and_file_chefs(self, mocker):
+        """
+        Test calling network_sniffer() with one valid chef from a module and
+        another valid chef from a file. We just check that both __import__
+        and importlib.util.spec_from_file_location get called once each.
+        """
+        # network_sniffer() uses the __import__ builtin to import chefs, so we
+        # need to patch that.
+        builtin_import = builtins.__import__
+        module_chef_callable = mocker.Mock()
+        file_chef_callable = mocker.Mock()
+
+        def import_side_effect(*args, **kwargs):
+            if args[0] == 'chefmodule':
+                return types.SimpleNamespace(
+                    ChefNameFromModule=module_chef_callable
+                )
+
+            return builtin_import(*args, **kwargs)
+
+        mocker.patch.object(
+            builtins, '__import__', side_effect=import_side_effect
+        )
+
+        mocker.patch.object(
+            importlib.util,
+            'module_from_spec',
+            return_value=types.SimpleNamespace(
+                ChefNameFromFile=file_chef_callable
+            )
+        )
+
+        mocker.patch.object(importlib.util, 'spec_from_file_location')
+
+        kitchen_name = 'test_kitchen'
+        interface = 'test_interface'
+        chefs = ''
+        chef_modules = ''
+        valid_chefs = {
+            'chefmodule': ['ChefNameFromModule'],
+            'tests/data/chefs_in_a_file.py': ['ChefNameFromFile'],
+        }
+        sniffer_filter = 'test_filter'
+        chef_poke_interval = 10
+        dumpling_queue = mocker.Mock()
+
+        mocker.patch('netdumplings.DumplingKitchen')
+
+        network_sniffer(
+            kitchen_name, interface, chefs, chef_modules, valid_chefs,
+            sniffer_filter, chef_poke_interval, dumpling_queue,
+        )
+
+        # Check that our two mock chefs were instantiated.
+        assert module_chef_callable.call_count == 1
+        assert file_chef_callable.call_count == 1
+
 
 class TestSniffListChefs:
     """
@@ -282,7 +340,7 @@ class TestSniffGetValidChefs:
     """
     def test_chef_retrieval(self, mocker):
         """
-        We fame two chef modules containing three chefs total, but one of them
+        We fake two chef modules containing three chefs total, but one of them
         has its assignable_to_kitchen set to False. Only the remaining two
         should be imported. We also request a missing chef, and check that a
         warning was logged for that one.
@@ -291,10 +349,22 @@ class TestSniffGetValidChefs:
             'moduleone': {
                 'import_error': False,
                 'chef_classes': ['ValidOneAChef', 'ValidOneBChef'],
+                'is_py_file': False,
             },
             'moduletwo': {
                 'import_error': False,
                 'chef_classes': ['ValidTwoAChef'],
+                'is_py_file': False,
+            },
+            'filemodule': {
+                'import_error': False,
+                'chef_classes': ['ValidFileChef'],
+                'is_py_file': True,
+            },
+            'bogusmodule': {
+                'import_error': 'error string',
+                'chef_classes': [],
+                'is_py_file': False,
             },
         }
 
@@ -307,6 +377,8 @@ class TestSniffGetValidChefs:
         # testing purposes. If we're not importing a test chef module then the
         # patch will call the builtin __import__ instead.
         builtin_import = builtins.__import__
+
+        # TODO: This feels too complicated.
 
         def import_side_effect(*args, **kwargs):
             if args[0] in test_chef_info.keys():
@@ -324,12 +396,29 @@ class TestSniffGetValidChefs:
                         )
                     )
                 return chef_module
+            elif not isinstance(args[0], str):
+                # We're in the filemodule case.
+                chef_module = types.SimpleNamespace()
+                for chef_class in test_chef_info['filemodule']['chef_classes']:
+                    setattr(
+                        chef_module,
+                        chef_class,
+                        types.SimpleNamespace(
+                            assignable_to_kitchen=True
+                        )
+                    )
+                return chef_module
 
             return builtin_import(*args, **kwargs)
 
         mocker.patch.object(
             builtins, '__import__', side_effect=import_side_effect
         )
+
+        mocker.patch.object(
+            importlib.util, 'module_from_spec', side_effect=import_side_effect
+        )
+        mocker.patch.object(importlib.util, 'spec_from_file_location')
 
         mock_log = mocker.Mock()
 
@@ -340,7 +429,8 @@ class TestSniffGetValidChefs:
                 'ValidOneAChef',
                 'ValidOneBChef',
                 'ValidTwoAChef',
-                'MissingChef'
+                'ValidFileChef',
+                'MissingChef',
             ],
             log=mock_log,
         )
@@ -351,10 +441,15 @@ class TestSniffGetValidChefs:
         assert result == {
             'moduleone': ['ValidOneAChef'],
             'moduletwo': ['ValidTwoAChef'],
+            'filemodule': ['ValidFileChef'],
         }
 
         mock_log.warning.assert_called_with(
             'test_kitchen: Chef MissingChef not found'
+        )
+
+        mock_log.error.assert_called_with(
+            'Problem with bogusmodule: error string'
         )
 
 
