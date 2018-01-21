@@ -30,8 +30,9 @@ The result looks something like this:
 ![overview](./docs/_static/overview.svg)
 
 Note that you write the bits in green (the dumpling chefs and the dumpling
-eaters). Even though the above shows everything running on different hosts, you
-can also run everything on the same host depending on your needs.
+eaters) and netdumplings provides the rest. Also, even though the above shows
+everything running on different hosts, you can run everything on the same host
+if that better suits your needs.
 
 ## What's in the box?
 
