@@ -39,7 +39,7 @@ netdumplings comes with:
 
 * The packet sniffer kitchen `nd-sniff`
 * The dumpling hub `nd-hub`
-* Sample dumpling chefs in the `netdumlings.dumplingchefs` module
+* Sample dumpling chefs in the `netdumplings.dumplingchefs` module
 * Sample dumpling eaters `nd-print`, `nd-hubdetails`, and `nd-hubstatus`
 * Classes to help you write your own chefs and eaters
 
@@ -52,7 +52,7 @@ the sample dumpling chefs and dumpling eaters instead.
 
 ### Installation
 
-First install netdumplings:
+To install netdumplings:
 
 ```
 $ pip3 install netdumplings
@@ -155,7 +155,7 @@ netdumplings comes with two other dumpling eaters which can be used to monitor
 ```
 $ nd-hubstatus
 
-Shifty status from ws://localhost:11348
+nd-hub status from ws://localhost:11348
 2018-01-20 14:44:52  uptime: 00:04:25  dumplings in: 107  out: 92  kitchens: 1  eaters: 1
 ```
 
@@ -262,9 +262,11 @@ class DNSLookupChef(netdumplings.DumplingChef):
 ### Example dumpling eater
 
 To create a dumpling eater with Python you subclass
-`netdumplings.DumplingEater` and implement `on_dumpling()`. The eater will
-receive all dumplings being sent out from `nd-hub`. The following example also
-implements `on_connect()`.
+`netdumplings.DumplingEater` and implement `on_dumpling()`. All eaters will
+receive all dumplings being sent out from `nd-hub`.
+
+The DumplingEater handlers, like `on_dumpling`, are async methods so you need
+to define them with the `async` keyword.
 
 The following dumpling eater prints the payload of every dumpling sent out from
 `nd-hub`.

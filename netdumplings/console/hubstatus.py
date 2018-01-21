@@ -21,7 +21,7 @@ async def on_connect(hub_uri, websocket):
         (websockets.WebSocketClientProtocol).
     :return: None
     """
-    print('Shifty status from {0}'.format(hub_uri))
+    print('nd-hub status from {0}'.format(hub_uri))
     print('Waiting for data... ', end='', flush=True)
 
 
