@@ -47,7 +47,9 @@ extras_require = {
 setup(
     name='netdumplings',
     version=version['__version__'],
-    description='Tools for building your own computer network visualizations.',
+    description=(
+        'A framework for distributed network packet sniffing and processing.'
+    ),
     long_description=readme,
     author='Mike Joblin',
     author_email='mike@tastymoss.com',
