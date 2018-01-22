@@ -1,87 +1,70 @@
 .. automodule:: netdumplings
 
-NetDumplings
+netdumplings
 ============
 
-NetDumplings helps you build your own computer network visualizations.  It lets
-you sniff your network for interesting packets and display the results in any
-way you please.  What NetDumplings listens for -- and how that information is
-displayed -- is up to you.
+A framework for distributed network packet sniffing and processing.
 
-Technically speaking, NetDumplings wraps ``tcpdump`` filters and network packet
-processors, sending the results over websockets for display.
+netdumplings requires Python 3.5 or later. The source is on `GitHub`_. It can
+be used as the back-end for tools like `netmomo`_ and `packscape`_, which are
+implementations of *dumpling eaters*. netdumplings has been tested on OS X
+and should work on Linux, and might work on Windows.
 
-NetDumplings requires `Python 3.5`_ or higher, and relies on the fantastic
-`scapy3k`_ and `websockets`_ modules.  The source is on `GitHub`_.
-
-For an example of a 3D browser-based network visualization using NetDumplings,
-see `packscape`_.
-
-What's a dumpling?
-------------------
-
-A dumpling is a description of network activity, defined by you and encoded in
-JSON.  It can contain anything you want based on one or more network packets
-sniffed on your network.  You control the dumpling contents through the
-:class:`DumplingChef` objects you `write <pages/writing_chef.html>`_, as well
-as how those contents are displayed by the **dumpling eaters** you
-`write <pages/writing_eater.html>`_.  You can make as many dumplings as you
-want; and since dumplings are just JSON data sent to eaters over websockets,
-you could even write your eaters in JavaScript and display them in a web
-browser.
-
-OK so how do I visualize my network?
-------------------------------------
-
-1. Write :class:`DumplingChef` Python classes to interpret your network packets and make dumplings.
-#. Write **dumpling eaters** (in any language) to visualize the information in the dumplings you've made.  If you're using Python then you can use the :class:`DumplingEater` helper class.
-#. Run `nd-snifty` (a command-line script included with NetDumplings) to sniff your network for the packets your chefs want to see.
-#. Run `nd-shifty` (also a command-line script included with NetDumplings) to forward the dumplings from `nd-snifty` to the eaters.
-
-Tell me more!
--------------
+Contents
+--------
 
 .. toctree::
    :maxdepth: 1
 
-   pages/why_netdumplings
+   pages/overview
    pages/quickstart
-
-**Running it:**
-
-.. toctree::
-   :maxdepth: 1
-
-   pages/installation
-   pages/in_the_box
-   pages/run_it
-
-**Developer documentation:**
-
-.. toctree::
-   :maxdepth: 1
-
-   pages/more_details
-
-.. toctree::
-   :maxdepth: 2
-
-   pages/api
-
-.. toctree::
-   :maxdepth: 1
-
    pages/writing_chef
    pages/writing_eater
+   pages/api
+   pages/developing
 
-.. toctree::
-   :maxdepth: 1
+Summary
+-------
 
-   pages/config
+To use netdumplings you:
 
-.. _Python 3.5: https://www.python.org/downloads/
-.. _scapy3k: https://github.com/phaethon/scapy
-.. _websockets: https://websockets.readthedocs.org/en/stable/
+* Run one or more **packet sniffer kitchens** (``nd-sniff``), giving each one:
+   * A PCAP-style packet filter
+   * Some **dumpling chefs** you've written for packet processing and dumpling
+     creation
+* Run the **dumpling hub** (``nd-hub``) which forwards dumplings from the
+  sniffers to the eaters
+* Write and run one or more **dumpling eaters** to display the dumpling
+  contents
+
+You can run the sniffer kitchens and dumpling eaters on as many different hosts
+as you like (or on the same host if you want to keep things simple). You run
+only one instance of the hub. The sniffers, hub, and eaters, all communicate
+over WebSockets.
+
+You write the dumpling chefs and dumpling eaters, but netdumplings comes with
+some sample chefs and eaters so you can get started quickly.
+
+Installation
+------------
+
+To install netdumplings: ::
+
+   $ pip3 install netdumplings
+
+You may want to do that in a virtualenv: ::
+
+   $ python3 -m venv venv-netdumplings
+   $ source venv-netdumplings/bin/activate
+   $ pip install netdumplings
+
+Installing netdumplings gives you the ``netdumplings`` Python module and the
+commandline tools: ``nd-sniff``, ``nd-hub``, ``nd-print``, ``nd-hubdetails``,
+and ``nd-hubstatus``. All tools support the ``--help`` flag for usage
+information.
+
+
 .. _GitHub: https://github.com/mjoblin/netdumplings
+.. _netmomo: https://github.com/mjoblin/netmomo
 .. _packscape: https://github.com/mjoblin/packscape
 

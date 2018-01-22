@@ -124,9 +124,7 @@ html_theme_options = {
     'logo': 'dumpling.png',
     'logo_name': True,
     'touch_icon': 'dumpling.png',
-    'description':
-        """NetDumplings lets you see what's happening on your network,
-        any way you want to see it.""",
+    'description': 'A framework for distributed network packet sniffing and processing.',
     'show_related': True,
     'analytics_id': 'UA-76821591-1',
 }
