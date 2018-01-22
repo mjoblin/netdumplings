@@ -71,23 +71,24 @@ function packetCountDumpling(dumpling) {
         count_table.appendChild(layer_row);
 
         layer_count.textContent = numberWithCommas(
-                dumpling.payload.packet_counts[layer]);
+            dumpling.payload.packet_counts[layer]
+        );
         layer_name.textContent = layer;
     }
 }
 
 // ----------------------------------------------------------------------------
 
-function shiftyStatusDumpling(dumpling) {
-    // Display shifty status information.
+function hubStatusDumpling(dumpling) {
+    // Display hub status information.
 
-    var shifty_status_container = document.getElementsByClassName(
-            'shifty-status-container')[0];
-    shifty_status_container.innerHTML = '';
+    var hub_status_container =
+        document.getElementsByClassName('hub-status-container')[0];
+    hub_status_container.innerHTML = '';
     var status_pre = document.createElement('pre');
-    status_pre.className = 'shifty-status';
+    status_pre.className = 'hub-status';
     status_pre.textContent = JSON.stringify(dumpling.payload, null, 2);
-    shifty_status_container.appendChild(status_pre);
+    hub_status_container.appendChild(status_pre);
 }
 
 
@@ -95,11 +96,11 @@ function shiftyStatusDumpling(dumpling) {
 // Initialization.
 // ============================================================================
 
-// Connect to shifty (the dumpling hub).
+// Connect to the dumpling hub.
 var ws = new WebSocket("ws://localhost:11348/");
 
 ws.onopen = function() {
-    // Send shifty our name.  Then we'll start receiving dumplings.
+    // Send the hub our name.  Then we'll start receiving dumplings.
     ws.send("{\"eater_name\": \"webnom\"}");
 };
 
@@ -115,6 +116,6 @@ ws.onmessage = function(event) {
         packetCountDumpling(dumpling);
     }
     else if (dumpling.metadata.chef === "SystemStatusChef") {
-        shiftyStatusDumpling(dumpling);
+        hubStatusDumpling(dumpling);
     }
 };
