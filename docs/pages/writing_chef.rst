@@ -6,11 +6,11 @@ Writing a dumpling chef
 =======================
 
 The mission of a dumpling chef is to receive network packets from ``nd-sniff``,
-process those packets, and ultimately create dumplings.
+process those packets, and create dumplings.
 
 To create a dumpling chef you subclass :class:`DumplingChef` and implement one
 or both of ``packet_handler()`` and ``interval_handler()``. The packet handler
-is called every time a packet is sniffed by ``nd-sniff``; and the interval
+is called every time a packet is sniffed by ``nd-sniff``, and the interval
 handler is called at regular intervals regardless of network packet activity.
 Whatever the handlers ``return`` is automatically packaged into a dumpling by
 ``nd-sniff`` and sent to ``nd-hub`` which then sends it on to all the eaters.
@@ -21,8 +21,8 @@ Dumpling chefs can be housed in three places:
 #. Python modules located under the directory where ``nd-sniff`` is run from
 #. Standalone Python files (e.g. ``/path/to/chefs.py``)
 
-You tell ``nd-sniff`` where to find dumpling chefs using the ``--chef-module``
-flag. You can specify this flag multiple times.
+Example chef
+------------
 
 The following dumpling chef creates a dumpling for every DNS lookup. ::
 
@@ -95,7 +95,7 @@ The packet format
 The packets passed to your packet handler are `scapy`_ packets.
 
 If you're writing your own dumpling chefs then you're probably going to want
-to get good and comfy with what scapy packets look like.  You can do that by
+to get comfortable with what scapy packets look like.  You can do that by
 `using scapy to sniff some packets`_ and interrogate the results in an
 interactive Python session.  Following is one way to get started with that.
 Since we're sniffing packets, you may need to run this as an administrator on
@@ -106,9 +106,9 @@ your system. ::
     >>> packet = sniff(filter='tcp', count=1)
     >>> packet[0].show()
 
-The ``filter`` argument is the same format that you're passing to ``nd-sniff``
-with the ``--filter`` flag. You can read more about the format of the `filter
-string here`_.
+The ``filter`` argument passed to ``sniff()`` is the same PCAP filter format
+that you're passing to ``nd-sniff`` with the ``--filter`` flag. You can read
+more about the format of the `filter string here`_.
 
 There's a series of articles called `Building Network Tools with Scapy`_ which
 provides a lot of useful information, including part 4: `Looking at Packets`_.
@@ -117,20 +117,13 @@ Telling nd-sniff where to find your chefs
 -----------------------------------------
 
 By default ``nd-sniff`` will only look for chefs in the
-``netdumplings.dumplingchefs`` module that comes with netdumplings.  You can
-tell ``nd-sniff`` to find its chefs elsewhere with the ``--chef-module``
-flag, which can be given either a Python module name or a path to a Python
-file. Also, you can ask ``nd-sniff`` to tell you what chefs it knows about with
-the ``--chef-list`` flag.
+``netdumplings.dumplingchefs`` module that comes with netdumplings.
 
-Chef locations
-``````````````
-
-You tell ``nd-sniff`` where to find your chefs with the ``--chef-module`` flag.
-You can give this flag either a Python module name or a path to a standalone
-Python file. You can specify the flag multiple times. For example, the
-following tells ``nd-sniff`` to look for chefs in the ``mychefs`` module and
-in a file called ``~/chefs/mychefs.py``: ::
+You can override the default behaviour by telling ``nd-sniff`` where to find
+your chefs with the ``--chef-module`` flag. You can give this flag either a
+Python module name or a path to a standalone Python file. You can specify the
+flag multiple times. For example, the following tells ``nd-sniff`` to look for
+chefs in the ``mychefs`` module and in a file called ``~/chefs/mychefs.py``: ::
 
     $ nd-sniff --chef-module mychefs --chef-module ~/chefs/mychefs.py
 
@@ -140,7 +133,7 @@ the module name and placed in the same directory as where ``nd-sniff`` is
 being run from.
 
 Listing found chefs
-```````````````````
+-------------------
 
 You can ask ``nd-sniff`` to list all the chefs it can find in the given chef
 modules by specifying the ``--chef-list`` flag: ::
@@ -162,8 +155,8 @@ modules by specifying the ``--chef-list`` flag: ::
       DNSLookupChef
       PacketCountChef
 
-Example chefs
--------------
+More example chefs
+------------------
 
 netumplings comes with some example chefs in the ``netdumplings.dumplingchefs``
 module. You can see their source code here:

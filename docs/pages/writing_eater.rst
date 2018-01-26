@@ -9,15 +9,15 @@ A dumpling eater has a very simple mission: receive dumplings from ``nd-hub``
 and do whatever it wants with them. The `netmomo`_ and `packscape`_
 Web applications are examples of dumpling eaters.
 
-To create a dumpling eater with Python you subclass
-:class:`DumplingEater` and implement ``on_dumpling()``. All eaters will
-receive all dumplings being sent out from ``nd-hub``.
+To create an eater with Python you subclass :class:`DumplingEater` and
+implement ``on_dumpling()``. All eaters will receive all dumplings being sent
+from ``nd-hub``.
 
 The DumplingEater handlers, like ``on_dumpling()``, are async methods so you
 need to define them with the ``async`` keyword.
 
-The following dumpling eater prints the payload of every dumpling sent out from
-``nd-hub``. ::
+The following eater prints the payload of every dumpling sent from
+``nd-hub``: ::
 
     import json
     import netdumplings
@@ -55,7 +55,7 @@ class) then there's a few things to remember:
   may want to interrogate the ``metadata`` key of each dumpling to check the
   ``chef_name`` (or any other information it cares about) to decide whether
   it's interested in the dumpling or not. Ignoring unwanted dumplings early
-  is a good practice.
+  is a good idea.
 
 Example eaters
 --------------
