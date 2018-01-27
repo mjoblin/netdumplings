@@ -53,7 +53,7 @@ which makes a dumpling for every DNS lookup.
     "payload": {
         "lookup": {
             "hostname": "myspace.com",
-            "when": 1515990721.147,
+            "when": 1515990721.147
         }
     }
 }
