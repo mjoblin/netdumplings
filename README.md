@@ -1,6 +1,6 @@
 # netdumplings
 
-netdumplings is a framework for distributed network packet sniffing.
+A framework for distributed network packet sniffing and processing.
 
 See the [documentation](https://netdumplings.readthedocs.org) for more details,
 and the [netmomo](https://github.com/mjoblin/netmomo) and
