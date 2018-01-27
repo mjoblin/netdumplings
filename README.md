@@ -92,3 +92,7 @@ def dumpling_printer():
 if __name__ == '__main__':
     dumpling_printer()
 ```
+
+## More information
+
+See the [documentation](https://netdumplings.readthedocs.org) for more details.
