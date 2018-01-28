@@ -331,8 +331,8 @@ def sniff_cli(kitchen_name, hub, interface, pkt_filter, chef_module, chef,
     A dumpling kitchen.
 
     Sniffs network packets matching the given PCAP-style filter and sends them
-    to chefs for processing into dumplings. Dumplings are then sent to
-    ``nd-hub`` for distribution to the dumpling eaters.
+    to chefs for processing into dumplings. Dumplings are then sent to nd-hub
+    for distribution to the dumpling eaters.
     """
     # NOTE: Since the --chef-module and --chef flags can be specified multiple
     #   times, the associated 'chef_module' and 'chef' parameters are tuples of
