@@ -9,20 +9,26 @@ from .dumpling import Dumpling, DumplingDriver
 from .exceptions import InvalidDumpling, NetDumplingsError
 
 from ._shared import (
-    validate_dumpling, HUB_HOST, HUB_IN_PORT,
-    HUB_OUT_PORT, HUB_STATUS_FREQ,
+    validate_dumpling, HUB_HOST, HUB_IN_PORT, HUB_OUT_PORT, HUB_STATUS_FREQ,
 )
 
 
 class DumplingHub:
     """
-    Implements a dumpling hub.  A dumpling hub is two websocket servers: one
-    receives dumplings from any number of running `nd-sniff` scripts; and the
-    other sends those dumplings to any number of `dumpling eaters`.  The hub
-    also makes its own dumplings which describe its own system status which are
-    also sent to all the dumpling eaters at regular intervals.
+    Implements a dumpling hub.
 
-    `nd-hub` is a simple wrapper around ``DumplingHub``.
+    A dumpling hub is two websocket servers: one receives dumplings from any
+    number of running ``nd-sniff`` scripts; and the other sends those dumplings
+    to any number of dumpling eaters. The hub also makes its own dumplings
+    which describe its own system status which are also sent to all the
+    dumpling eaters at regular intervals.
+
+    ``nd-hub`` is a simple wrapper around ``DumplingHub``.
+
+    :param address: Address the hub is running on.
+    :param in_port: Port used to receive connections from `nd-sniff`.
+    :param out_port: Port used to receive connections from `dumpling eaters`.
+    :param status_freq: Frequency (in secs) to send system status dumplings.
     """
     def __init__(
             self,
@@ -31,13 +37,7 @@ class DumplingHub:
             out_port: int = HUB_OUT_PORT,
             status_freq: int = HUB_STATUS_FREQ,
     ) -> None:
-        """
-        :param address: Address the hub is running on.
-        :param in_port: Port used to receive dumplings from `nd-sniff`.
-        :param out_port: Port used to send dumplings to `dumpling eaters`.
-        :param status_freq: Frequency (in secs) to send system status
-            dumplings.
-        """
+
         self.address = address
         self.in_port = in_port
         self.out_port = out_port
@@ -75,9 +75,9 @@ class DumplingHub:
 
     def _get_system_status(self):
         """
-        Generates a dictionary describing current system status.
+        Generates current system status information.
 
-        :return: Dict of system status information.
+        :return: System status information.
         """
         uptime = (datetime.datetime.now() - self._start_time).total_seconds()
 
@@ -100,8 +100,9 @@ class DumplingHub:
     async def _grab_dumplings(self, websocket, path):
         """
         A coroutine for grabbing dumplings from a single instance of
-        `nd-sniff`.  A single instance of this coroutine exists for each
-        `nd-sniff` and is invoked via :meth:`websockets.server.serve`.
+        ``nd-sniff``. A single instance of this coroutine exists for each
+        connected ``nd-sniff`` and is invoked via
+        :meth:`websockets.server.serve`.
 
         :param websocket: A :class:`websockets.server.WebSocketServerProtocol`.
         :param path: Websocket request URI.
@@ -166,8 +167,8 @@ class DumplingHub:
 
     async def _emit_dumplings(self, websocket, path):
         """
-        A coroutine for sending all tasty new dumplings to a single `dumpling
-        eater` over a websocket connection.  A single instance of this
+        A coroutine for sending all received dumplings to a single connected
+        dumpling eater over a websocket connection. A single instance of this
         coroutine exists for each eater and is invoked via
         :meth:`websockets.server.serve`.
 
@@ -245,11 +246,13 @@ class DumplingHub:
 
     def run(self):
         """
-        Run the dumpling hub.  Starts two websocket servers: one to receive
-        dumplings from zero or more instances of `nd-sniff`; and another to
-        send those dumplings to zero or more dumpling eaters.  Also creates its
-        own dumplings at regular intervals to send system status information to
-        all connected dumpling eaters.
+        Run the dumpling hub.
+
+        Starts two websocket servers: one to receive dumplings from zero or
+        more instances of ``nd-sniff``; and another to send those dumplings to
+        zero or more dumpling eaters. Also creates its own dumplings at regular
+        intervals to send system status information to all connected dumpling
+        eaters.
         """
         dumpling_in_server = \
             websockets.serve(self._grab_dumplings, self.address, self.in_port)

@@ -5,8 +5,7 @@ import click
 import netdumplings
 from netdumplings.exceptions import NetDumplingsError
 from netdumplings._shared import (
-    configure_logging, HUB_HOST, HUB_IN_PORT,
-    HUB_OUT_PORT, HUB_STATUS_FREQ,
+    configure_logging, HUB_HOST, HUB_IN_PORT, HUB_OUT_PORT, HUB_STATUS_FREQ,
 )
 
 from ._shared import CLICK_CONTEXT_SETTINGS

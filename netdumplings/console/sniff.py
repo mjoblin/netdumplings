@@ -11,8 +11,7 @@ import websockets
 
 import netdumplings
 from netdumplings._shared import (
-    configure_logging, ND_CLOSE_MSGS, HUB_HOST,
-    HUB_IN_PORT,
+    configure_logging, ND_CLOSE_MSGS, HUB_HOST, HUB_IN_PORT,
 )
 
 from ._shared import CLICK_CONTEXT_SETTINGS
@@ -29,35 +28,28 @@ def network_sniffer(
         dumpling_queue: multiprocessing.Queue,
 ):
     """
-    Top-level function for managing the flow of sniffed network packets to
-    dumpling chefs (via a kitchen).
+    The main network sniffing management function, responsible for:
+
+    * Instantiating a dumpling kitchen (which does the actual sniffing) and
+      providing it with a queue to put chef-created dumplings on
+    * Instantiating the dumpling chefs and registering them with the kitchen
+    * Running the kitchen
 
     This function is intended to be invoked as a Python process.
-
-    The dumpling chefs found in ``netdumplings.dumplingchefs`` are instantiated
-    and passed to the sniffer kitchen so they can register their packet and
-    interval handlers.  Use ``chef_modules`` to specify alternative Python
-    modules where chefs can be found.
 
     A dumpling chef will only be instantiated if its ``assignable_to_kitchen``
     class attribute is ``True``.
 
-    All the instantiated dumpling chefs receive every sniffed network packet
-    and make their own determination about whether to process the packet and
-    if/when they have enough network ingredients to make their dumpling (which
-    they will then submit to the dumpling queue).
-
     :param kitchen_name: Name of the sniffer kitchen.
     :param interface: Network interface to sniff (``all`` sniffs all
         interfaces).
-    :param chefs: List of chefs to send packets to.
-    :param chef_modules: List of Python module names in which to find our
-        chefs.
+    :param chefs: List of chefs to send packets to. Used for display only.
+    :param chef_modules: List of Python module names in which to find chefs.
+        Used for display only.
     :param valid_chefs: Dict of module+chef combinations we plan on importing.
     :param sniffer_filter: PCAP-compliant sniffer filter.
     :param chef_poke_interval: Interval (in secs) to poke chefs.
-    :param dumpling_queue: Queue to send fresh dumplings to so they can be
-        forwarded on to `nd-hub` (the dumpling hub).
+    :param dumpling_queue: Queue to pass to the kitchen to put dumplings on.
     """
     log = logging.getLogger('netdumplings.sniff')
     log.info("{0}: Starting network sniffer process".format(kitchen_name))
@@ -94,7 +86,7 @@ def network_sniffer(
     sniffer_kitchen.run()
 
 
-async def notify_hub(
+async def send_dumplings_from_queue_to_hub(
         kitchen_name: str,
         hub: str,
         dumpling_queue: multiprocessing.Queue,
@@ -102,12 +94,11 @@ async def notify_hub(
         log: logging.Logger,
 ):
     """
-    Grabs fresh dumplings from the sniffers dumpling queue and sends them on to
-    `nd-hub` (the dumpling hub).
+    Grabs dumplings from the dumpling queue and sends them to ``nd-hub``.
 
     :param kitchen_name: The name of the kitchen.
-    :param hub: The address where `nd-hub` is receiving dumplings.
-    :param dumpling_queue: Queue to grab fresh dumplings from.
+    :param hub: The address where ``nd-hub`` is receiving dumplings.
+    :param dumpling_queue: Queue to grab dumplings from.
     :param kitchen_info: Dict describing the kitchen.
     :param log: Logger.
     """
@@ -158,15 +149,16 @@ def dumpling_emitter(
         kitchen_info: Dict,
 ):
     """
-    Kick off an async event loop to manage funneling dumplings from the queue
-    to the dumpling hub.
+    Starts an async event loop to manage funneling dumplings from the queue to
+    the dumpling hub.
 
     This function is intended to be invoked as a Python process.
 
-    :param kitchen_name: The name of the kitchen.
-    :param hub: The address where `nd-hub` is receiving dumplings.
-    :param dumpling_queue: Queue to grab fresh dumplings from.
-    :param kitchen_info: Dict describing the kitchen.
+    :param kitchen_name: The name of the kitchen that the dumplings will be
+        coming from.
+    :param hub: The address where ``nd-hub`` is receiving dumplings.
+    :param dumpling_queue: Queue to get dumplings from.
+    :param kitchen_info: Information on the kitchen.
     """
     log = logging.getLogger('netdumplings.sniff')
     log.info("{0}: Starting dumpling emitter process".format(kitchen_name))
@@ -177,7 +169,9 @@ def dumpling_emitter(
 
     try:
         loop.run_until_complete(
-            notify_hub(kitchen_name, hub, dumpling_queue, kitchen_info, log)
+            send_dumplings_from_queue_to_hub(
+                kitchen_name, hub, dumpling_queue, kitchen_info, log
+            )
         )
     except KeyboardInterrupt:
         pass
@@ -188,7 +182,7 @@ def list_chefs(chef_modules: Optional[List[str]] = None):
     Lists all the chef classes (subclassed from :class:`DumplingChef`) found in
     the given list of ``chef_modules``.
 
-    :param chef_modules: A list of module names to look for chefs in.
+    :param chef_modules: Python module names to look for chefs in.
     """
     chef_info = netdumplings.DumplingKitchen.get_chefs_in_modules(chef_modules)
 
@@ -209,12 +203,12 @@ def list_chefs(chef_modules: Optional[List[str]] = None):
 def get_valid_chefs(
         kitchen_name: str,
         chef_modules: List[str],
-        chefs_requested: List[str],
+        chefs_requested: Union[List[str], bool],
         log: logging.Logger,
 ) -> Dict:
     """
     Retrieves the names of all valid DumplingChef subclasses for later
-    instantiation.  Valid chefs are all the classes in ``chef_modules`` which
+    instantiation. Valid chefs are all the classes in ``chef_modules`` which
     subclass DumplingChef and are included in our list of ``chefs_requested``.
     They also need to have their ``assignable_to_kitchen`` attribute set to
     True.
@@ -224,8 +218,9 @@ def get_valid_chefs(
     :param chefs_requested: List of requested chef names (True means all chefs
         are requested).
     :param log: Logger to log to.
-    :return: Dict of valid DumpingChef subclasses.  Keys are the Python module
-        names and the values are a list of valid chef classes in each module.
+    :return: Dict of valid DumpingChef subclasses. Keys are the Python module
+        names and the values are a list of valid chef class names in each
+        module.
     """
     valid_chefs = {}
     chef_info = netdumplings.DumplingKitchen.get_chefs_in_modules(chef_modules)
@@ -337,7 +332,7 @@ def sniff_cli(kitchen_name, hub, interface, pkt_filter, chef_module, chef,
 
     Sniffs network packets matching the given PCAP-style filter and sends them
     to chefs for processing into dumplings. Dumplings are then sent to
-    nd-hub for distribution to the dumpling eaters.
+    ``nd-hub`` for distribution to the dumpling eaters.
     """
     # NOTE: Since the --chef-module and --chef flags can be specified multiple
     #   times, the associated 'chef_module' and 'chef' parameters are tuples of
@@ -349,20 +344,19 @@ def sniff_cli(kitchen_name, hub, interface, pkt_filter, chef_module, chef,
         list_chefs(chef_module)
         sys.exit(0)
 
-    # sniff now does the following:
+    # now do the following:
     #
-    # * Starts a network-sniffing dumpling-making kitchen process.
-    # * Starts a dumpling emitter process for sending dumplings (over a
-    #   websocket) from the kitchen to nd-hub (a websocket hub which ferries
-    #   dumplings between dumpling emitters and dumpling eaters).
-    # * Creates a queue for the kitchen process to send freshly-made dumplings
-    #   to the emitter process.
+    # * Create a queue for a network-sniffing kitchen process to put dumplings
+    #   onto
+    # * Start a kitchen process, which will be putting dumplings onto the queue
+    # * Start a dumpling emitter process which takes dumplings from the queue
+    #   and sends them to nd-hub over a websocket
 
     configure_logging()
     logger = logging.getLogger('netdumplings.console.sniff')
 
-    # A queue for sending dumplings from the sniffer process (dumplings made
-    # by the dumplingchef packet handlers) to the dumpling-emitter process.
+    # A queue for passing dumplings from the sniffer kitchen to the
+    # dumpling-emitter process.
     dumpling_emitter_queue = multiprocessing.Queue()
 
     # Determine what chefs we'll be sending packets to.
@@ -383,11 +377,7 @@ def sniff_cli(kitchen_name, hub, interface, pkt_filter, chef_module, chef,
                 chef_module_name, chef_class_name)
             )
 
-    # Start the sniffer and dumpling-emitter processes.  The sniffer passes
-    # each sniffed packet to each of the registered dumpling chefs, and the
-    # dumpling chefs populate the queue with new dumplings whenever they're
-    # excited to share a tasty new dumpling -- which may or may not be every
-    # time they receive a packet to process (it's up to them really).
+    # Start the sniffer kitchen and dumpling-emitter processes.
     sniffer_process = multiprocessing.Process(
         target=network_sniffer,
         args=(

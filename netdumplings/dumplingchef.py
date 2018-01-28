@@ -11,26 +11,23 @@ class DumplingChef:
     """
     Base class for all dumpling chefs.
 
-    **NOTE: DumplingChef objects are instantiated for you by nd-sniff. You
-    normally won't need to instantiate DumplingChef objects yourself.  Instead
-    you'll normally subclass DumplingChef and let nd-sniff take care of
-    instantiating it.**
+    **DumplingChef objects are instantiated for you by nd-sniff. You normally
+    won't need to instantiate DumplingChef objects yourself. Instead you'll
+    normally subclass DumplingChef in a Python module which you'll pass to
+    nd-sniff on the commandline.**
 
     When instantiated, a DumplingChef registers itself with the given
-    ``kitchen`` which will take care of calling the chef's packet and interval
-    handlers.
-
-    A DumplingChef can create many :class:`~Dumpling` objects, where a
-    dumpling is a tasty bundle of information which (usually) describes some
-    sort of network activity.  A dumpling might say how many network packets
-    have been sniffed so far; how many packets of various network layers have
-    been sniffed; etc.
+    ``kitchen`` which will then take care of calling the chef's packet and
+    interval handlers as appropriate.
 
     This class implements the following methods which will usually be
     overridden by subclasses:
 
     * :meth:`packet_handler`
     * :meth:`interval_handler`
+
+    :param kitchen: The dumpling kitchen which is providing the network packets
+        used to create the dumplings.
     """
     # Setting assignable_to_kitchen to False (in a subclass) will ensure the
     # chef cannot be assigned to any kitchens via nd-sniff.
@@ -41,8 +38,6 @@ class DumplingChef:
             kitchen: Optional['netdumplings.DumplingKitchen'] = None,
     ) -> None:
         """
-        :param kitchen: The :class:`DumplingKitchen` which is providing the
-            network packet ingredients used to create the dumplings.
         """
         self.kitchen = kitchen
         self.name = type(self).__name__
@@ -57,14 +52,18 @@ class DumplingChef:
 
     def packet_handler(self, packet: scapy.packet.Raw) -> JSONSerializable:
         """
-        Called automatically by the DumplingKitchen whenever a new packet has
-        been sniffed.
+        Called automatically by the dumpling kitchen (``nd-sniff``) whenever a
+        new packet has been sniffed.
 
         This method is expected to be overridden by child classes. This base
         implementation returns a payload which is the string representation of
         the packet.
 
+        The return value is turned into a dumpling by the kitchen. If ``None``
+        is returned then no dumpling will be created.
+
         :param packet: Network packet (from scapy).
+        :rtype: Anything which is JSON-serializable.
         :return: Dumpling payload.
         """
         payload = "{0}: {1}".format(type(self).__name__, packet.summary())
@@ -76,14 +75,21 @@ class DumplingChef:
     def interval_handler(
             self, interval: Optional[int] = None) -> JSONSerializable:
         """
-        Called automatically at regular intervals by the DumplingKitchen.
+        Called automatically at regular intervals by the dumpling kitchen
+        (``nd-sniff``).
+
         Allows for time-based (rather than purely packet-based) chefs to keep
         on cheffing even in the absence of fresh packets.
 
         This method is expected to be overridden by child classes. This base
-        implementation does nothing.
+        implementation does nothing but log a debug entry.
 
-        :param interval: Frequency (in seconds) of the time interval pokes.
+        The return value is turned into a dumpling by the kitchen. If ``None``
+        is returned then no dumpling will be created.
+
+        :param interval: Frequency (in secs) of the time interval pokes.
+        :rtype: Anything which is JSON-serializable.
+        :return: Dumpling payload.
         """
         self._logger.debug(
             "{0}: Received interval_handler poke", self.name)

@@ -15,30 +15,30 @@ class DumplingEater:
     """
     Base helper class for Python-based dumpling eaters.
 
-    Connects to `nd-hub` and listens for any dumplings made by the provided
-    chef_filter (or all chefs if ``chef_filter`` is ``None``).  Can be given
-    callables for any of the following events:
+    Connects to ``nd-hub`` and listens for any dumplings made by the provided
+    ``chef_filter`` (or all chefs if ``chef_filter`` is ``None``).  Can be
+    given callables for any of the following events:
 
     ``on_connect(websocket_uri, websocket_obj)``
-        invoked when the connection to `nd-hub` is made.
+        invoked when the connection to ``nd-hub`` is made
 
     ``on_dumpling(dumpling)``
-        invoked whenever a dumpling is emitted from `nd-hub`.
+        invoked whenever a dumpling is emitted from ``nd-hub``
 
     ``on_connection_lost(e)``
-        invoked when the connection to `nd-hub` is closed.
+        invoked when the connection to ``nd-hub`` is closed
 
     :param name: Name of the dumpling eater. Is ideally unique per eater.
-    :param hub: Address where `nd-hub` is sending dumplings from.
+    :param hub: Address where ``nd-hub`` is sending dumplings from.
     :param chef_filter: List of chef names whose dumplings this eater wants to
         receive. ``None`` means get all chefs' dumplings.
-    :param on_connect: Called when connection to `nd-hub` is made. Is passed
-        two parameters: the `nd-hub` websocket URI (string) and websocket
+    :param on_connect: Called when connection to ``nd-hub`` is made. Is passed
+        two parameters: the ``nd-hub`` websocket URI (string) and websocket
         object (:class:`websockets.client.WebSocketClientProtocol`).
     :param on_dumpling: Called whenever a dumpling is received. Is passed the
         dumpling as a Python dict.
-    :param on_connection_lost: Called when connection to `nd-hub` is lost.
-        Is passed the associated exception object.
+    :param on_connection_lost: Called when connection to ``nd-hub`` is lost. Is
+        passed the associated exception object.
     """
     def __init__(
             self,
@@ -114,11 +114,11 @@ class DumplingEater:
     async def _grab_dumplings(self, dumpling_count=None):
         """
         Receives all dumplings from the hub and looks for any dumplings which
-        were created by the chef(s) we're interested in.  All those dumplings
+        were created by the chef(s) we're interested in. All those dumplings
         are then passed to the on_dumpling handler (after being converted from
         their JSON form back into a Dumpling instance).
 
-        :param dumpling_count: Number of dumplings to eat.  None means eat
+        :param dumpling_count: Number of dumplings to eat. ``None`` means eat
             forever.
         """
         dumplings_eaten = 0
@@ -189,7 +189,7 @@ class DumplingEater:
     @staticmethod
     def _interrupt_handler():
         """
-        Signal handler.  Cancels all running async tasks.
+        Signal handler. Cancels all running async tasks.
         """
         tasks = asyncio.Task.all_tasks()
         for task in tasks:
@@ -199,7 +199,9 @@ class DumplingEater:
         """
         Run the dumpling eater.
 
-        :param dumpling_count: Number of dumplings to eat.  ``None`` means eat
+        This will block until the desired ``dumpling_count`` is met.
+
+        :param dumpling_count: Number of dumplings to eat. ``None`` means eat
             forever.
         """
         self.logger.info("{0}: Running dumpling eater".format(self.name))
@@ -217,14 +219,16 @@ class DumplingEater:
         )
 
         loop = asyncio.get_event_loop()
-        task = loop.create_task(self._grab_dumplings(dumpling_count))
+        dumpling_grabber_task = loop.create_task(
+            self._grab_dumplings(dumpling_count)
+        )
 
         for signal_name in ('SIGTERM', 'SIGINT'):
             loop.add_signal_handler(
                 getattr(signal, signal_name), DumplingEater._interrupt_handler)
 
         try:
-            loop.run_until_complete(task)
+            loop.run_until_complete(dumpling_grabber_task)
         except KeyboardInterrupt as e:
             self.logger.warning(
                 "{0}: Caught keyboard interrupt; attempting graceful "
@@ -251,6 +255,8 @@ class DumplingEater:
         This will be used if an ``on_connect`` handler is not provided during
         instantiation, and if a handler is not provided by a DumplingEater
         subclass.
+
+        Only logs an warning-level log entry.
         """
         self.logger.warning(
             '{}: No on_connect handler specified; ignoring '
@@ -264,6 +270,8 @@ class DumplingEater:
         This will be used if an ``on_dumpling`` handler is not provided during
         instantiation, and if a handler is not provided by a DumplingEater
         subclass.
+
+        Only logs an warning-level log entry.
         """
         self.logger.warning(
             '{}: No on_dumpling handler specified; ignoring '
@@ -277,6 +285,8 @@ class DumplingEater:
         This will be used if an ``on_connection_lost`` handler is not provided
         during instantiation, and if a handler is not provided by a
         DumplingEater subclass.
+
+        Only logs an warning-level log entry.
         """
         self.logger.warning(
             '{}: No on_connection_lost handler specified; ignoring '
