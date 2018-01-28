@@ -1,8 +1,6 @@
-import time
-
 from scapy.all import ARP
 
-from netdumplings import DumplingChef, DumplingDriver
+from netdumplings import DumplingChef
 
 
 class ARPChef(DumplingChef):
@@ -24,18 +22,16 @@ class ARPChef(DumplingChef):
     request = 1
     reply = 2
 
-    def __init__(self, kitchen=None, dumpling_queue=None, receive_pokes=False):
-        super().__init__(kitchen=kitchen, dumpling_queue=dumpling_queue,
-                         receive_pokes=receive_pokes)
-
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.ip_mac = {}
 
     def packet_handler(self, packet):
         """
-        Processes a packet from nd-snifty.  Makes a dumpling summarizing the
+        Processes a packet from nd-sniff.  Makes a dumpling summarizing the
         contents of each each valid ARP packet.
 
-        :param packet: Packet from nd-snifty.
+        :param packet: Packet from nd-sniff.
         """
         if not packet.haslayer("ARP"):
             return
@@ -49,7 +45,7 @@ class ARPChef(DumplingChef):
         else:
             operation = arp.op
 
-        result = {
+        payload = {
             'operation': operation,
             'src_hw': arp.hwsrc,
             'src_ip': arp.psrc,
@@ -61,11 +57,12 @@ class ARPChef(DumplingChef):
 
         if arp.op == ARPChef.reply:
             if self.ip_mac.get(arp.psrc) is None:
-                result['notes'] = 'source device is new'
-            elif self.ip_mac.get(arp.psrc) and self.ip_mac[arp.psrc] != arp.hwsrc:
-                result['notes'] = 'source device has new IP address'
+                payload['notes'] = 'source device is new'
+            elif (self.ip_mac.get(arp.psrc) and
+                  self.ip_mac[arp.psrc] != arp.hwsrc):
+                payload['notes'] = 'source device has new IP address'
 
             # Remember this IP -> MAC mapping.
             self.ip_mac[arp.psrc] = arp.hwsrc
 
-        self.send_dumpling(payload=result, driver=DumplingDriver.packet)
+        return payload

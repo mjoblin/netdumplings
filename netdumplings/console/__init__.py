@@ -1,5 +1,14 @@
-from .info import main as info
-from .printer import main as printer
-from .shifty import main as shifty
-from .snifty import main as snifty
-from .status import main as status
+from .hub import hub_cli
+from .hubdetails import hubdetails_cli
+from .hubstatus import hubstatus_cli
+from .print import print_cli
+from .sniff import sniff_cli
+
+
+(
+    hub_cli,
+    hubdetails_cli,
+    hubstatus_cli,
+    print_cli,
+    sniff_cli,
+)

@@ -1,28 +1,55 @@
-#!/usr/bin/env python
-
+import os
 from setuptools import setup
 
 
-version = '0.2.0'
+here = os.path.abspath(os.path.dirname(__file__))
 
-with open('README.rst', 'r') as f:
+version = {}
+with open(os.path.join(here, 'netdumplings', '_version.py')) as ver_file:
+    exec(ver_file.read(), version)
+
+with open('README.md', 'r') as f:
     readme = f.read()
-
-install_requires = [
-    'scapy-python3',
-    'websockets'
-]
 
 packages = [
     'netdumplings',
     'netdumplings.console',
-    'netdumplings.dumplingchefs'
+    'netdumplings.dumplingchefs',
 ]
+
+install_requires = [
+    'click~=6.7',
+    'netifaces',
+    'pygments',
+    'scapy-python3==0.23',
+    'termcolor',
+    'websockets~=4.0.0',
+]
+
+tests_require = [
+    'asynctest',
+    'pytest',
+    'pytest-asyncio',
+    'pytest-cov',
+    'pytest-mock',
+    'pytest-sugar',
+]
+
+extras_require = {
+    'dev': [
+        'flake8',
+        'mypy',
+        'sphinx',
+        'sphinx-autodoc-typehints',
+    ] + tests_require,
+}
 
 setup(
     name='netdumplings',
-    version=version,
-    description='Tools for building your own computer network visualizations.',
+    version=version['__version__'],
+    description=(
+        'A framework for distributed network packet sniffing and processing.'
+    ),
     long_description=readme,
     author='Mike Joblin',
     author_email='mike@tastymoss.com',
@@ -30,24 +57,26 @@ setup(
     packages=packages,
     include_package_data=True,
     install_requires=install_requires,
+    tests_require=tests_require,
+    extras_require=extras_require,
     download_url='https://pypi.python.org/pypi/netdumplings',
     entry_points={
         'console_scripts': [
-            'nd-snifty=netdumplings.console:snifty',
-            'nd-shifty=netdumplings.console:shifty',
-            'nd-info=netdumplings.console:info',
-            'nd-status=netdumplings.console:status',
-            'nd-printer=netdumplings.console:printer',
+            'nd-hub=netdumplings.console:hub_cli',
+            'nd-hubdetails=netdumplings.console:hubdetails_cli',
+            'nd-hubstatus=netdumplings.console:hubstatus_cli',
+            'nd-print=netdumplings.console:print_cli',
+            'nd-sniff=netdumplings.console:sniff_cli',
         ]
     },
     license='MIT',
     zip_safe=False,
     classifiers=[
-        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: System :: Monitoring',
         'Topic :: System :: Networking',
         'Topic :: System :: Networking :: Monitoring',

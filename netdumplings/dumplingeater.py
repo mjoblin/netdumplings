@@ -1,117 +1,155 @@
-import argparse
 import asyncio
 import json
 import logging
-import re
 import signal
-import sys
+from typing import Awaitable, Callable, Dict, List, Optional
 import websockets
 
-from netdumplings.exceptions import InvalidDumplingError, NetDumplingsError
-from netdumplings.shared import (configure_logging, get_config, get_config_file,
-                                 get_logging_config_file, validate_dumpling,
-                                 ND_CLOSE_MSGS)
+from .dumpling import Dumpling
+from .exceptions import InvalidDumpling
+
+from ._shared import ND_CLOSE_MSGS, HUB_HOST, HUB_OUT_PORT
 
 
 class DumplingEater:
     """
     Base helper class for Python-based dumpling eaters.
 
-    Connects to `nd-shifty` and listens for any dumplings made by the provided
-    list of chefs (or all chefs if ``chefs`` is ``None``).  Can be given
-    callables for any of the following events:
+    Connects to ``nd-hub`` and listens for any dumplings made by the provided
+    ``chef_filter`` (or all chefs if ``chef_filter`` is ``None``). Can be
+    given ``async`` callables for any of the following events:
 
     ``on_connect(websocket_uri, websocket_obj)``
-        invoked when the connection to `nd-shifty` is made.
+        invoked when the connection to ``nd-hub`` is made
 
     ``on_dumpling(dumpling)``
-        invoked whenever a dumpling is emitted from `nd-shifty`.
+        invoked whenever a dumpling is emitted from ``nd-hub``
 
     ``on_connection_lost(e)``
-        invoked when the connection to `nd-shifty` is closed.
+        invoked when the connection to ``nd-hub`` is closed
+
+    **The above callables must be** ``async def`` **methods**.
+
+    :param name: Name of the dumpling eater. Is ideally unique per eater.
+    :param hub: Address where ``nd-hub`` is sending dumplings from.
+    :param chef_filter: List of chef names whose dumplings this eater wants to
+        receive. ``None`` means get all chefs' dumplings.
+    :param on_connect: Called when connection to ``nd-hub`` is made. Is passed
+        two parameters: the ``nd-hub`` websocket URI (string) and websocket
+        object (:class:`websockets.client.WebSocketClientProtocol`).
+    :param on_dumpling: Called whenever a dumpling is received. Is passed the
+        dumpling as a Python dict.
+    :param on_connection_lost: Called when connection to ``nd-hub`` is lost. Is
+        passed the associated exception object.
     """
-    def __init__(self, name=None, shifty=None, *, chefs=None, on_connect=None,
-                 on_dumpling=None, on_connection_lost=None):
-        """
-        :param name: Name of the dumpling eater.  Is ideally unique per eater.
-        :param shifty: Address where `nd-shifty` is sending dumplings from.
-        :param chefs: List of chef names whose dumplings this eater wants to
-            receive.  ``None`` means get all chefs' dumplings.
-        :param on_connect: Called when connection to shifty is made.  Is passed
-            two paramers: the shifty websocket URI (string) and websocket
-            object (:class:`websockets.client.WebSocketClientProtocol`).
-        :param on_dumpling: Called whenever a dumpling is received.  Is passed
-            the dumpling as a Python dict.
-        :param on_connection_lost: Called when connection to `nd-shifty` is
-            lost.  Is passed the associated exception object.
-        """
+    def __init__(
+            self,
+            name: str = 'nameless_eater',
+            hub: str ='{}:{}'.format(HUB_HOST, HUB_OUT_PORT),
+            *,
+            chef_filter: Optional[List[str]] = None,
+            on_connect: Optional[Callable] = None,
+            on_dumpling: Optional[Callable] = None,
+            on_connection_lost: Optional[Callable] = None,
+    ) -> None:
         self.name = name
+        self.chef_filter = chef_filter
+        self.hub = hub
+        self.hub_ws = "ws://{0}".format(hub)
+
+        # Configure handlers. If we're not provided with handlers then we
+        # fall back on the default handlers or the handlers provided by a
+        # subclass.
+        self.on_connect = (
+            on_connect if on_connect is not None else self.on_connect
+        )
+        self.on_dumpling = (
+            on_dumpling if on_dumpling is not None else self.on_dumpling
+        )
+        self.on_connection_lost = (
+            on_connection_lost if on_connection_lost is not None
+            else self.on_connection_lost
+        )
+
         self._was_connected = False
-        self._logger_name = "netdumplings.eater.{0}".format(self.name)
-
-        # We're forgiving of not being given a shifty address.  The
-        # commandline_helper assists with shifty address generation but it's
-        # nice to use the default from the config if the helper isn't used.
-        config = get_config()
-        if shifty:
-            self.shifty = shifty if ":" in shifty else \
-                "{0}:{1}".format(shifty, config['shifty']['out_port'])
-        else:
-            self.shifty = "{0}:{1}".format(config['shifty']['address'],
-                                           config['shifty']['out_port'])
-
-        self.chefs = chefs
-        self.on_connect = on_connect
-        self.on_dumpling = on_dumpling
-        self.on_connection_lost = on_connection_lost
-        self.shifty_uri = "ws://{0}".format(self.shifty)
+        self._logger_name = "{}.{}".format(__name__, self.name)
         self.logger = logging.getLogger(self._logger_name)
+
+    def __repr__(self):
+        def handler_string(attr):
+            # We can't use 'repr(self.handler)' for callables because it causes
+            # an infinite loop as the repr of the handler includes the repr of
+            # the handler (etc). So we replace handler reprs with
+            # '<callable: name>'.
+            return (
+                '<callable: {}>'.format(attr.__name__) if callable(attr)
+                else repr(attr)
+            )
+
+        return (
+            '{}('
+            'name={}, '
+            'hub={}, '
+            'chef_filter={}, '
+            'on_connect={}, '
+            'on_dumpling={}, '
+            'on_connection_lost={})'.format(
+                type(self).__name__,
+                repr(self.name),
+                repr(self.hub),
+                repr(self.chef_filter),
+                handler_string(self.on_connect),
+                handler_string(self.on_dumpling),
+                handler_string(self.on_connection_lost),
+            )
+        )
 
     async def _grab_dumplings(self, dumpling_count=None):
         """
-        Receives all dumplings from shifty and looks for any dumplings which
-        were created by the chef(s) we're interested in.  All those dumplings
-        are then passed to the on_dumpling handler.
+        Receives all dumplings from the hub and looks for any dumplings which
+        were created by the chef(s) we're interested in. All those dumplings
+        are then passed to the on_dumpling handler (after being converted from
+        their JSON form back into a Dumpling instance).
 
-        :param dumpling_count: Number of dumplings to eat.  None means eat
+        :param dumpling_count: Number of dumplings to eat. ``None`` means eat
             forever.
         """
         dumplings_eaten = 0
 
-        websocket = await websockets.client.connect(self.shifty_uri)
+        websocket = await websockets.client.connect(self.hub_ws)
         self._was_connected = True
 
-        self.logger.info("{0}: Connected to shifty at {1}".format(
-            self.name, self.shifty_uri))
+        self.logger.info("{0}: Connected to dumpling hub at {1}".format(
+            self.name, self.hub_ws))
 
         try:
-            # Announce ourselves to shifty.
+            # Announce ourselves to the dumpling hub.
             await websocket.send(json.dumps({'eater_name': self.name}))
 
             if self.on_connect:
-                await self.on_connect(self.shifty_uri, websocket)
+                await self.on_connect(self.hub_ws, websocket)
 
             while True:
                 # Eat a single dumpling.
                 dumpling_json = await websocket.recv()
 
-                # Validate the dumpling.  Note that invalid dumplings will
-                # probably be stripped out by shifty (the DumplingHub).
+                # Create a Dumpling from the JSON received over the websocket.
+                # Note that invalid dumplings will probably be stripped out by
+                # the hub already.
                 try:
-                    dumpling = validate_dumpling(dumpling_json)
-                except InvalidDumplingError as e:
+                    dumpling = Dumpling.from_json(dumpling_json)
+                except InvalidDumpling as e:
                     self.logger.error("{0}: Invalid dumpling: {1}".format(
                         self.name, e))
                     continue
 
-                dumpling_chef = dumpling['metadata']['chef']
-
                 self.logger.debug("{0}: Received dumpling from {1}".format(
-                    self.name, dumpling_chef))
+                    self.name, dumpling.chef_name))
 
                 # Call the on_dumpling handler if this dumpling is from a
                 # chef that we've registered interest in.
-                if self.chefs is None or dumpling_chef in self.chefs:
+                if (self.chef_filter is None or
+                        dumpling.chef_name in self.chef_filter):
                     self.logger.debug(
                         "{0}: Calling dumpling handler {1}".format(
                             self.name, self.on_dumpling))
@@ -126,7 +164,7 @@ class DumplingEater:
                     break
         except asyncio.CancelledError:
             self.logger.warning(
-                "{0}: Connection to shifty cancelled; closing...".format(
+                "{0}: Connection to dumpling hub cancelled; closing...".format(
                     self.name))
 
             try:
@@ -134,8 +172,9 @@ class DumplingEater:
             except websockets.exceptions.InvalidState:
                 pass
         except websockets.exceptions.ConnectionClosed as e:
-            self.logger.warning("{0}: Lost connection to shifty: {1}".format(
-                self.name, e))
+            self.logger.warning(
+                "{}: Lost connection to dumpling hub: {}".format(self.name, e)
+            )
 
             if self.on_connection_lost:
                 await self.on_connection_lost(e)
@@ -143,126 +182,46 @@ class DumplingEater:
     @staticmethod
     def _interrupt_handler():
         """
-        Signal handler.  Cancels all running async tasks.
+        Signal handler. Cancels all running async tasks.
         """
         tasks = asyncio.Task.all_tasks()
         for task in tasks:
             task.cancel()
 
-    @staticmethod
-    def commandline_helper(name="dumpling_eater", description=None, chefs=None):
-        """
-        Helper function for generating and processing eater commandline args.
-
-        :param name: The name of the dumpling eater. Default: "dumpling_eater".
-        :param description: Description of the dumpling eater.
-        :param chefs: List of chefs whose dumplings we want to eat.
-        :return: tuple: ``eater_name`` (string), ``shifty`` (string; address of
-            shifty), ``log_level`` (``None`` or Python logging level string),
-            ``chefs`` (``None`` or list of strings).
-        """
-        config = get_config()
-        default_config_file = get_config_file()
-        default_address = config['shifty']['address']
-        default_out_port = config['shifty']['out_port']
-        default_shifty = "{0}:{1}".format(default_address, default_out_port)
-
-        default_name = name
-        try:
-            default_chefs = ",".join(chefs)
-        except TypeError:
-            default_chefs = chefs
-        default_log_level = 'INFO'
-        default_log_config_file = get_logging_config_file()
-
-        parser = argparse.ArgumentParser(description=description)
-
-        parser.add_argument(
-            "--name", default=default_name,
-            help="name of this dumpling eater (default: {0})".format(
-                default_name))
-        parser.add_argument(
-            "--shifty", default=None,
-            help="address where nd-shifty is sending dumplings from "
-                 "(default: {0})".format(default_shifty))
-        parser.add_argument(
-            "--chefs", default=default_chefs,
-            help="chefs whose dumplings we want to eat (default: {0})".format(
-                default_chefs if default_chefs else "all"))
-        parser.add_argument(
-            "--config", default=None,
-            help="configuration file (default: {0})".format(
-                default_config_file))
-        parser.add_argument(
-            "--log-level", default=None,
-            help="logging level (default: {0})".format(default_log_level))
-        parser.add_argument(
-            "--log-config", default=default_log_config_file,
-            help="logging config file (default: in netdumplings.data module)")
-
-        args = parser.parse_args()
-
-        # Handle shifty overrides.  Priority order is: command-line args,
-        # then any potential config override file, then the default config.
-        if args.shifty:
-            if ":" in args.shifty:
-                (address, port) = args.shifty.split(":")
-                config['shifty']['address'] = address
-                config['shifty']['out_port'] = port
-            else:
-                config['shifty']['address'] = args.shifty
-        elif args.config:
-            try:
-                config_overrides = get_config(args.config)
-            except NetDumplingsError as e:
-                # Printing and exiting from a class is a bit dodgy, but this is
-                # a command-line script helper class, so yeah.
-                print("error: {0}".format(e))
-                sys.exit(0)
-
-            for shifty_setting in ['address', 'out_port']:
-                try:
-                    config['shifty'][shifty_setting] = \
-                        config_overrides['shifty'][shifty_setting]
-                except (KeyError, TypeError):
-                    # This setting may not be overridden so we quietly ignore.
-                    pass
-
-        configure_logging(args.log_level, args.log_config, 'netdumplings.eater')
-
-        return (args.name, config,
-                None if not args.log_level else args.log_level.upper(),
-                None if not args.chefs else re.split("[,\s]+", args.chefs))
-
     def run(self, dumpling_count=None):
         """
         Run the dumpling eater.
 
-        :param dumpling_count: Number of dumplings to eat.  ``None`` means eat
+        This will block until the desired ``dumpling_count`` is met.
+
+        :param dumpling_count: Number of dumplings to eat. ``None`` means eat
             forever.
         """
         self.logger.info("{0}: Running dumpling eater".format(self.name))
 
-        # Check that we have a valid callable on_dumpling handler.
-        if not hasattr(self.on_dumpling, '__call__'):
+        if not callable(self.on_dumpling):
             self.logger.error(
                 "{0}: on_dumpling handler is not callable".format(self.name))
             return
 
-        self.logger.debug("{0}: Looking for shifty at {1}".format(
-            self.name, self.shifty_uri))
+        self.logger.debug("{0}: Looking for dumpling hub at {1}".format(
+            self.name, self.hub_ws))
         self.logger.debug("{0}: Chefs: {1}".format(
-            self.name, ", ".join(self.chefs) if self.chefs else 'all'))
+            self.name,
+            ", ".join(self.chef_filter) if self.chef_filter else 'all')
+        )
 
         loop = asyncio.get_event_loop()
-        task = loop.create_task(self._grab_dumplings(dumpling_count))
+        dumpling_grabber_task = loop.create_task(
+            self._grab_dumplings(dumpling_count)
+        )
 
         for signal_name in ('SIGTERM', 'SIGINT'):
             loop.add_signal_handler(
                 getattr(signal, signal_name), DumplingEater._interrupt_handler)
 
         try:
-            loop.run_until_complete(task)
+            loop.run_until_complete(dumpling_grabber_task)
         except KeyboardInterrupt as e:
             self.logger.warning(
                 "{0}: Caught keyboard interrupt; attempting graceful "
@@ -273,11 +232,56 @@ class DumplingEater:
             loop.run_forever()
         except OSError as e:
             self.logger.warning(
-                "{0}: There was a problem with the shifty connection. "
-                "Is shifty available?".format(self.name))
+                "{0}: There was a problem with the dumpling hub connection. "
+                "Is nd-hub available?".format(self.name))
             self.logger.warning("{0}: {1}".format(self.name, e))
         finally:
             if self._was_connected:
                 self.logger.info(
                     "{0}: Done eating dumplings.".format(self.name))
             loop.close()
+
+    async def on_connect(self, websocket_uri, websocket_obj):
+        """
+        Default on_connect handler.
+
+        This will be used if an ``on_connect`` handler is not provided during
+        instantiation, and if a handler is not provided by a DumplingEater
+        subclass.
+
+        Only logs an warning-level log entry.
+        """
+        self.logger.warning(
+            '{}: No on_connect handler specified; ignoring '
+            'connection.'.format(self.name)
+        )
+
+    async def on_dumpling(self, dumpling):
+        """
+        Default on_dumpling handler.
+
+        This will be used if an ``on_dumpling`` handler is not provided during
+        instantiation, and if a handler is not provided by a DumplingEater
+        subclass.
+
+        Only logs an warning-level log entry.
+        """
+        self.logger.warning(
+            '{}: No on_dumpling handler specified; ignoring '
+            'dumpling.'.format(self.name)
+        )
+
+    async def on_connection_lost(self, e):
+        """
+        Default on_connection_lost handler.
+
+        This will be used if an ``on_connection_lost`` handler is not provided
+        during instantiation, and if a handler is not provided by a
+        DumplingEater subclass.
+
+        Only logs an warning-level log entry.
+        """
+        self.logger.warning(
+            '{}: No on_connection_lost handler specified; ignoring '
+            'connection loss.'.format(self.name)
+        )

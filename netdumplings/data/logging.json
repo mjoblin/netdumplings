@@ -3,8 +3,7 @@
     "disable_existing_loggers": false,
     "formatters": {
         "standard": {
-            "format": "%(asctime)s.%(msecs).03d.UTC %(levelname)s %(message)s",
-            "datefmt": "%Y-%m-%d.%H:%M:%S"
+            "format": "%(asctime)s %(levelname)s %(message)s"
         }
     },
     "handlers": {
@@ -19,17 +18,17 @@
             "level": "INFO",
             "propagate": false
         },
-        "netdumplings.shifty": {
+        "netdumplings.dumplinghub": {
             "handlers": ["default"],
             "level": "INFO",
             "propagate": false
         },
-        "netdumplings.snifty": {
+        "netdumplings.dumplingkitchen": {
             "handlers": ["default"],
             "level": "INFO",
             "propagate": false
         },
-        "netdumplings.eater": {
+        "netdumplings.dumplingeater": {
             "handlers": ["default"],
             "level": "INFO",
             "propagate": false

@@ -1,6 +1,6 @@
 import time
 
-from netdumplings import DumplingChef, DumplingDriver
+from netdumplings import DumplingChef
 
 
 class DNSLookupChef(DumplingChef):
@@ -40,19 +40,16 @@ class DNSLookupChef(DumplingChef):
             }
         }
     """
-    def __init__(self, kitchen=None, dumpling_queue=None, receive_pokes=True):
-        """
-        """
-        super().__init__(kitchen=kitchen, dumpling_queue=dumpling_queue,
-                         receive_pokes=receive_pokes)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.lookups_seen = {}
 
     def packet_handler(self, packet):
         """
-        Processes a packet from nd-snifty.  Makes a dumpling summarizing the
+        Processes a packet from nd-sniff.  Makes a dumpling summarizing the
         contents of each each valid DNS lookup.
 
-        :param packet: Packet from nd-snifty.
+        :param packet: Packet from nd-sniff.
         """
         if not packet.haslayer('DNS'):
             return
@@ -64,7 +61,7 @@ class DNSLookupChef(DumplingChef):
         if hostname.endswith('.'):
             hostname = hostname[:-1]
 
-        now_millis = time.time() * 1000
+        now_millis = time.time()
 
         try:
             self.lookups_seen[hostname]['count'] += 1
@@ -82,7 +79,7 @@ class DNSLookupChef(DumplingChef):
             }
         }
 
-        self.send_dumpling(payload=payload, driver=DumplingDriver.packet)
+        return payload
 
     def interval_handler(self, interval=None):
         """
@@ -94,5 +91,4 @@ class DNSLookupChef(DumplingChef):
             'lookups_seen': self.lookups_seen
         }
 
-        self.send_dumpling(payload=payload, driver=DumplingDriver.interval)
-
+        return payload
