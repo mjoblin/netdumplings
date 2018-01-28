@@ -9,11 +9,11 @@ Release History
 This release introduces breaking changes.
 
 * Renamed CLI tools
-	* ``nd-shifty`` is now ``nd-hub``
-	* ``nd-snifty`` is now ``nd-sniff``
-	* ``nd-printer`` is now ``nd-print``
-	* ``nd-info`` is now ``nd-hubdetails``
-	* ``nd-status`` is now ``nd-hubstatus``
+    * ``nd-shifty`` is now ``nd-hub``
+    * ``nd-snifty`` is now ``nd-sniff``
+    * ``nd-printer`` is now ``nd-print``
+    * ``nd-info`` is now ``nd-hubdetails``
+    * ``nd-status`` is now ``nd-hubstatus``
 * Changed behavior of commandline tools (new and changed flags, colorized
   output)
 * DumplingChefs now ``return`` dumpling payloads from their packet and interval
@@ -32,10 +32,10 @@ This release introduces breaking changes.
   milliseconds
 * DumplingEater’s ``chefs`` parameter renamed to ``chef_filter``
 * Changed SystemStatus dumpling payload:
-	* ``”total_dumplings_sent”`` renamed to ``“total_dumplings_out”``
-	* added ``”total_dumplings_in”``
-	* ``”info_from_shifty”`` (under ``”dumpling_eaters”`` and
-	  ``”dumpling_kitchens”``) renamed to ``”info_from_hub”``
+    * ``”total_dumplings_sent”`` renamed to ``“total_dumplings_out”``
+    * added ``”total_dumplings_in”``
+    * ``”info_from_shifty”`` (under ``”dumpling_eaters”`` and
+      ``”dumpling_kitchens”``) renamed to ``”info_from_hub”``
 * Renamed InvalidDumplingError to InvalidDumpling and added
   InvalidDumplingPayload exception
 * Removed ``commandline_helper()`` from DumplingEater (no longer useful after
