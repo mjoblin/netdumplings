@@ -22,8 +22,8 @@ class PrinterEater(DumplingEater):
             packet_dumplings=True,
             payload=True,
             color=True,
-            **kwargs,
-    ):
+            **kwargs):
+
         super().__init__(**kwargs)
 
         self._kitchens = kitchens

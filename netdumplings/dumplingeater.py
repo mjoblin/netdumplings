@@ -50,8 +50,8 @@ class DumplingEater:
             chef_filter: Optional[List[str]] = None,
             on_connect: Optional[Callable] = None,
             on_dumpling: Optional[Callable] = None,
-            on_connection_lost: Optional[Callable] = None,
-    ) -> None:
+            on_connection_lost: Optional[Callable] = None) -> None:
+
         self.name = name
         self.chef_filter = chef_filter
         self.hub = hub

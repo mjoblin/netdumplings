@@ -52,8 +52,8 @@ class Dumpling:
             chef: Union[DumplingChef, str],
             driver: DumplingDriver = DumplingDriver.packet,
             creation_time: Optional[float] = None,
-            payload: Any,
-    ) -> None:
+            payload: Any) -> None:
+
         self.chef = chef
 
         try:
