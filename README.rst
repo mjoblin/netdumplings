@@ -41,7 +41,9 @@ What does a dumpling look like?
 -------------------------------
 
 Dumplings are just JSON data. The following dumpling was created by a chef
-which makes a dumpling for every DNS lookup. ::
+which makes a dumpling for every DNS lookup.
+
+.. code-block:: javascript
 
     {
         "metadata": {
@@ -67,7 +69,9 @@ Example dumpling chef
 ---------------------
 
 The following dumpling chef creates a dumpling for every DNS lookup (see the
-example dumpling above). ::
+example dumpling above).
+
+.. code-block:: python
 
     import time
     import netdumplings
@@ -103,7 +107,9 @@ Example dumpling eater
 ----------------------
 
 The following eater prints the payload of every dumpling sent from
-``nd-hub``. ::
+``nd-hub``.
+
+.. code-block:: python
 
     import json
     import netdumplings
