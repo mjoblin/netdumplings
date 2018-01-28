@@ -8,7 +8,7 @@ version = {}
 with open(os.path.join(here, 'netdumplings', '_version.py')) as ver_file:
     exec(ver_file.read(), version)
 
-with open(os.path.join(here, 'README.md'), 'r') as f:
+with open(os.path.join(here, 'README.rst'), 'r') as f:
     readme = f.read()
 
 packages = [
