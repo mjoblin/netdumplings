@@ -3,6 +3,11 @@
 Release History
 ---------------
 
+0.3.2 (2018-01-27)
+++++++++++++++++++
+
+* Reverting README back to rst from markdown (to support pypi)
+
 0.3.1 (2018-01-27)
 ++++++++++++++++++
 
