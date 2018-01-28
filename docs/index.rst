@@ -36,6 +36,9 @@ You can run the sniffer kitchens and dumpling eaters on as many different hosts
 as you like; but you only run one instance of the hub. The sniffers, hub, and
 eaters all communicate over WebSockets.
 
+The netdumplings components are loosely coupled to provide you with some
+flexibility for where and how you run the various pieces.
+
 
 .. _GitHub: https://github.com/mjoblin/netdumplings
 .. _netmomo: https://github.com/mjoblin/netmomo
