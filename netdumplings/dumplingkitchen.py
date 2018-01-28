@@ -20,16 +20,36 @@ from ._shared import JSONSerializable
 
 class DumplingKitchen:
     """
-    A network packet sniffer kitchen.  Every sniffed packet gets passed to all
-    the :class:`DumplingChef` objects via the handler they each register with
-    the kitchen via :meth:`register_handler`.
+    A network packet sniffer kitchen.
 
-    The ``DumplingKitchen`` will attempt to find available
-    :class:`DumplingChef` subclasses and automatically instantiate them so that
-    they can register their handlers with the kitchen.
+    The sniffer kitchen does the following:
 
-    The ``DumplingKitchen`` runs the sniffer and maintains a separate thread
-    for poking the chefs at regular time intervals.
+    * Sniffs network packets
+    * Allows chefs to be registered with the kitchen
+    * Sends all sniffed packets to all registered dumpling chefs' packet
+      handlers
+    * Optionally pokes the interval handler of all registered dumpling chefs
+      at regular time intervals
+    * Takes the return values from the packet and interval handlers, converts
+      them into dumplings, JSON-serializes the dumplings, and puts them on
+      the given dumpling queue
+
+    Once the kitchen has put a dumpling on the dumpling queue, the kitchen's
+    involvement in that dumpling's life cycle is complete. It's the
+    responsibility of the thing instantiating the kitchen to provide the queue
+    and to then pull dumplings off the queue and send them on to the dumpling
+    hub.
+
+    Which network packets are sniffed can be controlled with a PCAP-style
+    packer filter.
+
+    :param dumpling_queue: Queue for sending dumplings to the dumpling hub.
+    :param name: Kitchen name.
+    :param interface: Network interface to sniff on.
+    :param sniffer_filter: PCAP-compliant sniffer filter (``None`` means sniff
+        all packets).
+    :param chef_poke_interval: Frequency (in secs) to call all registered chef
+        poke handlers. ``None`` disables poking.
     """
     def __init__(
             self,
@@ -39,14 +59,6 @@ class DumplingKitchen:
             sniffer_filter: str = 'tcp',
             chef_poke_interval: int = 5,
     ) -> None:
-        """
-        :param dumpling_queue: Queue for sending dumplings to the dumpling hub.
-        :param name: Kitchen name.
-        :param sniffer_filter: PCAP-compliant sniffer filter (``None`` means
-            sniff all packets).
-        :param chef_poke_interval: Frequency (in secs) to call all registered
-            chef poke handlers.  ``None`` disables poking.
-        """
         self.name = name
         self.interface = interface
         self.filter = sniffer_filter
@@ -73,20 +85,19 @@ class DumplingKitchen:
             )
         )
 
-    def _send_dumpling(
+    def _put_dumpling_on_queue(
             self,
             chef: DumplingChef,
             payload: JSONSerializable,
             driver: DumplingDriver,
     ):
         """
-        Initiates a send of a dumpling to all the dumpling eaters by putting
-        the dumpling on the dumpling queue.
+        Creates a dumpling, JSON-serializes it, and puts it on the dumpling
+        queue.
 
-        :param payload: The dumpling payload.  Can be anything which is JSON
-            serializable.  It's up to the dumpling eaters to make sense of it.
-        :param driver: The DumplingDriver; either ``DumplingDriver.packet`` or
-            ``DumplingDriver.interval``.
+        :param chef: The chef which provided the dumpling payload.
+        :param payload: The dumpling payload.
+        :param driver: The driver of the dumpling creation.
         """
         dumpling = Dumpling(chef=chef, payload=payload, driver=driver)
         dumpling_json = dumpling.to_json()
@@ -97,9 +108,11 @@ class DumplingKitchen:
 
     def _process_packet(self, packet: scapy.packet.Raw):
         """
-        Passes the given network packet to each of the registered
-        :class:`DumplingChef` packet handlers. Takes the returned payload and
-        sends it to the dumpling hub.
+        Takes a single sniffed packet and:
+
+        * Passes it to each of the registered dumpling chef packet handlers
+        * Takes the returned payload from each chef (if any) and initiates the
+          process of putting the result on the dumpling queue
 
         If a packet handler raises an exception then the exception will be
         logged and otherwise ignored.
@@ -118,13 +131,16 @@ class DumplingKitchen:
                 continue
 
             if payload is not None:
-                self._send_dumpling(chef, payload, DumplingDriver.packet)
+                self._put_dumpling_on_queue(
+                    chef, payload, DumplingDriver.packet
+                )
 
     def _poke_chefs(self, interval: int):
         """
-        Call any registered :class:`DumplingChef` interval handlers at regular
-        time intervals.  Intended to be run in a separate thread managed by the
-        ``DumplingKitchen``.
+        Call any registered dumpling chef interval handlers at regular time
+        intervals.
+
+        This is intended to be run in a separate thread.
 
         If an interval handler raises an exception then the exception will be
         logged and otherwise ignored.
@@ -146,23 +162,31 @@ class DumplingKitchen:
                     continue
 
                 if payload is not None:
-                    self._send_dumpling(chef, payload, DumplingDriver.interval)
+                    self._put_dumpling_on_queue(
+                        chef, payload, DumplingDriver.interval
+                    )
 
             sleep(interval)
 
     @staticmethod
     def get_chefs_in_modules(chef_modules: Optional[List[str]] = None) -> Dict:
         """
-        Finds available :class:`DumplingChef` subclasses.  Looks inside the
-        given ``chef_modules`` list of Python module names for classes which
-        are subclasses of :class:`DumplingChef`.  An attempt is made to find
-        the given module in the existing PYTHONPATH, or under the current
-        directory, or as a standalone Python file.
+        Finds available :class:`DumplingChef` subclasses.
 
-        :return: A dict where the keys are the module name, and the values are
-            a dict containing keys ``import_error`` (``False`` if no error),
-            and ``chef_classes`` (a list of class names subclassed from
-            :class:`DumplingChef`).
+        This helper method looks inside the modules provided in
+        ``chef_modules`` for classes which are subclasses of
+        :class:`DumplingChef`.
+
+        The returned dict contains information on all found chefs. Each key
+        is the name of a single module, and the values are dicts which contain
+        the follownig keys:
+
+        * ``"chef_classes"`` - a list of DumplingChef class names contained in
+          the module
+        * ``"import_error"`` - an error string describing a problem encountered
+          while finding dumpling chefs in the module (``False`` if no errors)
+
+        :return: Information on chefs found in the give modules.
         """
         # Allow for a chef module to be relative to the current working
         # directory (wherever the script calling this method is being run
@@ -217,10 +241,12 @@ class DumplingKitchen:
 
     def register_chef(self, chef: DumplingChef):
         """
-        Called by each :class:`DumplingChef` to register themselves with the
-        kitchen.
+        Registers dumpling chef with the kitchen.
 
-        :param chef: The DumplingChef being registered.
+        Registered dumpling chefs will have their packet and interval handlers
+        invoked by the kitchen as appropriate.
+
+        :param chef: The DumplingChef to register.
         """
         self._chefs.append(chef)
 
@@ -230,8 +256,9 @@ class DumplingKitchen:
 
     def run(self):
         """
-        Starts the kitchen (i.e. the packet sniffer and the chef poking
-        thread).  This will loop forever (or until execution stops).
+        Starts the kitchen.
+
+        This blocks and will run forever.
         """
         # Start the chef poking thread.
         if self.chef_poke_interval is not None:

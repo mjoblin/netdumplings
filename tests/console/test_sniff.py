@@ -10,7 +10,8 @@ import click.testing
 import pytest
 
 from netdumplings.console.sniff import (
-    sniff_cli, get_valid_chefs, network_sniffer, dumpling_emitter, notify_hub,
+    sniff_cli, get_valid_chefs, network_sniffer, dumpling_emitter,
+    send_dumplings_from_queue_to_hub,
 )
 
 
@@ -455,37 +456,37 @@ class TestSniffGetValidChefs:
 
 class TestSniffDumplingEmitter:
     """
-    Test the dumpling_emitter() function and the closely-related notify_hub()
-    async function.
+    Test the dumpling_emitter() function and the closely-related
+    send_dumplings_from_queue_to_hub() async function.
     """
     def test_dumpling_emitter(self, mocker):
         """
         Test that the dumpling emitter kicks off an async event loop running
-        notify_hub().
+        send_dumplings_from_queue_to_hub().
         """
         log = logging.getLogger('netdumplings.sniff')
 
         mock_queue = mocker.Mock()
         mock_get_event_loop = mocker.patch('asyncio.get_event_loop')
 
-        mock_notify_hub = mocker.patch(
-            'netdumplings.console.sniff.notify_hub',
+        mock_send_dumplings_from_queue_to_hub = mocker.patch(
+            'netdumplings.console.sniff.send_dumplings_from_queue_to_hub',
             return_value=asynctest.CoroutineMock(),
         )
 
         dumpling_emitter('test_kitchen', 'test_hub:5000', mock_queue, {})
 
         # Check that an event loop was retrieved, and that run_until_complete
-        # wa called on it, running notify_hub.
+        # wa called on it, running send_dumplings_from_queue_to_hub.
         mock_get_event_loop.assert_called_once()
 
-        mock_notify_hub.assert_called_once_with(
+        mock_send_dumplings_from_queue_to_hub.assert_called_once_with(
             'test_kitchen', 'test_hub:5000', mock_queue, {}, log
         )
 
         mock_loop = mock_get_event_loop.return_value
         mock_loop.run_until_complete.assert_called_once_with(
-            mock_notify_hub.return_value
+            mock_send_dumplings_from_queue_to_hub.return_value
         )
 
     @pytest.mark.asyncio
@@ -493,10 +494,10 @@ class TestSniffDumplingEmitter:
             self, mocker, test_dumpling_dns, test_dumpling_pktcount,
             test_kitchen):
         """
-        Test a conventional execution of notify_hub(). We make sure a websocket
-        connection is opened to the hub; and that two dumplings are
-        successfully retrieved from the dumpling queue and re-emitted down the
-        websocket connection.
+        Test a conventional execution of send_dumplings_from_queue_to_hub(). We
+        make sure a websocket connection is opened to the hub; and that two
+        dumplings are successfully retrieved from the dumpling queue and
+        re-emitted down the websocket connection.
         """
         log = logging.getLogger('netdumplings.sniff')
 
@@ -521,7 +522,7 @@ class TestSniffDumplingEmitter:
         mock_websocket.send = asynctest.CoroutineMock()
 
         try:
-            await notify_hub(
+            await send_dumplings_from_queue_to_hub(
                 kitchen_name=test_kitchen_name,
                 hub=test_hub,
                 dumpling_queue=mock_queue,
@@ -564,7 +565,7 @@ class TestSniffDumplingEmitter:
         test_kitchen_name = 'test_kitchen'
         test_hub = 'test_hub:5000'
 
-        await notify_hub(
+        await send_dumplings_from_queue_to_hub(
             kitchen_name=test_kitchen_name,
             hub=test_hub,
             dumpling_queue=mocker.Mock(),
@@ -601,7 +602,7 @@ class TestSniffDumplingEmitter:
         mock_websocket.send = asynctest.CoroutineMock()
         mock_websocket.close = asynctest.CoroutineMock()
 
-        await notify_hub(
+        await send_dumplings_from_queue_to_hub(
             kitchen_name=test_kitchen_name,
             hub=test_hub,
             dumpling_queue=mock_queue,

@@ -11,9 +11,9 @@ PRINT_COLOR = False
 
 async def on_connect(hub_uri, websocket):
     """
-    Called when the connection to nd-hub has been created.
+    Called when the connection to ``nd-hub`` has been created.
 
-    :param hub_uri: The nd-hub websocket URI.
+    :param hub_uri: The ``nd-hub`` websocket URI.
     :param websocket: The websocket object used for talking to nd-hub
         (websockets.WebSocketClientProtocol).
     """
@@ -23,10 +23,10 @@ async def on_connect(hub_uri, websocket):
 
 async def on_dumpling(dumpling):
     """
-    Called when a new dumpling is received from nd-hub. Prints dumpling
+    Called when a new dumpling is received from ``nd-hub``. Prints dumpling
     payload.
 
-    :param dumpling: The freshly-made new dumpling.
+    :param dumpling: The received dumpling.
     """
     print('\n{}\n'.format(
         printable_dumpling(dumpling.payload, colorize=PRINT_COLOR)
@@ -35,7 +35,7 @@ async def on_dumpling(dumpling):
 
 async def on_connection_lost(e):
     """
-    Called when nd-hub connection is lost.
+    Called when the ``nd-hub`` connection is lost.
 
     :param e: The exception thrown during the connection close.
     """

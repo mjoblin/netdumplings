@@ -95,7 +95,7 @@ class TestHandlerInvocations:
         Test invocation of the packet handlers.
         """
         kitchen = DumplingKitchen(dumpling_queue=mocker.Mock())
-        mocker.patch.object(kitchen, '_send_dumpling')
+        mocker.patch.object(kitchen, '_put_dumpling_on_queue')
 
         # Set up two valid chefs. One of them returns a dumpling when given a
         # packet, and the other one doesn't.
@@ -114,7 +114,7 @@ class TestHandlerInvocations:
         kitchen._process_packet(packet)
 
         # Check that we only sent one packet dumpling.
-        kitchen._send_dumpling.assert_called_once_with(
+        kitchen._put_dumpling_on_queue.assert_called_once_with(
             mock_chef_with_packet_dumpling,
             'dumpling',
             DumplingDriver.packet,
@@ -127,7 +127,7 @@ class TestHandlerInvocations:
         created but the processing being otherwise unaffected.
         """
         kitchen = DumplingKitchen(dumpling_queue=mocker.Mock())
-        mocker.patch.object(kitchen, '_send_dumpling')
+        mocker.patch.object(kitchen, '_put_dumpling_on_queue')
         mocker.patch.object(kitchen, '_logger')
 
         # Set up two valid chefs. One of them returns a dumpling when given a
@@ -151,7 +151,7 @@ class TestHandlerInvocations:
 
         # Check that we only sent one packet dumpling, and that an
         # exception-level log was created.
-        kitchen._send_dumpling.assert_called_once_with(
+        kitchen._put_dumpling_on_queue.assert_called_once_with(
             mock_chef_with_packet_dumpling,
             'dumpling',
             DumplingDriver.packet,
@@ -167,7 +167,7 @@ class TestHandlerInvocations:
             dumpling_queue=mocker.Mock(),
             chef_poke_interval=test_interval,
         )
-        mocker.patch.object(kitchen, '_send_dumpling')
+        mocker.patch.object(kitchen, '_put_dumpling_on_queue')
 
         # _poke_chefs() runs in an infinite loop which we need to break out of.
         # We do that by setting a side effect on the mocked call to sleep()
@@ -213,7 +213,7 @@ class TestHandlerInvocations:
             interval=test_interval
         )
 
-        kitchen._send_dumpling.assert_called_once_with(
+        kitchen._put_dumpling_on_queue.assert_called_once_with(
             mock_chef_with_interval_dumpling,
             'dumpling',
             DumplingDriver.interval,
@@ -230,7 +230,7 @@ class TestHandlerInvocations:
             dumpling_queue=mocker.Mock(),
             chef_poke_interval=test_interval,
         )
-        mocker.patch.object(kitchen, '_send_dumpling')
+        mocker.patch.object(kitchen, '_put_dumpling_on_queue')
         mocker.patch.object(kitchen, '_logger')
 
         mocker.patch(
@@ -264,7 +264,7 @@ class TestHandlerInvocations:
 
         # Check that the valid dumpling was sent, and that we logged an
         # exception for the other chef.
-        kitchen._send_dumpling.assert_called_once_with(
+        kitchen._put_dumpling_on_queue.assert_called_once_with(
             mock_chef_with_interval_dumpling,
             'dumpling',
             DumplingDriver.interval,
@@ -278,8 +278,8 @@ class TestDumplingSends:
     """
     def test_dumpling_send(self, mocker, test_dumpling_dns):
         """
-        Test the _send_dumpling method to ensure that it creates a new Dumpling
-        and puts the resulting dumpling contents onto the queue.
+        Test the _put_dumpling_on_queue method to ensure that it creates a new
+        Dumpling and puts the resulting dumpling contents onto the queue.
         """
         test_payload_json = json.dumps(test_dumpling_dns)
 
@@ -296,7 +296,7 @@ class TestDumplingSends:
 
         kitchen = DumplingKitchen(dumpling_queue=mock_queue)
 
-        kitchen._send_dumpling(
+        kitchen._put_dumpling_on_queue(
             chef=mock_chef,
             payload=test_dumpling_dns['payload'],
             driver=DumplingDriver.packet,

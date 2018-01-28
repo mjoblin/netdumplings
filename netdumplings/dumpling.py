@@ -9,14 +9,13 @@ from .exceptions import InvalidDumpling, InvalidDumplingPayload
 
 class DumplingDriver(Enum):
     """
-    When a new :class:`Dumpling` is created it wants to be told why it's being
-    created.  Its creation will be the result of one of two things:
+    The event driving the creation of a :class:`Dumpling`.
 
     ``DumplingDriver.packet``
         a network packet being received by a :class:`DumplingChef`.
 
     ``DumplingDriver.interval``
-        a regular time-based poke being received by a :class:`DumplingChef`.
+        a regular time interval poke being received by a :class:`DumplingChef`.
     """
     packet = 1
     interval = 2
@@ -24,37 +23,28 @@ class DumplingDriver(Enum):
 
 class Dumpling:
     """
-    Represents a single Dumpling.  Dumplings are created indirectly by a
-    :class:`~DumplingChef`.  A Dumpling might be created as the result of
-    a :class:`~DumplingChef` receiving a packet, or receiving a poke (which
-    happens at regular intervals), from a :class:`~DumplingKitchen`.
+    Represents a single Dumpling.
 
-    **NOTE: You will normally not instantiate Dumpling objects yourself.
-    They will normally be created for you when you call the DumplingChef send()
-    method (into which you'll pass a Python dict which will become the payload
-    of the dumpling).**
+    Dumplings are usually created automatically by a dumpling kitchen from the
+    payload returned by a :class:`~DumplingChef`.
 
-    A single ``Dumpling`` is a callable.  When invoked in this way it returns
-    the result of :meth:`make`: ::
+    A Dumpling exposes the following attributes:
 
-        dumpling = Dumpling(
-            chef=chef, driver=DumplingDriver.packet, payload=payload)
+    * ``chef`` - the :class:`DumplingChef` which is responsible for the
+      dumpling payload
+    * ``chef_name`` - the name of the DumplingChef
+    * ``kitchen`` - the name of the kitchen which created the Dumpling
+    * ``driver`` - the :class:`DumplingDriver` for the dumpling
+    * ``creation_time`` - when the dumpling was created (epoch milliseconds)
+    * ``payload`` - the dumpling payload
 
-        print(dumpling())
-
-    A complete JSON-serialized dumpling, as sent to the dumpling eaters, looks
-    as follows: ::
-
-        {
-            'metadata': {
-                'chef': <string: name of the dumpling chef>,
-                'kitchen': <string: name of the kitchen which provided the
-                            ingredients (packets) to create the dumpling>,
-                'creation_time': <float: time the dumpling was created>,
-                'count': <int: the number of dumplings made by this chef>
-            },
-            'payload': <mixed: the meat/veg of the dumpling>
-        }
+    :param chef: The chef which created the dumpling payload (usually a
+        :class:`DumplingChef` instance, but can be a string).
+    :param driver: The event type that drove the dumpling to be created.
+    :param creation_time: Dumpling creation time (epoch milliseconds). Defaults
+        to current time.
+    :param payload: The dumpling payload information. Can be anything (usually
+        a dict) which is JSON-serializable.
     """
     def __init__(
             self,
@@ -64,17 +54,6 @@ class Dumpling:
             creation_time: Optional[float] = None,
             payload: Any,
     ) -> None:
-        """
-        :param chef: The :class:`DumplingChef` who created the dumpling, or
-            a string representing the dumpling chef name.  A string can be
-            used when a real :class:`DumplingChef` isn't making the dumpling.
-        :param driver: The :class:`DumplingDriver` event that drove the
-            dumpling to be created; should be ``DumplingDriver.packet`` or
-            ``DumplingDriver.interval``.
-        :param payload: The payload information.  Can be anything (usually a
-            dict) which is JSON-serializable.  It's up to the dumpling eaters
-            to make sense of it.
-        """
         self.chef = chef
 
         try:
@@ -118,12 +97,15 @@ class Dumpling:
     @classmethod
     def from_json(cls, json_dumpling: str):
         """
-        Creates a Dumpling from a given ``json_dumpling`` string. The input
-        JSON is expected to be a dumpling which has already been
-        JSON-serialized (presumably by a DumplingHub).
+        A Dumpling factory which creates a Dumpling from a given
+        ``json_dumpling`` string. The given ``json_dumpling`` is expected to be
+        a dumpling which has already been JSON-serialized (presumably by a
+        dumpling kitchen).
 
         :param json_dumpling: JSON string to create the Dumpling from.
         :return: A :class:`Dumpling` instance.
+        :raise: :class:`InvalidDumpling` if ``json_dumpling`` could not be
+            successfully converted into a Dumpling.
         """
         try:
             dumpling_dict = json.loads(json_dumpling)
@@ -160,18 +142,11 @@ class Dumpling:
 
     def to_json(self) -> str:
         """
-        Makes a complete JSON-serialized dumpling string from the Dumpling.
+        Creates a JSON-serialized dumpling string from the Dumpling.
 
-        The created dumpling string will include the ``metadata`` and
-        ``payload`` components of the dumpling.
-
-        This method will normally not be called directly except in cases where
-        the dumpling is being built manually rather than via a
-        :class:`DumplingKitchen`.
-
-        :return: A JSON string representation of the dumpling.
-        :raises: :class:`InvalidDumplingPayload` if the Dumpling ``payload``
-            cannot be JSON-serialized.
+        :return: A JSON string representation of the Dumpling.
+        :raise: :class:`InvalidDumplingPayload` if the Dumpling payload cannot
+            be JSON-serialized.
         """
         dumpling = {
             'metadata': {

@@ -14,24 +14,22 @@ PRINT_COLOR = False
 
 async def on_connect(hub_uri, websocket):
     """
-    Called when the connection to nd-hub has been created.
+    Called when the connection to ``nd-hub`` has been created.
 
-    :param hub_uri: The nd-hub websocket URI.
-    :param websocket: The websocket object used for talking to nd-hub
+    :param hub_uri: The ``nd-hub`` websocket URI.
+    :param websocket: The websocket object used for talking to ``nd-hub``
         (websockets.WebSocketClientProtocol).
-    :return: None
     """
-    print('Shifty status from {0}'.format(hub_uri))
+    print('nd-hub status from {0}'.format(hub_uri))
     print('Waiting for data... ', end='', flush=True)
 
 
 async def on_dumpling(dumpling):
     """
-    Called when a new dumpling is received from nd-hub.  Prints summary
-    information about the current state of nd-hub.
+    Called when a new dumpling is received from ``nd-hub``. Prints summary
+    information about the current state of ``nd-hub``.
 
-    :param dumpling: The freshly-made new dumpling.
-    :return: None
+    :param dumpling: The received dumpling.
     """
     payload = dumpling.payload
 
@@ -80,10 +78,9 @@ async def on_dumpling(dumpling):
 
 async def on_connection_lost(e):
     """
-    Called when nd-hub connection is lost.
+    Called when the ``nd-hub`` connection is lost.
 
     :param e: The exception thrown during the connection close.
-    :return: None
     """
     print('\nLost connection to nd-hub: {}'.format(e))
 
@@ -119,9 +116,8 @@ def hubstatus_cli(hub, eater_name, color):
     A dumpling eater.
 
     Connects to nd-hub (the dumpling hub) and continually prints summary status
-    information from any SystemStatusChef dumplings. This is a
-    system monitoring dumpling eater which can be used to keep an eye on
-    nd-hub.
+    information from any SystemStatusChef dumplings. This is a system
+    monitoring dumpling eater which can be used to keep an eye on nd-hub.
     """
     global PRINT_COLOR
     PRINT_COLOR = color

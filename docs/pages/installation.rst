@@ -1,40 +1,71 @@
-.. _installation:
 .. automodule:: netdumplings
 
 Installation
 ============
 
-NetDumplings requires `Python 3.5`_ or higher.
+To install netdumplings: ::
 
-Using pip
----------
+   pip install netdumplings
 
-You can install NetDumplings (including all the command-line scripts and the
-associated Python modules) with pip: ::
+Installing netdumplings gives you the ``netdumplings`` Python module with the
+:class:`DumplingChef` and :class:`DumplingEater` classes.
 
-    $ pip install netdumplings
+Installation also provides the commandline tools: ``nd-sniff``, ``nd-hub``,
+``nd-print``, ``nd-hubdetails``, and ``nd-hubstatus``.
 
-You may want to to that in a `virtual environment`_: ::
+All commandline tools support the ``--help`` flag for usage information.
+Following is the help for the two main tools, ``nd-sniff`` and ``nd-hub``.
 
-    $ virtualenv --python=python3.5 nd-env
-    $ source nd-env/bin/activate
-    $ pip install netdumplings
+nd-sniff
+--------
+::
 
-Manually from GitHub
---------------------
+    Usage: nd-sniff [OPTIONS]
 
-The full source code is on `GitHub`_ which you can clone into your local
-environment: ::
+      A dumpling kitchen.
 
-    $ git clone git://github.com/mjoblin/netdumplings.git
+      Sniffs network packets matching the given PCAP-style filter and sends them to chefs for
+      processing into dumplings. Dumplings are then sent to nd-hub for distribution to the dumpling
+      eaters.
 
-You can then install NetDumplings from your local copy: ::
+    Options:
+      -n, --kitchen-name KITCHEN_NAME
+                                      Dumpling kitchen name to assign to the sniffer  [default:
+                                      default_kitchen]
+      -h, --hub HOST:PORT             Address where nd-hub is receiving dumplings.  [default:
+                                      localhost:11347]
+      -i, --interface INTERFACE       Network interface to sniff.  [default: all]
+      -f, --filter PCAP_FILTER        PCAP-style sniffer packet filter.  [default: tcp or udp or arp]
+      -m, --chef-module PYTHON_MODULE
+                                      Python module containing chef implementations. Multiple can be
+                                      specified.  [default: netdumplings.dumplingchefs]
+      -c, --chef CHEF_NAME            Chef (as found in a --chef-module) to deliver packets to.
+                                      Multiple can be specified. Default is to send packets to all
+                                      chefs.
+      -p, --poke-interval SECONDS     Interval (in seconds) to poke chefs instructing them to send
+                                      their interval dumplings.  [default: 5.0]
+      -l, --chef-list                 List all available chefs (as found in the given --chef-module
+                                      Python modules, or the default netdumplings.dumplingchefs
+                                      module) and exit.
+      --version                       Show the version and exit.
+      --help                          Show this message and exit.
 
-    $ cd netdumplings
-    $ python setup.py install
+nd-hub
+------
+::
 
+    Usage: nd-hub [OPTIONS]
 
-.. _Python 3.5: https://www.python.org/downloads/
-.. _virtual environment: http://docs.python-guide.org/en/latest/dev/virtualenvs/
-.. _GitHub: https://github.com/mjoblin/netdumplings
+      The dumpling hub.
 
+      Sends dumplings received from all kitchens (usually any running instances of nd-sniff) to all
+      dumpling eaters. All kitchens and eaters need to connect to the nd-hub --in-port or --out-port
+      respectively.
+
+    Options:
+      -a, --address HOSTNAME     Address where nd-hub will send dumplings from.  [default: localhost]
+      -i, --in-port PORT         Port to receive incoming dumplings from.  [default: 11347]
+      -o, --out-port PORT        Port to send outgoing dumplings on.  [default: 11348]
+      -f, --status-freq SECONDS  Frequency (in seconds) to send status dumplings.  [default: 5]
+      --version                  Show the version and exit.
+      --help                     Show this message and exit.

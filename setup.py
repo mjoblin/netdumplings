@@ -8,7 +8,7 @@ version = {}
 with open(os.path.join(here, 'netdumplings', '_version.py')) as ver_file:
     exec(ver_file.read(), version)
 
-with open('README.rst', 'r') as f:
+with open('README.md', 'r') as f:
     readme = f.read()
 
 packages = [
@@ -47,7 +47,9 @@ extras_require = {
 setup(
     name='netdumplings',
     version=version['__version__'],
-    description='Tools for building your own computer network visualizations.',
+    description=(
+        'A framework for distributed network packet sniffing and processing.'
+    ),
     long_description=readme,
     author='Mike Joblin',
     author_email='mike@tastymoss.com',

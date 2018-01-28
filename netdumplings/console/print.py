@@ -13,7 +13,7 @@ from ._shared import CLICK_CONTEXT_SETTINGS, printable_dumpling
 class PrinterEater(DumplingEater):
     """
     A dumpling eater which displays dumpling information to the terminal as it
-    arrives from nd-hub.
+    arrives from ``nd-hub``.
     """
     def __init__(
             self,
@@ -34,9 +34,9 @@ class PrinterEater(DumplingEater):
 
     async def on_connect(self, hub_uri, websocket):
         """
-        Called when the connection to nd-hub has been created.
+        Called when the connection to ``nd-hub`` has been created.
 
-        :param hub_uri: The nd-hub websocket URI.
+        :param hub_uri: The ``nd-hub`` websocket URI.
         :param websocket: The websocket object used for talking to nd-hub
             (websockets.WebSocketClientProtocol).
         """
@@ -45,10 +45,10 @@ class PrinterEater(DumplingEater):
 
     async def on_dumpling(self, dumpling):
         """
-        Called when a new dumpling is received from nd-hub. Prints the
+        Called when a new dumpling is received from ``nd-hub``. Prints the
         dumpling summary and payload.
 
-        :param dumpling: The freshly-made new dumpling.
+        :param dumpling: The received dumpling.
         """
         driver = dumpling.driver
 
@@ -92,7 +92,7 @@ class PrinterEater(DumplingEater):
 
     async def on_connection_lost(self, e):
         """
-        Called when the nd-hub connection is lost.
+        Called when the ``nd-hub`` connection is lost.
 
         :param e: The exception thrown during the connection close.
         """
@@ -162,7 +162,7 @@ def print_cli(hub, chef, kitchen, eater_name, interval_dumplings,
     """
     A dumpling eater.
 
-    Connects to nd-hub (the dumpling hub) and prints information on the
+    Connects to nd-hub (the dumpling hub) and prints information on all
     received dumplings.
     """
     eater = PrinterEater(
