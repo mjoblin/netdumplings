@@ -2,5 +2,6 @@ click~=6.7
 netifaces
 pygments
 scapy-python3==0.23
+sphinx-autodoc-typehints
 termcolor
 websockets~=4.0.0
