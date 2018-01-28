@@ -1,1 +1,1 @@
-include README.rst LICENSE HISTORY.rst netdumplings/data/config.json netdumplings/data/logging.json
+include README.md LICENSE HISTORY.rst netdumplings/data/logging.json
