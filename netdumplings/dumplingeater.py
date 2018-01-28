@@ -16,8 +16,8 @@ class DumplingEater:
     Base helper class for Python-based dumpling eaters.
 
     Connects to ``nd-hub`` and listens for any dumplings made by the provided
-    ``chef_filter`` (or all chefs if ``chef_filter`` is ``None``).  Can be
-    given callables for any of the following events:
+    ``chef_filter`` (or all chefs if ``chef_filter`` is ``None``). Can be
+    given ``async`` callables for any of the following events:
 
     ``on_connect(websocket_uri, websocket_obj)``
         invoked when the connection to ``nd-hub`` is made
@@ -27,6 +27,8 @@ class DumplingEater:
 
     ``on_connection_lost(e)``
         invoked when the connection to ``nd-hub`` is closed
+
+    **The above callables must be** ``async def`` **methods**.
 
     :param name: Name of the dumpling eater. Is ideally unique per eater.
     :param hub: Address where ``nd-hub`` is sending dumplings from.
@@ -46,18 +48,9 @@ class DumplingEater:
             hub: str ='{}:{}'.format(HUB_HOST, HUB_OUT_PORT),
             *,
             chef_filter: Optional[List[str]] = None,
-            on_connect: Optional[
-                Callable[
-                    [str, websockets.client.WebSocketClientProtocol],
-                    Awaitable[None]
-                ]
-            ] = None,
-            on_dumpling: Optional[
-                Callable[[Dict], Awaitable[None]]
-            ] = None,
-            on_connection_lost: Optional[
-                Callable[[Exception], Awaitable[None]]
-            ] = None,
+            on_connect: Optional[Callable] = None,
+            on_dumpling: Optional[Callable] = None,
+            on_connection_lost: Optional[Callable] = None,
     ) -> None:
         self.name = name
         self.chef_filter = chef_filter
