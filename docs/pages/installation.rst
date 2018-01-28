@@ -5,13 +5,7 @@ Installation
 
 To install netdumplings: ::
 
-   $ pip3 install netdumplings
-
-You may want to do that in a virtualenv: ::
-
-   $ python3 -m venv venv-netdumplings
-   $ source venv-netdumplings/bin/activate
-   $ pip install netdumplings
+   pip install netdumplings
 
 Installing netdumplings gives you the ``netdumplings`` Python module with the
 :class:`DumplingChef` and :class:`DumplingEater` classes.
