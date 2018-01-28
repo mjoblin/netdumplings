@@ -3,6 +3,12 @@
 Release History
 ---------------
 
+0.3.1 (2018-01-27)
+++++++++++++++++++
+
+* Now requires Python 3.6 or higher
+* Updates to get documentation to build on readthedocs
+
 0.3.0 (2018-01-27)
 ++++++++++++++++++
 
