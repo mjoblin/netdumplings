@@ -5,7 +5,7 @@ A framework for distributed network packet sniffing and processing.
 See the [documentation](https://netdumplings.readthedocs.org) for more details,
 and the [netmomo](https://github.com/mjoblin/netmomo) and
 [packscape](https://github.com/mjoblin/packscape) sample Web applications
-(dumpling eaters) which use netdumplings as their back-end. Python 3.5 or
+(dumpling eaters) which use netdumplings as their back-end. Python 3.6 or
 higher is required.
 
 ## Installation

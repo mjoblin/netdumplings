@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 import signal
-from typing import Awaitable, Callable, Dict, List, Optional
+from typing import Callable, List, Optional
 import websockets
 
 from .dumpling import Dumpling
