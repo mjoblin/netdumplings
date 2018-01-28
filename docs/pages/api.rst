@@ -5,11 +5,12 @@ API
 
 .. automodule:: netdumplings
 
-You subclass the :class:`DumplingChef` class to write dumpling chefs. When
-writing dumpling eaters in Python, you can subclass :class:`DumplingEater`.
+There are three main classes in the netdumplings API:
 
-:class:`Dumpling` objects are passed to the ``on_dumpling()`` handler of
-Python DumplingEaters.
+* You subclass :class:`DumplingChef` to write dumpling chefs.
+* You subclass :class:`DumplingEater` to write dumpling eaters.
+* :class:`Dumpling` instances are passed to the ``on_dumpling()`` handler of
+  Python dumpling eaters.
 
 DumplingChef
 ^^^^^^^^^^^^
@@ -36,18 +37,27 @@ Dumpling
 ^^^^^^^^
 
 .. Note::
-   :class:`Dumpling` instances are passed into the ``on_dumpling()`` handler of
-   your dumpling eaters.
+   Dumpling instances are created automatically by dumpling kitchens, from the
+   payload returned by a :class:`DumplingChef`.
+
+   Dumpling instances are passed to the ``on_dumpling()`` handler of your
+   dumpling eaters.
 
 .. autoclass:: Dumpling
+   :members:
+
+DumplingDriver
+^^^^^^^^^^^^^^
+
+.. autoclass:: DumplingDriver
    :members:
 
 Exception classes
 ^^^^^^^^^^^^^^^^^
 
-.. autoexception:: netdumplings.exceptions.NetDumplingsError
+.. autoexception:: NetDumplingsError
 
-.. autoexception:: netdumplings.exceptions.InvalidDumpling
+.. autoexception:: InvalidDumpling
 
-.. autoexception:: netdumplings.exceptions.InvalidDumplingPayload
+.. autoexception:: InvalidDumplingPayload
 

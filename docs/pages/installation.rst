@@ -20,7 +20,7 @@ Installation also provides the commandline tools: ``nd-sniff``, ``nd-hub``,
 ``nd-print``, ``nd-hubdetails``, and ``nd-hubstatus``.
 
 All commandline tools support the ``--help`` flag for usage information.
-Following is the help for ``nd-sniff`` and ``nd-hub``.
+Following is the help for the two main tools, ``nd-sniff`` and ``nd-hub``.
 
 nd-sniff
 --------

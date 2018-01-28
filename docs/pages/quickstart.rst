@@ -60,8 +60,7 @@ lookups), and `PacketCountChef`_ (which counts packets by protocol).
 The dumplings created by the chefs are automatically sent to the dumpling hub,
 which then forwards them on to any connected eaters.
 
-You may need to specify a specific interface when starting the dumpling
-kitchen: ::
+You may need to specify an interface when starting the dumpling kitchen: ::
 
    $ nd-sniff --interface en0
 

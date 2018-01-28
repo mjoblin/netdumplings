@@ -77,11 +77,11 @@ If you put the above chef code into a file in your home directory called
 Packet and interval handlers
 ----------------------------
 
-You don't have to send a dumpling for every packet your chef receives. For
-example you may want your chef to receive and process multiple packets before
-deciding it's ready to send a dumpling. You can instead have your chef do
-something at regular time intervals by implementing an ``interval_handler()``
-method in your dumpling chef.
+You don't have to return a dumpling payload for every packet your chef
+receives. For example you may want your chef to receive and process multiple
+packets before deciding it's ready to send a dumpling. You can instead have
+your chef do something at regular time intervals by implementing an
+``interval_handler()`` method in your dumpling chef.
 
 Dumplings will only be sent as the result of a packet or interval handler being
 called if that handler returns something. If a handler doesn't return anything,
@@ -112,6 +112,27 @@ more about the format of the `filter string here`_.
 
 There's a series of articles called `Building Network Tools with Scapy`_ which
 provides a lot of useful information, including part 4: `Looking at Packets`_.
+
+Maintaining state in a chef
+---------------------------
+
+Some chefs will need to maintain state between invocations of its packet and
+interval handlers. You can achieve this by defining an ``__init__`` method
+where you initialize the state which can then be accessed by the handler
+methods. For example: ::
+
+    import time
+
+    class StateExampleChef(DumplingChef):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+            # Initialize state.
+            self.my_state = []
+
+        def packet_handler(self, packet):
+            # Change the state.
+            self.my_state.append(time.time())
 
 Telling nd-sniff where to find your chefs
 -----------------------------------------

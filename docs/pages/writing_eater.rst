@@ -13,6 +13,12 @@ To create an eater with Python you subclass :class:`DumplingEater` and
 implement ``on_dumpling()``. All eaters will receive all dumplings being sent
 from ``nd-hub``.
 
+.. Note::
+   The dumpling hub will emit its own special dumplings describing the hub's
+   current status. These are emitted at regular intervals with the
+   ``"SystemStatusChef"`` chef name. These system status dumplings, like all
+   other dumplings, are sent to every eater.
+
 The DumplingEater handlers, like ``on_dumpling()``, are async methods so you
 need to define them with the ``async`` keyword.
 
