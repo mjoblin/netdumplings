@@ -139,6 +139,6 @@ More information
 See the `documentation`_ for more details.
 
 
-.. _documentation: http://netdumplings.readthedocs.io)
+.. _documentation: http://netdumplings.readthedocs.io
 .. _netmomo: https://github.com/mjoblin/netmomo
 .. _packscape: https://github.com/mjoblin/packscape
