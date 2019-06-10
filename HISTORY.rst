@@ -3,6 +3,15 @@
 Release History
 ---------------
 
+0.4.0 (2019-06-09)
+++++++++++++++++++
+
+Updates to dependencies
+
+* Changed to websockets v7 to fix security warnings
+* Switched to main scapy package now that it supports python 3
+* Updated docs to explain that nd-sniff might need to be run as root
+
 0.3.2 (2018-01-27)
 ++++++++++++++++++
 

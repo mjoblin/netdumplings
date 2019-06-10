@@ -14,6 +14,11 @@ In this quickstart you'll:
    dumplings)
 3. Start a dumpling eater ``nd-print`` (to display the dumplings)
 
+.. warning:: You may need to run ``nd-sniff`` as root, especially if you see
+  errors from ``nd-sniff`` that you don't see with the other CLI tools. If you
+  do this and are using a virtualenv, then remember to source your virtualenv
+  after you become root.
+
 1. Dumpling hub
 ---------------
 
@@ -32,7 +37,8 @@ The hub is now waiting for WebSocket connections from one or more kitchens
 2. Sniffer kitchen
 ------------------
 
-Now open another terminal and start a sniffer kitchen: ::
+Now open another terminal and start a sniffer kitchen (**you may need to do this
+as root, depending on your system**): ::
 
    $ nd-sniff
 

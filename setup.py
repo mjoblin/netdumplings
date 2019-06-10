@@ -21,9 +21,9 @@ install_requires = [
     'click~=6.7',
     'netifaces',
     'pygments',
-    'scapy-python3==0.23',
+    'scapy~=2.4.2',
     'termcolor',
-    'websockets~=4.0.0',
+    'websockets~=7.0.0',
 ]
 
 tests_require = [
