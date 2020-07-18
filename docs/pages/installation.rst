@@ -3,9 +3,13 @@
 Installation
 ============
 
+Python 3.7 or higher is required.
+
 To install netdumplings: ::
 
    pip install netdumplings
+
+This should be enough for Linux and OS X. On Windows you may also need to `install Npcap`_.
 
 Installing netdumplings gives you the ``netdumplings`` Python module with the
 :class:`DumplingChef` and :class:`DumplingEater` classes.
@@ -69,3 +73,6 @@ nd-hub
       -f, --status-freq SECONDS  Frequency (in seconds) to send status dumplings.  [default: 5]
       --version                  Show the version and exit.
       --help                     Show this message and exit.
+
+
+.. _install Npcap: https://nmap.org/npcap/#download

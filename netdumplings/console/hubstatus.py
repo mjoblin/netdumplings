@@ -1,12 +1,13 @@
 import datetime
 
 import click
+import colorama
 import termcolor
 
 import netdumplings
 from netdumplings._shared import HUB_HOST, HUB_OUT_PORT
 
-from ._shared import CLICK_CONTEXT_SETTINGS
+from netdumplings.console._shared import CLICK_CONTEXT_SETTINGS
 
 
 PRINT_COLOR = False
@@ -121,6 +122,9 @@ def hubstatus_cli(hub, eater_name, color):
     """
     global PRINT_COLOR
     PRINT_COLOR = color
+
+    if PRINT_COLOR:
+        colorama.init()  # Needed for Windows console.
 
     eater = netdumplings.DumplingEater(
         name=eater_name,

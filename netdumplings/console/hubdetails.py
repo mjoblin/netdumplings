@@ -3,7 +3,7 @@ import click
 import netdumplings
 from netdumplings._shared import HUB_HOST, HUB_OUT_PORT
 
-from ._shared import CLICK_CONTEXT_SETTINGS, printable_dumpling
+from netdumplings.console._shared import CLICK_CONTEXT_SETTINGS, printable_dumpling
 
 
 PRINT_COLOR = False

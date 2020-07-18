@@ -164,8 +164,9 @@ class DumplingEater:
                     break
         except asyncio.CancelledError:
             self.logger.warning(
-                "{0}: Connection to dumpling hub cancelled; closing...".format(
-                    self.name))
+                f"\n{self.name}: Connection to dumpling hub cancelled; "
+                f"closing..."
+            )
 
             try:
                 await websocket.close(*ND_CLOSE_MSGS['conn_cancelled'])
@@ -211,25 +212,8 @@ class DumplingEater:
             ", ".join(self.chef_filter) if self.chef_filter else 'all')
         )
 
-        loop = asyncio.get_event_loop()
-        dumpling_grabber_task = loop.create_task(
-            self._grab_dumplings(dumpling_count)
-        )
-
-        for signal_name in ('SIGTERM', 'SIGINT'):
-            loop.add_signal_handler(
-                getattr(signal, signal_name), DumplingEater._interrupt_handler)
-
         try:
-            loop.run_until_complete(dumpling_grabber_task)
-        except KeyboardInterrupt as e:
-            self.logger.warning(
-                "{0}: Caught keyboard interrupt; attempting graceful "
-                "shutdown...".format(self.name))
-            tasks = asyncio.Task.all_tasks()
-            for task in tasks:
-                task.cancel()
-            loop.run_forever()
+            asyncio.run(self._grab_dumplings(dumpling_count))
         except OSError as e:
             self.logger.warning(
                 "{0}: There was a problem with the dumpling hub connection. "
@@ -237,9 +221,8 @@ class DumplingEater:
             self.logger.warning("{0}: {1}".format(self.name, e))
         finally:
             if self._was_connected:
-                self.logger.info(
+                self.logger.warning(
                     "{0}: Done eating dumplings.".format(self.name))
-            loop.close()
 
     async def on_connect(self, websocket_uri, websocket_obj):
         """

@@ -3,6 +3,17 @@
 Release History
 ---------------
 
+0.5.0 (2020-07-18)
+++++++++++++++++++
+
+* Updated required Python version from 3.6 to 3.7
+* Minor tweaks to get things mostly working out-of-the-box on Windows
+* Tweaks to async handling (this likely requires a full modernization overhaul)
+* Have ``DNSLookupChef`` quietly ignore DNS packets without a ``qd`` field
+* Have ``nd-sniff`` produce some startup initialization output
+* Documentation tweaks
+* Updated websockets and scapy to latest versions
+
 0.4.0 (2019-06-09)
 ++++++++++++++++++
 

@@ -21,3 +21,10 @@ Run the unit tests: ::
     $ pytest
 
 Coverage is generated in ``coverage_html/index.html``.
+
+Build the documentation: ::
+
+    $ cd docs
+    $ make html
+
+The documentation will be available at ``_build/html/index.html``.

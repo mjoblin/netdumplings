@@ -283,11 +283,11 @@ class DumplingHub:
         except KeyboardInterrupt:
             self._logger.warning(
                 "Caught keyboard interrupt; attempting graceful shutdown...")
+        except asyncio.CancelledError:
+            pass
         finally:
             srv_in.close()
             srv_out.close()
             loop.run_until_complete(srv_in.wait_closed())
             loop.run_until_complete(srv_out.wait_closed())
-            if not status_task.cancelled():
-                status_task.set_result(None)
             self._logger.info("Dumpling hub signing off.  Thanks!")

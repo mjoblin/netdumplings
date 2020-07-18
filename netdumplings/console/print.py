@@ -1,13 +1,14 @@
 import datetime
 
 import click
+import colorama
 import termcolor
 
 import netdumplings
 from netdumplings import DumplingDriver, DumplingEater
 from netdumplings._shared import HUB_HOST, HUB_OUT_PORT
 
-from ._shared import CLICK_CONTEXT_SETTINGS, printable_dumpling
+from netdumplings.console._shared import CLICK_CONTEXT_SETTINGS, printable_dumpling
 
 
 class PrinterEater(DumplingEater):
@@ -31,6 +32,9 @@ class PrinterEater(DumplingEater):
         self._packet_dumplings = packet_dumplings
         self._payload = payload
         self._color = color
+
+        if color:
+            colorama.init()  # Needed for Windows console.
 
     async def on_connect(self, hub_uri, websocket):
         """

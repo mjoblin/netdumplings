@@ -16,7 +16,7 @@ from netdumplings._shared import (
     configure_logging, ND_CLOSE_MSGS, HUB_HOST, HUB_IN_PORT,
 )
 
-from ._shared import CLICK_CONTEXT_SETTINGS
+from netdumplings.console._shared import CLICK_CONTEXT_SETTINGS
 
 
 def network_sniffer(
@@ -376,6 +376,7 @@ def sniff_cli(kitchen_name, hub, interface, pkt_filter, chef_module, chef,
 
     configure_logging()
     logger = logging.getLogger('netdumplings.console.sniff')
+    logger.info("Initializing sniffer...")
 
     # A queue for passing dumplings from the sniffer kitchen to the
     # dumpling-emitter process.
@@ -424,6 +425,12 @@ def sniff_cli(kitchen_name, hub, interface, pkt_filter, chef_module, chef,
     sniffer_process.start()
     dumpling_emitter_process.start()
 
+    logger.info("Sniffer initialized; sniffing has begun")
+    logger.info(
+        f"Kitchen: {kitchen_name}; Interface: {interface}; "
+        f"Filter: {pkt_filter}"
+    )
+
     try:
         while True:
             if (sniffer_process.is_alive() and
@@ -447,6 +454,9 @@ def sniff_cli(kitchen_name, hub, interface, pkt_filter, chef_module, chef,
         logger.warning(
             "{0}: Caught keyboard interrupt; exiting.".format(
                 kitchen_name))
+
+        for process in multiprocessing.active_children():
+            process.terminate()
 
 
 if __name__ == '__main__':

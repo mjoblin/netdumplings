@@ -8,7 +8,7 @@ from netdumplings._shared import (
     configure_logging, HUB_HOST, HUB_IN_PORT, HUB_OUT_PORT, HUB_STATUS_FREQ,
 )
 
-from ._shared import CLICK_CONTEXT_SETTINGS
+from netdumplings.console._shared import CLICK_CONTEXT_SETTINGS
 
 
 @click.command(

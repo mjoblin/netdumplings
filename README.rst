@@ -5,13 +5,16 @@ A framework for distributed network packet sniffing and processing.
 
 See the `documentation`_ for more details, and the `netmomo`_ and `packscape`_
 sample Web applications (dumpling eaters) which use netdumplings as their
-back-end. Python 3.6 or higher is required.
+back-end. Python 3.7 or higher is required.
 
 Installation
 ------------
 ::
 
     pip install netdumplings
+
+This should be enough for Linux and OS X. On Windows you may also need to
+`install Npcap<https://nmap.org/npcap/#download>`_.
 
 Distributed packet sniffing?
 ----------------------------
