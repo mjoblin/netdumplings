@@ -367,7 +367,7 @@ def sniff_cli(kitchen_name, hub, interface, pkt_filter, chef_module, chef,
     to chefs for processing into dumplings. Dumplings are then sent to nd-hub
     for distribution to the dumpling eaters.
 
-    This tool likely need to be run as root, or as an Administrator user.
+    This tool likely needs to be run as root, or as an Administrator user.
     """
     # NOTE: Since the --chef-module and --chef flags can be specified multiple
     #   times, the associated 'chef_module' and 'chef' parameters are tuples of

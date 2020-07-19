@@ -32,7 +32,7 @@ nd-sniff
       processing into dumplings. Dumplings are then sent to nd-hub for distribution to the dumpling
       eaters.
 
-      This tool likely need to be run as root, or as an Administrator user.
+      This tool likely needs to be run as root, or as an Administrator user.
 
     Options:
       -n, --kitchen-name KITCHEN_NAME
