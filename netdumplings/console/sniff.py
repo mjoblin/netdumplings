@@ -53,7 +53,8 @@ def network_sniffer(
     :param chef_poke_interval: Interval (in secs) to poke chefs.
     :param dumpling_queue: Queue to pass to the kitchen to put dumplings on.
     """
-    log = logging.getLogger('netdumplings.sniff')
+    configure_logging()
+    log = logging.getLogger('netdumplings.console.sniff')
     log.info("{0}: Starting network sniffer process".format(kitchen_name))
     log.info("{0}: Interface: {1}".format(kitchen_name, interface))
     log.info("{0}: Requested chefs: {1}".format(kitchen_name,
@@ -119,7 +120,7 @@ async def send_dumplings_from_queue_to_hub(
     )
 
     try:
-        websocket = await websockets.connect(hub_ws)
+        websocket = await websockets.client.connect(hub_ws, ping_interval=0.0)
     except OSError as e:
         log.error(
             "{0}: There was a problem with the dumpling hub connection. "
@@ -170,21 +171,15 @@ def dumpling_emitter(
     :param dumpling_queue: Queue to get dumplings from.
     :param kitchen_info: Information on the kitchen.
     """
-    log = logging.getLogger('netdumplings.sniff')
+    configure_logging()
+    log = logging.getLogger('netdumplings.console.sniff')
     log.info("{0}: Starting dumpling emitter process".format(kitchen_name))
-    # TODO: Confirm that this new event loop creation is unnecessary.
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop = asyncio.get_event_loop()
 
-    try:
-        loop.run_until_complete(
-            send_dumplings_from_queue_to_hub(
-                kitchen_name, hub, dumpling_queue, kitchen_info, log
-            )
+    asyncio.run(
+        send_dumplings_from_queue_to_hub(
+            kitchen_name, hub, dumpling_queue, kitchen_info, log
         )
-    except KeyboardInterrupt:
-        pass
+    )
 
 
 def list_chefs(chef_modules: Optional[List[str]] = None):
@@ -425,38 +420,27 @@ def sniff_cli(kitchen_name, hub, interface, pkt_filter, chef_module, chef,
     sniffer_process.start()
     dumpling_emitter_process.start()
 
-    logger.info("Sniffer initialized; sniffing has begun")
-    logger.info(
-        f"Kitchen: {kitchen_name}; Interface: {interface}; "
-        f"Filter: {pkt_filter}"
-    )
-
     try:
         while True:
-            if (sniffer_process.is_alive() and
-                    dumpling_emitter_process.is_alive()):
-                sleep(1)
-            else:
-                if sniffer_process.is_alive():
-                    logger.error(
-                        "{0}: Dumpling emitter process died; exiting.".format(
-                            kitchen_name))
-                    sniffer_process.terminate()
+            sniffer_process.join(0.5)
+            dumpling_emitter_process.join(0.5)
 
-                if dumpling_emitter_process.is_alive():
-                    logger.error(
-                        "{0}: Network sniffer process died; exiting.".format(
-                            kitchen_name))
-                    dumpling_emitter_process.terminate()
+            if not sniffer_process.is_alive():
+                logger.error(
+                    f"{kitchen_name}: Network sniffer process died; exiting."
+                )
+                break
 
+            if not dumpling_emitter_process.is_alive():
+                logger.error(
+                    f"{kitchen_name}: Dumpling emitter process died; exiting."
+                )
                 break
     except KeyboardInterrupt:
-        logger.warning(
-            "{0}: Caught keyboard interrupt; exiting.".format(
-                kitchen_name))
+        logger.warning(f"{kitchen_name}: Caught keyboard interrupt; exiting.")
 
-        for process in multiprocessing.active_children():
-            process.terminate()
+    for process in multiprocessing.active_children():
+        process.terminate()
 
 
 if __name__ == '__main__':
