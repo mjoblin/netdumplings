@@ -14,7 +14,7 @@ Installation
     pip install netdumplings
 
 This should be enough for Linux and OS X. On Windows you may also need to
-`install Npcap<https://nmap.org/npcap/#download>`_.
+`install Npcap`_.
 
 Distributed packet sniffing?
 ----------------------------
@@ -145,3 +145,4 @@ See the `documentation`_ for more details.
 .. _documentation: http://netdumplings.readthedocs.io
 .. _netmomo: https://github.com/mjoblin/netmomo
 .. _packscape: https://github.com/mjoblin/packscape
+.. _install Npcap: https://nmap.org/npcap/#download
