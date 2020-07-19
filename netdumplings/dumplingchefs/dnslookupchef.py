@@ -56,6 +56,10 @@ class DNSLookupChef(DumplingChef):
 
         dns_query = packet.getlayer('DNS')
         query = dns_query.fields['qd']
+
+        if query is None:
+            return
+
         hostname = query.qname.decode('utf-8')
 
         if hostname.endswith('.'):

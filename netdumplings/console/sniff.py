@@ -3,9 +3,9 @@ import importlib.util
 import json
 import logging
 import os.path
+import queue
 import sys
 import multiprocessing
-from time import sleep
 from typing import Dict, List, Optional, Union
 
 import click
@@ -16,7 +16,7 @@ from netdumplings._shared import (
     configure_logging, ND_CLOSE_MSGS, HUB_HOST, HUB_IN_PORT,
 )
 
-from ._shared import CLICK_CONTEXT_SETTINGS
+from netdumplings.console._shared import CLICK_CONTEXT_SETTINGS
 
 
 def network_sniffer(
@@ -53,7 +53,8 @@ def network_sniffer(
     :param chef_poke_interval: Interval (in secs) to poke chefs.
     :param dumpling_queue: Queue to pass to the kitchen to put dumplings on.
     """
-    log = logging.getLogger('netdumplings.sniff')
+    configure_logging()
+    log = logging.getLogger('netdumplings.console.sniff')
     log.info("{0}: Starting network sniffer process".format(kitchen_name))
     log.info("{0}: Interface: {1}".format(kitchen_name, interface))
     log.info("{0}: Requested chefs: {1}".format(kitchen_name,
@@ -119,7 +120,7 @@ async def send_dumplings_from_queue_to_hub(
     )
 
     try:
-        websocket = await websockets.connect(hub_ws)
+        websocket = await websockets.client.connect(hub_ws)
     except OSError as e:
         log.error(
             "{0}: There was a problem with the dumpling hub connection. "
@@ -133,8 +134,21 @@ async def send_dumplings_from_queue_to_hub(
 
         # Send dumplings to the hub when they come in from the chefs.
         while True:
-            dumpling = dumpling_queue.get()
-            await websocket.send(dumpling)
+            # This is a bit hacky. We have a multiprocessing queue to get from,
+            # but we're running in a coroutine. The get() blocks, which I think
+            # is inferfering with websockets' ability to manage its heartbeat
+            # with the hub. This only seems to affect Windows. The workaround
+            # implemented here is to put a 1-second timeout on the queue get,
+            # ignore empty gets, and await asyncio.sleep() which appears to
+            # allow the run loop to continue (presumably allowing the keepalives
+            # to work).
+            try:
+                dumpling = dumpling_queue.get(timeout=1)
+                await websocket.send(dumpling)
+            except queue.Empty:
+                pass
+
+            await asyncio.sleep(0)
     except asyncio.CancelledError:
         log.warning(
             "{0}: Connection to dumpling hub cancelled; closing...".format(
@@ -170,21 +184,18 @@ def dumpling_emitter(
     :param dumpling_queue: Queue to get dumplings from.
     :param kitchen_info: Information on the kitchen.
     """
-    log = logging.getLogger('netdumplings.sniff')
+    configure_logging()
+    log = logging.getLogger('netdumplings.console.sniff')
     log.info("{0}: Starting dumpling emitter process".format(kitchen_name))
-    # TODO: Confirm that this new event loop creation is unnecessary.
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop = asyncio.get_event_loop()
 
     try:
-        loop.run_until_complete(
+        asyncio.run(
             send_dumplings_from_queue_to_hub(
                 kitchen_name, hub, dumpling_queue, kitchen_info, log
             )
         )
     except KeyboardInterrupt:
-        pass
+        log.warning(f"Keyboard interrupt detected")
 
 
 def list_chefs(chef_modules: Optional[List[str]] = None):
@@ -355,6 +366,8 @@ def sniff_cli(kitchen_name, hub, interface, pkt_filter, chef_module, chef,
     Sniffs network packets matching the given PCAP-style filter and sends them
     to chefs for processing into dumplings. Dumplings are then sent to nd-hub
     for distribution to the dumpling eaters.
+
+    This tool likely needs to be run as root, or as an Administrator user.
     """
     # NOTE: Since the --chef-module and --chef flags can be specified multiple
     #   times, the associated 'chef_module' and 'chef' parameters are tuples of
@@ -376,6 +389,7 @@ def sniff_cli(kitchen_name, hub, interface, pkt_filter, chef_module, chef,
 
     configure_logging()
     logger = logging.getLogger('netdumplings.console.sniff')
+    logger.info("Initializing sniffer...")
 
     # A queue for passing dumplings from the sniffer kitchen to the
     # dumpling-emitter process.
@@ -419,6 +433,7 @@ def sniff_cli(kitchen_name, hub, interface, pkt_filter, chef_module, chef,
     dumpling_emitter_process = multiprocessing.Process(
         target=dumpling_emitter,
         args=(kitchen_name, hub, dumpling_emitter_queue, kitchen_info),
+        daemon=True,
     )
 
     sniffer_process.start()
@@ -426,27 +441,25 @@ def sniff_cli(kitchen_name, hub, interface, pkt_filter, chef_module, chef,
 
     try:
         while True:
-            if (sniffer_process.is_alive() and
-                    dumpling_emitter_process.is_alive()):
-                sleep(1)
-            else:
-                if sniffer_process.is_alive():
-                    logger.error(
-                        "{0}: Dumpling emitter process died; exiting.".format(
-                            kitchen_name))
-                    sniffer_process.terminate()
+            sniffer_process.join(0.5)
+            dumpling_emitter_process.join(0.5)
 
-                if dumpling_emitter_process.is_alive():
-                    logger.error(
-                        "{0}: Network sniffer process died; exiting.".format(
-                            kitchen_name))
-                    dumpling_emitter_process.terminate()
+            if not sniffer_process.is_alive():
+                logger.error(
+                    f"{kitchen_name}: Network sniffer process died; exiting."
+                )
+                break
 
+            if not dumpling_emitter_process.is_alive():
+                logger.error(
+                    f"{kitchen_name}: Dumpling emitter process died; exiting."
+                )
                 break
     except KeyboardInterrupt:
-        logger.warning(
-            "{0}: Caught keyboard interrupt; exiting.".format(
-                kitchen_name))
+        logger.warning(f"{kitchen_name}: Caught keyboard interrupt; exiting.")
+
+    for process in multiprocessing.active_children():
+        process.terminate()
 
 
 if __name__ == '__main__':

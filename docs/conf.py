@@ -144,9 +144,10 @@ html_theme = 'alabaster'
 html_theme_options = {
     'logo': 'dumpling.png',
     'logo_name': True,
+    'sidebar_width': '230px',
     'touch_icon': 'dumpling.png',
     'description': 'A framework for distributed network packet sniffing and processing.',
-    'show_related': True,
+    'show_related': False,
     'analytics_id': 'UA-76821591-1',
 }
 

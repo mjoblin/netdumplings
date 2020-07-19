@@ -5,9 +5,9 @@ netdumplings
 
 A framework for distributed network packet sniffing and processing.
 
-netdumplings requires Python 3.6 or later. The source is on `GitHub`_. It can
-be used as the back-end for tools like `netmomo`_ and `packscape`_. This is
-version |version|.
+netdumplings requires Python 3.7 or later. The source is on `GitHub`_. It can
+be used as the back-end for tools like `netmomo`_ and `packscape`_. It has been
+tested on OS X 10.15 and Windows 10. This is version |version|.
 
 .. toctree::
    :maxdepth: 1

@@ -11,6 +11,7 @@ from time import sleep
 from typing import Dict, List, Optional
 
 from scapy.all import sniff
+from scapy.error import Scapy_Exception
 import scapy.packet
 
 from .dumpling import Dumpling, DumplingDriver
@@ -267,19 +268,26 @@ class DumplingKitchen:
 
             interval_poker = Thread(
                 target=self._poke_chefs,
-                kwargs={'interval': self.chef_poke_interval}
+                kwargs={'interval': self.chef_poke_interval},
+                daemon=True,
             )
 
             interval_poker.start()
         else:
-            self._logger.info(
-                "{0}: Interval poker thread disabled".format(self.name))
+            self._logger.info(f"{self.name}: Interval poker thread disabled")
 
         # Start the sniffer.
-        self._logger.info("{0}: Starting sniffer thread".format(self.name))
+        self._logger.info(f"{self.name}: Sniffing started")
 
-        if self.interface == 'all':
-            sniff(filter=self.filter, prn=self._process_packet, store=0)
-        else:
-            sniff(iface=self.interface, filter=self.filter,
-                  prn=self._process_packet, store=0)
+        try:
+            if self.interface == 'all':
+                sniff(filter=self.filter, prn=self._process_packet, store=0)
+            else:
+                sniff(iface=self.interface, filter=self.filter,
+                      prn=self._process_packet, store=0)
+        except Scapy_Exception as e:
+            self._logger.error(f"Error from scapy: {e}")
+            self._logger.error(
+                "The sniffer encountered a problem; try running as root if "
+                "you're not already"
+            )

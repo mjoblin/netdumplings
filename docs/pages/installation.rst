@@ -3,9 +3,13 @@
 Installation
 ============
 
+Python 3.7 or higher is required.
+
 To install netdumplings: ::
 
    pip install netdumplings
+
+This should be enough for Linux and OS X. On Windows you may also need to `install Npcap`_.
 
 Installing netdumplings gives you the ``netdumplings`` Python module with the
 :class:`DumplingChef` and :class:`DumplingEater` classes.
@@ -27,6 +31,8 @@ nd-sniff
       Sniffs network packets matching the given PCAP-style filter and sends them to chefs for
       processing into dumplings. Dumplings are then sent to nd-hub for distribution to the dumpling
       eaters.
+
+      This tool likely needs to be run as root, or as an Administrator user.
 
     Options:
       -n, --kitchen-name KITCHEN_NAME
@@ -69,3 +75,6 @@ nd-hub
       -f, --status-freq SECONDS  Frequency (in seconds) to send status dumplings.  [default: 5]
       --version                  Show the version and exit.
       --help                     Show this message and exit.
+
+
+.. _install Npcap: https://nmap.org/npcap/#download
