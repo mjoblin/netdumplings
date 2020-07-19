@@ -3,9 +3,9 @@ import importlib.util
 import json
 import logging
 import os.path
+import queue
 import sys
 import multiprocessing
-from time import sleep
 from typing import Dict, List, Optional, Union
 
 import click
@@ -120,7 +120,7 @@ async def send_dumplings_from_queue_to_hub(
     )
 
     try:
-        websocket = await websockets.client.connect(hub_ws, ping_interval=0.0)
+        websocket = await websockets.client.connect(hub_ws)
     except OSError as e:
         log.error(
             "{0}: There was a problem with the dumpling hub connection. "
@@ -134,8 +134,21 @@ async def send_dumplings_from_queue_to_hub(
 
         # Send dumplings to the hub when they come in from the chefs.
         while True:
-            dumpling = dumpling_queue.get()
-            await websocket.send(dumpling)
+            # This is a bit hacky. We have a multiprocessing queue to get from,
+            # but we're running in a coroutine. The get() blocks, which I think
+            # is inferfering with websockets' ability to manage its heartbeat
+            # with the hub. This only seems to affect Windows. The workaround
+            # implemented here is to put a 1-second timeout on the queue get,
+            # ignore empty gets, and await asyncio.sleep() which appears to
+            # allow the run loop to continue (presumably allowing the keepalives
+            # to work).
+            try:
+                dumpling = dumpling_queue.get(timeout=1)
+                await websocket.send(dumpling)
+            except queue.Empty:
+                pass
+
+            await asyncio.sleep(0)
     except asyncio.CancelledError:
         log.warning(
             "{0}: Connection to dumpling hub cancelled; closing...".format(
@@ -175,11 +188,14 @@ def dumpling_emitter(
     log = logging.getLogger('netdumplings.console.sniff')
     log.info("{0}: Starting dumpling emitter process".format(kitchen_name))
 
-    asyncio.run(
-        send_dumplings_from_queue_to_hub(
-            kitchen_name, hub, dumpling_queue, kitchen_info, log
+    try:
+        asyncio.run(
+            send_dumplings_from_queue_to_hub(
+                kitchen_name, hub, dumpling_queue, kitchen_info, log
+            )
         )
-    )
+    except KeyboardInterrupt:
+        log.warning(f"Keyboard interrupt detected")
 
 
 def list_chefs(chef_modules: Optional[List[str]] = None):
@@ -350,6 +366,8 @@ def sniff_cli(kitchen_name, hub, interface, pkt_filter, chef_module, chef,
     Sniffs network packets matching the given PCAP-style filter and sends them
     to chefs for processing into dumplings. Dumplings are then sent to nd-hub
     for distribution to the dumpling eaters.
+
+    This tool likely need to be run as root, or as an Administrator user.
     """
     # NOTE: Since the --chef-module and --chef flags can be specified multiple
     #   times, the associated 'chef_module' and 'chef' parameters are tuples of
@@ -415,6 +433,7 @@ def sniff_cli(kitchen_name, hub, interface, pkt_filter, chef_module, chef,
     dumpling_emitter_process = multiprocessing.Process(
         target=dumpling_emitter,
         args=(kitchen_name, hub, dumpling_emitter_queue, kitchen_info),
+        daemon=True,
     )
 
     sniffer_process.start()

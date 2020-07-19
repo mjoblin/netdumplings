@@ -14,10 +14,10 @@ In this quickstart you'll:
    dumplings)
 3. Start a dumpling eater ``nd-print`` (to display the dumplings)
 
-.. warning:: You may need to run ``nd-sniff`` as root, especially if you see
-  errors from ``nd-sniff`` that you don't see with the other CLI tools. If you
-  do this and are using a virtualenv, then remember to source your virtualenv
-  after you become root.
+.. warning:: You may need to run ``nd-sniff`` as root (or as an Adminstrator on
+  Windows), especially if you see errors from ``nd-sniff`` that you don't see
+  with the other CLI tools. If you do this and are using a virtualenv, then
+  remember to source your virtualenv after you become root.
 
 1. Dumpling hub
 ---------------
