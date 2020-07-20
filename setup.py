@@ -20,7 +20,6 @@ packages = [
 install_requires = [
     'click~=7.1',
     'colorama',
-    'netifaces',
     'pygments',
     'scapy~=2.4.3',
     'termcolor',
