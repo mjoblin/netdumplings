@@ -3,6 +3,12 @@
 Release History
 ---------------
 
+0.5.1 (2020-07-19)
+++++++++++++++++++
+
+* Remove dependency on netifaces
+* Improve errors when attempting to sniff on unknown interfaces
+
 0.5.0 (2020-07-19)
 ++++++++++++++++++
 
