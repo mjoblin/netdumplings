@@ -286,8 +286,15 @@ class DumplingKitchen:
                 sniff(iface=self.interface, filter=self.filter,
                       prn=self._process_packet, store=0)
         except Scapy_Exception as e:
-            self._logger.error(f"Error from scapy: {e}")
             self._logger.error(
-                "The sniffer encountered a problem; try running as root if "
-                "you're not already"
+                "The sniffer encountered a problem (it might help to run as "
+                "root if you're not already)"
             )
+            self._logger.error(f"Error from scapy: {e}")
+        except ValueError as e:
+            # On Windows an unknown interface is a ValueError (on OS X it's
+            # picked up by Scapy_Exception).
+            if "Unknown pypcap network interface" in str(e):
+                self._logger.error(str(e))
+            else:
+                raise
